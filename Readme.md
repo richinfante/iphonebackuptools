@@ -4,7 +4,7 @@ Currently works on macOS, If someone wants to make the changes nessecary for win
 ## Installing
 clone this repo, then run:
 ```bash
-npm install.
+npm install
 ```
 
 ## Usage
