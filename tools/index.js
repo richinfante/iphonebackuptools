@@ -3,7 +3,7 @@ const inquirer = require('inquirer')
 const chalk = require('chalk')
 
 async function main() {
-
+  try {
   var backups = await backup.availableBackups()
 
   var result = await inquirer.prompt({
@@ -22,6 +22,7 @@ async function main() {
   })
   
   const selectedBackup = backup.iPhoneBackup.fromID(result.backupid)
+  
   const conversations = await selectedBackup.getConversations()
 
   var conversation = await inquirer.prompt({
@@ -43,7 +44,15 @@ async function main() {
     messages.map(el => chalk.gray(el.date ? el.date.toLocaleString() : '') + ' ' + chalk.blue(el.sender + ': ') + el.text)
     .join('\n')
   )
+  } catch(e) {
+    console.log(e)
+  }
 }
+
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+  // application specific logging, throwing an error, or other logic here
+})
 
 try {
   main()

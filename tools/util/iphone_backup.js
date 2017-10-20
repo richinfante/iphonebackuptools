@@ -50,7 +50,6 @@ class iPhoneBackup {
   getDatabase(fileID) {
     // Get the backup folder
     const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', this.id)
-
     // Return v2 filename
     if (this.status.Version < 3) {
       return new sqlite3.Database(path.join(base, fileID), sqlite3.OPEN_READONLY)
@@ -146,6 +145,7 @@ class iPhoneBackup {
       var messagedb = this.getDatabase(databases.SMS)
 
       messagedb.all('SELECT * FROM chat', async function (err, rows) {
+        rows = rows || []
         for(var el of rows) {
           if (el.properties) el.properties = bplist.parseBuffer(el.properties)[0]
           if (el.properties) {
