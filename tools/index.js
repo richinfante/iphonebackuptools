@@ -1,61 +1,288 @@
-const backup = require('./util/iphone_backup')
-const inquirer = require('inquirer')
+#!/usr/bin/env node
+
 const chalk = require('chalk')
+const fs = require('fs')
+const program = require('commander')
+const path = require('path')
+const { URL } = require('url')
+const stripAnsi = require('strip-ansi')
+const iPhoneBackup = require('./util/iphone_backup.js').iPhoneBackup
+const normalizeCols = require('./util/normalize.js')
+var base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
 
-async function main() {
-  try {
-  var backups = await backup.availableBackups()
-
-  var result = await inquirer.prompt({
-    type: 'list',
-    name: 'backupid',
-    message: 'Select Backup:',
-    choices: backups.map(el => {
-      console.log(el)
-      return {
-        name: el.manifest ? 
-          `${el.manifest.Lockdown.DeviceName} <${el.id}> ${el.status ? new Date(el.status.Date).toLocaleString() : ''}` : 
-          `Unknown Device ${el.id} ${el.status ? new Date(el.status.Date).toLocaleString() : ''}`,
-        value: el.id
-      }
-    })
-  })
-  
-  const selectedBackup = backup.iPhoneBackup.fromID(result.backupid)
-  
-  const conversations = await selectedBackup.getConversations()
-
-  var conversation = await inquirer.prompt({
-    type: 'list',
-    name: 'chat_id',
-    message: 'Select Conversation:',
-    choices: conversations.map(el => {
-      return {
-        name: chalk.gray(el.date ? el.date.toLocaleString() : '??') + ' ' + el.display_name + ' ' +  el.chat_identifier,
-        value: el.ROWID
-      }
-    })
-  })
-
-  //console.log(conversation)
-
-  const messages = await selectedBackup.getMessages(conversation.chat_id)
-  console.log(
-    messages.map(el => chalk.gray(el.date ? el.date.toLocaleString() : '') + ' ' + chalk.blue(el.sender + ': ') + el.text)
-    .join('\n')
-  )
-  } catch(e) {
-    console.log(e)
-  }
-}
-
-process.on('unhandledRejection', (reason, p) => {
-  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-  // application specific logging, throwing an error, or other logic here
+program
+    .version('2.0.0')
+    .option('-l, --list', 'List Backups')
+    .option('-c, --conversations', 'List Conversations')
+    .option('-m, --messages <conversation_id>', 'List Conversations')
+    .option('-r, --report <report_type>', 'Report types: apps, notes, webhistory, photolocations, manifest')
+    .option(`-d, --dir <directory>`, `Backup Directory (default: ${base})`)
+    .option(`-u, --device <device>`, 'Device UUID')
+    .option(`-b, --backup <backup>`, 'Backup ID')
+    .option(`-v, --verbose`, 'Verbose debugging output')
+    .option(`-x, --no-color`, 'Disable colorized output')
+    .option('-z, --dump', 'Dump a ton of raw JSON formatted data instead of formatted output')
+    
+program.on('--help', function(){
+    console.log('')
+    console.log("If you're interested to know how this works, check out my post:")
+    console.log("https://www.richinfante.com/2017/3/16/reverse-engineering-the-ios-backup")
+    console.log('')
 })
+    
+program.parse(process.argv);
 
-try {
-  main()
-} catch (e) {
-  console.log(e)
+if(!process.stdout.isTTY) { program.color = false }
+
+base = program.dir || base
+
+if(program.verbose) console.log('Using source:', base)
+
+if(program.list) {
+    var items = fs.readdirSync(base, { encoding: 'utf8' })
+        .filter(el => (el.length == 40))
+        .map(file => iPhoneBackup.fromID(file, base))
+        
+        
+        // Possibly dump output
+        if(program.dump) {
+            console.log(JSON.stringify(items, null, 4))
+            return
+        }
+
+    items = items.map(el => { 
+            return {
+            encrypted: el.manifest ? el.manifest.IsEncrypted 
+                                        ? chalk.green('encrypted') 
+                                        : chalk.red('not encrypted')
+                                   : 'unknown encryption',
+            device_name: el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
+            device_id: el.id,
+            serial: el.manifest.Lockdown.SerialNumber,
+            iOSVersion: el.manifest.Lockdown.ProductVersion + '(' + el.manifest.Lockdown.BuildVersion + ')',
+            backupVersion: el.status ? el.status.Version : '?',
+            date: el.status ? new Date(el.status.Date).toLocaleString() : ''
+        }})
+        .map(el => [
+            chalk.gray(el.device_id), 
+            el.encrypted,
+            el.date, 
+            el.device_name,
+            el.serial,
+            el.iOSVersion,
+            el.backupVersion
+        ])
+
+    items = [
+        ['UDID', 'Encryption', 'Date', 'Device Name', 'Serial #', 'iOS Version', 'Backup Version'],
+        ['-','-','-','-','-','-','-'],
+            ...items
+    ]
+    items = normalizeCols(items)
+    items = items.map(el => el.join(' | ')).join('\n')
+
+    if(!program.color) { items = stripAnsi(items) }
+
+    console.log('BACKUPS LIST')
+    console.log(items)
+} else if (program.conversations) {
+    if(!program.backup) {
+        console.log('use -b or --backup <id> to specify backup.')
+        process.exit(1)
+    }
+
+    // Grab the backup
+    var backup = iPhoneBackup.fromID(program.backup, base)
+
+
+    backup.getConversations(program.dump)
+    .then((items) => {
+        if(program.dump) return 
+
+        var items = items.map(el => [ 
+            el.ROWID + '', 
+            chalk.gray(el.date ? el.date.toLocaleString() : '??'),
+            el.chat_identifier + '',
+            el.display_name + ''
+        ])
+
+        items = [['ID', 'DATE', 'Chat Name', 'Display Name'], ['-', '-', '-', '-',], ...items]
+        items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+        
+        if(!program.color) { items = stripAnsi(items) }
+
+        console.log(items)
+    })
+} else if(program.messages) {
+    if(!program.backup) {
+        console.log('use -b or --backup <id> to specify backup.')
+        process.exit(1)
+    }
+
+    // Grab the backup
+    var backup = iPhoneBackup.fromID(program.backup, base)
+
+
+    backup.getMessages(program.messages, program.dump)
+    .then((items) => {
+        if(program.dump) return 
+
+        items = items.map(el => [
+            chalk.gray(el.date ? el.date.toLocaleString() : ''),
+            chalk.blue(el.sender + ': '),
+            el.text || ''
+        ])
+
+        items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+
+        if(!program.color) { items = stripAnsi(items) }
+
+        console.log(items)
+    })
+} else if(program.report) {
+    ///
+    /// APPS REPORT
+    ///
+    if(program.report == 'apps') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+
+        if (!backup.manifest) return {}
+
+        // Possibly dump output
+        if(program.dump) {
+            console.log(JSON.stringify(backup.manifest, null, 4))
+            return
+        }
+
+        // Enumerate the apps in the backup
+        var apps = []
+        for (var key in backup.manifest.Applications) {
+            apps.push(key)
+        }
+
+        console.log(`Apps installed inside backup: ${backup.id}`)
+        console.log(apps.map(el => '- ' + el).join('\n'))
+    } else if(program.report == 'notes') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getNotes(program.dump)
+            .then((items) => {
+                // Dump if needed
+                if(program.dump) {
+                    console.log(JSON.stringify(items, null, 4))
+                    return
+                }
+                
+                // Otherwise, format table
+                items = items.map(el => [el.ZMODIFICATIONDATE + '', (el.Z_PK + ''), (el.ZTITLE + '').substring(0, 128)])
+                items = [['Modified', 'ID', 'Title'], ['-', '-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+                
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+    }  else if(program.report == 'webhistory') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getWebHistory(program.dump)
+            .then((history) => {
+
+                if(program.dump) {
+                    console.log(JSON.stringify(history, null, 4))
+                    return
+                }
+
+                var items = history.map(el => [
+                    el.visit_time + '' || '',
+                    new URL(el.url || '').origin || '',
+                    (el.title || '').substring(0, 64)
+                ])
+
+                items = [['Time', 'URL', 'Title'], ['-', '-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+                
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+    } else if(program.report == 'photolocations') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getPhotoLocationHistory(program.dump)
+            .then((history) => {
+
+                if(program.dump) {
+                    console.log(JSON.stringify(history, null, 4))
+                    return
+                }
+
+                var items = history.map(el => [
+                    el.ZDATECREATED + '' || '',
+                    el.ZLATITUDE + '' || '',
+                    el.ZLONGITUDE  + '' || '',
+                    el.ZFILENAME + '' || ''
+                ])
+
+                items = [['Time', 'Latitude', 'Longitude', 'Photo Name'], ['-', '-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+    }  else if(program.report == 'manifest') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getFileManifest()
+            .then((items) => {
+
+                if(program.dump) {
+                    console.log(JSON.stringify(items, null, 4))
+                    return
+                }
+
+                var items = items.map(el => [
+                    el.fileID + '',
+                    el.relativePath + '' 
+                ])
+
+                items = [['ID', 'Path'], ['-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+                
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+    }
+} else {
+    program.outputHelp()
 }

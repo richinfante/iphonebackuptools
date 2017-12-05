@@ -12,7 +12,9 @@ const databases = {
   Reminders: '2041457d5fe04d39d0ab481178355df6781e6858',
   Notes: 'ca3bc056d4da0bbf88b5fb3be254f3b7147e639c',
   Calls: '2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca',
-  Locations: '4096c9ec676f2847dc283405900e284a7c815836'
+  Locations: '4096c9ec676f2847dc283405900e284a7c815836',
+  WebHistory: 'e74113c185fd8297e140cfcf9c99436c5cc06b57',
+  Photos: '12b144c0bd44f2b3dffd9186d3f9c05b917cee25'
 }
 
 var cache = {}
@@ -25,33 +27,43 @@ class iPhoneBackup {
     this.manifest = manifest;
   }
 
-
-  static fromID(id) {
+  // Open a backup with a specified ID
+  // base is optional and will be computed if not used.
+  static fromID(id, base) {
     // Get the path of the folder.
-    const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', id)
+    if(base) {
+      base = path.join(base, id)
+    } else {
+      base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', id)
+    }
 
     // Parse manifest bplist files
     try {
       var status = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Status.plist')))[0];
     } catch (e) {
+      console.log('Cannot open Status.plist', e)
     }
     try {
       var manifest = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Manifest.plist')))[0];
     } catch (e) {
+      console.log('Cannot open Manifest.plist', e)
     }
     try {
       var info = plist.parse(fs.readFileSync(path.join(base, 'Info.plist'), 'utf8'));
     } catch (e) {
+      console.log('Cannot open Info.plist', e)
     }
 
     return new iPhoneBackup(id, status, info, manifest)
   }
 
-  getDatabase(fileID) {
+  getDatabase(fileID, isAbsoulte) {
+    isAbsoulte = isAbsoulte || false
+
     // Get the backup folder
     const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', this.id)
     // Return v2 filename
-    if (this.status.Version < 3) {
+    if (this.status.Version < 3 || isAbsoulte) {
       return new sqlite3.Database(path.join(base, fileID), sqlite3.OPEN_READONLY)
     } else {
       // v3 has folders
@@ -60,7 +72,7 @@ class iPhoneBackup {
   }
 
   getName(messageDest) {
-
+    
     return new Promise((resolve, reject) => {
       if(messageDest.indexOf('@') === -1) {
         messageDest = messageDest.replace(/[\s+\-()]*/g, '')
@@ -83,7 +95,6 @@ class iPhoneBackup {
         from ABPersonFullTextSearch_content WHERE c15Phone like '%${messageDest}%'`, 
       (err, row) => {
           if(err) return resolve()
-        
           if(!row) return resolve()
 
           var result = {
@@ -99,7 +110,7 @@ class iPhoneBackup {
     })
   }
 
-  getMessages(chat_id) {
+  getMessages(chat_id, dumpAll) {
     var backup = this;
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
@@ -115,10 +126,21 @@ class iPhoneBackup {
           ON handle.rowid = message.handle_id
         WHERE chat_message_join.chat_id = ?`, [parseInt(chat_id)], 
      async function (err, chats) {
+      if(err) return reject(err)
+
+       chats = chats || []
         var offset = new Date('2001-01-01 00:00:00').getTime()
         
+        if(dumpAll) console.log(JSON.stringify(chats, null, 4))
+
         for(var i in chats) {
           var el = chats[i]
+          
+          // Some of the dates are of much larger precision
+          if(el.date > 100000000000000000) {
+            el.date = el.date / 1000000000
+          }
+
           var date = new Date(offset + el.date * 1000 - tz_offset * 60 * 60 * 1000)
           var text = el.text
           var sender = el.is_from_me ? 'Me' : el.sender_name
@@ -134,20 +156,27 @@ class iPhoneBackup {
           chats[i] = { sender, text, date }
         }
 
+        
+
         resolve(chats)
       })
     })
   }
 
-  getConversations() {
+  getConversations(dumpAll) {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
 
       messagedb.all('SELECT * FROM chat', async function (err, rows) {
+        if(err) return reject(err)
         rows = rows || []
+
         for(var el of rows) {
           if (el.properties) el.properties = bplist.parseBuffer(el.properties)[0]
+
+
+          // Interestingly, some of these do not have dates attached.
           if (el.properties) {
             el.date = new Date(el.properties.CKChatWatermarkTime * 1000)
           } else {
@@ -167,8 +196,58 @@ class iPhoneBackup {
           return new Date(b.date) - new Date(a.date);
         });
 
+        if(dumpAll) console.log(JSON.stringify(rows, null, 4))
+
         resolve(rows)
       })
+    })
+  }
+
+  getFileManifest() {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase('Manifest.db', true)
+      messagedb.all('SELECT * from FILES', async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    
+    })
+  }
+
+  getNotes() {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Notes)
+      messagedb.all('SELECT * from ZNOTE LEFT JOIN ZNOTEBODY ON ZBODY = ZNOTEBODY.Z_PK', async function (err, rows) {
+        if (err) reject(err)
+        
+        resolve(rows)
+      })
+    
+    })
+  }
+
+  getWebHistory() {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.WebHistory)
+      messagedb.all('SELECT * from history_visits LEFT JOIN history_items ON history_items.ROWID = history_visits.history_item', async function (err, rows) {
+        if(err) reject(err)
+
+        resolve(rows)
+      })
+    
+    })
+  }
+
+  getPhotoLocationHistory() {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Photos)
+      messagedb.all('SELECT ZDATECREATED, ZLATITUDE, ZLONGITUDE, ZFILENAME FROM ZGENERICASSET ORDER BY ZDATECREATED ASC', async function (err, rows) {
+        if(err) reject(err)
+
+        resolve(rows)
+      })
+    
     })
   }
 }
