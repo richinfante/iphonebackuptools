@@ -101,7 +101,7 @@ if(program.list) {
 
         var items = items.map(el => [ 
             el.ROWID + '', 
-            chalk.gray(el.date ? el.date.toLocaleString() : '??'),
+            chalk.gray(el.XFORMATTEDDATESTRING || '??'),
             el.chat_identifier + '',
             el.display_name + ''
         ])
@@ -112,6 +112,9 @@ if(program.list) {
         if(!program.color) { items = stripAnsi(items) }
 
         console.log(items)
+    })
+    .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
     })
 } else if(program.messages) {
     if(!program.backup) {
@@ -128,16 +131,19 @@ if(program.list) {
         if(program.dump) return 
 
         items = items.map(el => [
-            chalk.gray(el.date ? el.date.toLocaleString() : ''),
-            chalk.blue(el.sender + ': '),
+            chalk.gray(el.XFORMATTEDDATESTRING + ''),
+            chalk.blue(el.x_sender + ''),
             el.text || ''
         ])
 
-        items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+        items = normalizeCols(items, 2).map(el => el.join(' | ')).join('\n')
 
         if(!program.color) { items = stripAnsi(items) }
 
         console.log(items)
+    })
+    .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
     })
 } else if(program.report) {
     ///
@@ -168,6 +174,34 @@ if(program.list) {
 
         console.log(`Apps installed inside backup: ${backup.id}`)
         console.log(apps.map(el => '- ' + el).join('\n'))
+    } else if(program.report == 'oldnotes') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getOldNotes(program.dump)
+            .then((items) => {
+                // Dump if needed
+                if(program.dump) {
+                    console.log(JSON.stringify(items, null, 4))
+                    return
+                }
+                
+                // Otherwise, format table
+                items = items.map(el => [el.XFORMATTEDDATESTRING + '', (el.Z_PK + ''), (el.ZTITLE + '').substring(0, 128)])
+                items = [['Modified', 'ID', 'Title'], ['-', '-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+                
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
+            })
     } else if(program.report == 'notes') {
         if(!program.backup) {
             console.log('use -b or --backup <id> to specify backup.')
@@ -185,13 +219,21 @@ if(program.list) {
                 }
                 
                 // Otherwise, format table
-                items = items.map(el => [el.ZMODIFICATIONDATE + '', (el.Z_PK + ''), (el.ZTITLE + '').substring(0, 128)])
-                items = [['Modified', 'ID', 'Title'], ['-', '-', '-'], ...items]
-                items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+                items = items.map(el => [
+                    (el.XFORMATTEDDATESTRING || el.XFORMATTEDDATESTRING1 )+ '', 
+                    (el.Z_PK + ''), 
+                    (el.ZTITLE2+ '').trim().substring(0, 128), 
+                    (el.ZTITLE1+ '').trim() || ''
+                ])
+                items = [['Modified', 'ID', 'Title2', 'Title1'], ['-', '-', '-', '-'], ...items]
+                items = normalizeCols(items, 3).map(el => el.join(' | ')).join('\n')
                 
                 if(!program.color) { items = stripAnsi(items) }
 
                 console.log(items)
+            })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
             })
     }  else if(program.report == 'webhistory') {
         if(!program.backup) {
@@ -210,7 +252,7 @@ if(program.list) {
                 }
 
                 var items = history.map(el => [
-                    el.visit_time + '' || '',
+                    el.XFORMATTEDDATESTRING + '' || '',
                     new URL(el.url || '').origin || '',
                     (el.title || '').substring(0, 64)
                 ])
@@ -221,6 +263,9 @@ if(program.list) {
                 if(!program.color) { items = stripAnsi(items) }
 
                 console.log(items)
+            })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
             })
     } else if(program.report == 'photolocations') {
         if(!program.backup) {
@@ -240,7 +285,7 @@ if(program.list) {
                 }
 
                 var items = history.map(el => [
-                    el.ZDATECREATED + '' || '',
+                    el.XFORMATTEDDATESTRING + '' || '',
                     el.ZLATITUDE + '' || '',
                     el.ZLONGITUDE  + '' || '',
                     el.ZFILENAME + '' || ''
@@ -252,6 +297,9 @@ if(program.list) {
                 if(!program.color) { items = stripAnsi(items) }
 
                 console.log(items)
+            })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
             })
     }  else if(program.report == 'manifest') {
         if(!program.backup) {
@@ -282,6 +330,14 @@ if(program.list) {
 
                 console.log(items)
             })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
+            })
+    } else {
+        console.log('')
+        console.log('  [!] Unknown Option type:', program.report)
+        console.log('')
+        program.outputHelp()
     }
 } else {
     program.outputHelp()

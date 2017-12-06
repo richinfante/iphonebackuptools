@@ -44,6 +44,7 @@ UDID="0c1bc52c50016933679b0980ccff3680e5831162"
 - Current types:
     - `apps`: List all installed bundle ids and groups.
     - `notes`: List all notes data
+    - `oldnotes`: List old notes data that may have been retained from around iOS 8ish
     - `webhistory`: List recent web history
     - `photolocations`: List photo locations (lat/lng) and timestamp.
     - `manifest`: List all files in the backup manifest and what they are.
@@ -61,6 +62,9 @@ ibackuptool -b $UDID --report photolocations
 
 # List iOS Notes
 ibackuptool -b $UDID --report notes
+
+# List iOS Notes from old database that may exist
+ibackuptool -b $UDID --report oldnotes
 ```
 
 ### Messages Access
