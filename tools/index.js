@@ -333,6 +333,83 @@ if(program.list) {
             .catch((e) => {
                 console.log('[!] Encountered an Error:', e)
             })
+    } else if(program.report == 'calls') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getCallsList()
+            .then((items) => {
+
+                if(program.dump) {
+                    console.log(JSON.stringify(items, null, 4))
+                    return
+                }
+
+                var items = items.map(el => [
+                    el.Z_PK + '',
+                    el.XFORMATTEDDATESTRING,
+                    el.ZANSWERED + '',
+                    el.ZORIGINATED + '',
+                    el.ZCALLTYPE + '',
+                    el.ZDURATION + '',
+                    el.ZLOCATION + '',
+                    el.ZISO_COUNTRY_CODE + '',
+                    el.ZSERVICE_PROVIDER + '',
+                    (el.ZADDRESS || '').toString()
+                ])
+
+                items = [['ID', 'Date', 'Answered', 'Originated', 'Type', 'Duration', 'Location', 'Country', 'Service', 'Address'], ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+                
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
+            })
+    }  else if(program.report == 'wifi') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getWifiList()
+            .then((items) => {
+
+                if(program.dump) {
+                    console.log(JSON.stringify(items, null, 4))
+                    return
+                }
+
+                var items = items['List of known networks'].map(el => [
+                    el.lastJoined + '' || '',
+                    el.lastAutoJoined + '' || '',
+                    el.SSID_STR + '',
+                    el.BSSID + '',
+                    el.SecurityMode || '',
+                    el.HIDDEN_NETWORK + '',
+                    el.enabled + '',
+                ]).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+
+                items = [['Last Joined', 'Last AutoJoined', 'SSID', 'BSSID','Security', 'Hidden', 'Enabled'], ['-', '-', '-', '-', '-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+                
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
+            })
     } else {
         console.log('')
         console.log('  [!] Unknown Option type:', program.report)

@@ -13,9 +13,11 @@ const databases = {
   Notes: 'ca3bc056d4da0bbf88b5fb3be254f3b7147e639c',
   Notes2: '4f98687d8ab0d6d1a371110e6b7300f6e465bef2',
   Calls: '2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca',
+  Calls2: '5a4935c78a5255723f707230a451d79c540d2741',
   Locations: '4096c9ec676f2847dc283405900e284a7c815836',
   WebHistory: 'e74113c185fd8297e140cfcf9c99436c5cc06b57',
-  Photos: '12b144c0bd44f2b3dffd9186d3f9c05b917cee25'
+  Photos: '12b144c0bd44f2b3dffd9186d3f9c05b917cee25',
+  WiFi: 'ade0340f576ee14793c607073bd7e8e409af07a8'
 }
 
 var cache = {}
@@ -58,7 +60,20 @@ class iPhoneBackup {
     return new iPhoneBackup(id, status, info, manifest)
   }
 
-  getDatabase(fileID, isAbsoulte) {
+  getFileName (fileID, isAbsoulte) {
+    isAbsoulte = isAbsoulte || false
+
+    // Get the backup folder
+    const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', this.id)
+    // Return v2 filename
+    if (this.status.Version < 3 || isAbsoulte) {
+      return path.join(base, fileID)
+    } else {
+      // v3 has folders
+      return path.join(base, fileID.substr(0, 2), fileID)
+    }
+  }
+  getDatabase (fileID, isAbsoulte) {
     isAbsoulte = isAbsoulte || false
 
     // Get the backup folder
@@ -237,8 +252,8 @@ class iPhoneBackup {
     })
   }
 
-  getNotes() {
-    if(parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
+  getNotes () {
+    if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
       // Legacy iOS 9 support
       // May work for earlier but I haven't tested it
       return this.getNewNotesLegacyiOS9()
@@ -247,32 +262,62 @@ class iPhoneBackup {
     }
   }
 
-  getWebHistory() {
+  getWebHistory () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.WebHistory)
       messagedb.all(`SELECT *, datetime(visit_time + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING from history_visits LEFT JOIN history_items ON history_items.ROWID = history_visits.history_item`, async function (err, rows) {
-        if(err) reject(err)
+        if (err) reject(err)
 
         resolve(rows)
       })
-    
     })
   }
 
-  getPhotoLocationHistory() {
+  getPhotoLocationHistory () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Photos)
       messagedb.all(`SELECT ZDATECREATED, ZLATITUDE, ZLONGITUDE, ZFILENAME, datetime(ZDATECREATED + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM ZGENERICASSET ORDER BY ZDATECREATED ASC`, async function (err, rows) {
-        if(err) reject(err)
+        if (err) reject(err)
 
         resolve(rows)
       })
-    
+    })
+  }
+
+  getGeofencesList () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Locations)
+      messagedb.all(`SELECT datetime(Timestamp + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING, Latitude, Longitude, Distance FROM Fences ORDER BY Timestamp ASC`, async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    })
+  }
+
+  getCallsList () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls2)
+      messagedb.all(`SELECT *, datetime(ZDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING from ZCALLRECORD ORDER BY ZDATE ASC`, async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    })
+  }
+
+  getWifiList () {
+    return new Promise((resolve, reject) => {
+      var filename = this.getFileName(databases.WiFi)
+
+      try {
+        resolve(bplist.parseBuffer(fs.readFileSync(filename))[0])
+      } catch (e) {
+        reject(e)
+      }
     })
   }
 }
-
-
 
 module.exports.availableBackups = function () {
   const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
