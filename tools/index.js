@@ -22,7 +22,7 @@ var reportTypes = {
 }
 
 program
-    .version('2.0.2')
+    .version('2.0.3')
     .option('-l, --list', 'List Backups')
     .option(`-b, --backup <backup>`, 'Backup ID')
     .option('-r, --report <report_type>', 'Select a report type. see below for a full list.')
@@ -33,7 +33,6 @@ program
     .option(`-v, --verbose`, 'Verbose debugging output')
     .option(`-x, --no-color`, 'Disable colorized output')
     .option('-z, --dump', 'Dump a ton of raw JSON formatted data instead of formatted output')
-    .option(`--help-reports`, `Display supported report types.`)
 
 program.on('--help', function () {
   console.log('')
