@@ -3,7 +3,7 @@ const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
-const tz_offset = 5;
+const tz_offset = 5
 
 const databases = {
   SMS: '3d0d7e5fb2ce288813306e4d4636395e047a3d28',
@@ -24,18 +24,18 @@ const databases = {
 var cache = {}
 
 class iPhoneBackup {
-  constructor(id, status, info, manifest) {
-    this.id = id;
-    this.status = status;
-    this.info = info;
-    this.manifest = manifest;
+  constructor (id, status, info, manifest) {
+    this.id = id
+    this.status = status
+    this.info = info
+    this.manifest = manifest
   }
 
   // Open a backup with a specified ID
   // base is optional and will be computed if not used.
-  static fromID(id, base) {
+  static fromID (id, base) {
     // Get the path of the folder.
-    if(base) {
+    if (base) {
       base = path.join(base, id)
     } else {
       base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', id)
@@ -43,17 +43,17 @@ class iPhoneBackup {
 
     // Parse manifest bplist files
     try {
-      var status = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Status.plist')))[0];
+      var status = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Status.plist')))[0]
     } catch (e) {
       console.log('Cannot open Status.plist', e)
     }
     try {
-      var manifest = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Manifest.plist')))[0];
+      var manifest = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Manifest.plist')))[0]
     } catch (e) {
       console.log('Cannot open Manifest.plist', e)
     }
     try {
-      var info = plist.parse(fs.readFileSync(path.join(base, 'Info.plist'), 'utf8'));
+      var info = plist.parse(fs.readFileSync(path.join(base, 'Info.plist'), 'utf8'))
     } catch (e) {
       console.log('Cannot open Info.plist', e)
     }
@@ -88,18 +88,17 @@ class iPhoneBackup {
     }
   }
 
-  getName(messageDest) {
-    
+  getName (messageDest) {
     return new Promise((resolve, reject) => {
-      if(messageDest.indexOf('@') === -1) {
+      if (messageDest.indexOf('@') === -1) {
         messageDest = messageDest.replace(/[\s+\-()]*/g, '')
-        if(messageDest.length == 11 && messageDest[0] == '1') {
+        if (messageDest.length == 11 && messageDest[0] == '1') {
           messageDest = messageDest.substring(1)
         }
       }
 
-      if(cache[messageDest] !== undefined) {
-       return resolve(cache[messageDest])
+      if (cache[messageDest] !== undefined) {
+        return resolve(cache[messageDest])
       }
 
       var contactdb = this.getDatabase(databases.Contacts)
@@ -109,29 +108,70 @@ class iPhoneBackup {
         c1Last as last,
         c2Middle as middle,
         c15Phone as phones
-        from ABPersonFullTextSearch_content WHERE c15Phone like '%${messageDest}%'`, 
+        from ABPersonFullTextSearch_content WHERE c15Phone like '%${messageDest}%'`,
       (err, row) => {
-          if(err) return resolve()
-          if(!row) return resolve()
+        if (err) return resolve()
+        if (!row) return resolve()
 
-          var result = {
+        var result = {
           name: [row.first, row.middle, row.last].filter(el => el != null).join(' '),
           phones: row.phones.split(' '),
           query: messageDest
         }
 
-        if(row) cache[messageDest] = result
+        if (row) cache[messageDest] = result
 
         resolve(result)
       })
     })
   }
 
-  getMessages(chat_id, dumpAll) {
-    var backup = this;
+  getMessagesiOS9 (chatId, dumpAll) {
+    var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
-      
+
+      messagedb.all(`
+        SELECT 
+          message.*,
+          handle.id as sender_name,
+          datetime(date + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING
+        FROM chat_message_join 
+        INNER JOIN message 
+          ON message.rowid = chat_message_join.message_id 
+        INNER JOIN handle
+          ON handle.rowid = message.handle_id
+        WHERE chat_message_join.chat_id = ?`, [parseInt(chatId)],
+     async function (err, chats) {
+       if (err) return reject(err)
+
+       chats = chats || []
+       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
+
+        // Compute the user's name
+       for (var i in chats) {
+         var el = chats[i]
+         el.x_sender = el.is_from_me ? 'Me' : el.sender_name
+
+         if (!el.is_from_me) {
+           var contact = await backup.getName(el.sender_name)
+
+           if (contact) {
+             el.x_sender = `${contact.name} <${contact.query}>`
+           }
+         }
+       }
+
+       resolve(chats)
+     })
+    })
+  }
+
+  getMessagesiOS10iOS11 (chatId, dumpAll) {
+    var backup = this
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.SMS)
+
       messagedb.all(`
         SELECT 
           message.*,
@@ -142,44 +182,54 @@ class iPhoneBackup {
           ON message.rowid = chat_message_join.message_id 
         INNER JOIN handle
           ON handle.rowid = message.handle_id
-        WHERE chat_message_join.chat_id = ?`, [parseInt(chat_id)], 
+        WHERE chat_message_join.chat_id = ?`, [parseInt(chatId)],
      async function (err, chats) {
-      if(err) return reject(err)
+       if (err) return reject(err)
 
        chats = chats || []
-        if(dumpAll) console.log(JSON.stringify(chats, null, 4))
+       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
 
         // Compute the user's name
-        for(var i in chats) {
-          var el = chats[i]
-          el.x_sender = el.is_from_me ? 'Me' : el.sender_name
+       for (var i in chats) {
+         var el = chats[i]
+         el.x_sender = el.is_from_me ? 'Me' : el.sender_name
 
-          if(!el.is_from_me) {
-            var contact = await backup.getName(el.sender_name)
+         if (!el.is_from_me) {
+           var contact = await backup.getName(el.sender_name)
 
-            if(contact) {
-              el.x_sender = `${contact.name} <${contact.query}>`
-            }
-          }
-        }
+           if (contact) {
+             el.x_sender = `${contact.name} <${contact.query}>`
+           }
+         }
+       }
 
-        resolve(chats)
-      })
+       resolve(chats)
+     })
     })
   }
 
-  getConversations(dumpAll) {
+  getMessages (chatId, dumpAll) {
+    if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
+      return this.getMessagesiOS9(chatId, dumpAll)
+    } else {
+      return this.getMessagesiOS10iOS11(chatId, dumpAll)
+    }
+  }
+
+  getConversationsiOS9 (dumpAll) {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
 
-      messagedb.all(`SELECT *, datetime(last_read_message_timestamp / 1000000000 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM chat ORDER BY last_read_message_timestamp ASC`, async function (err, rows) {
-        if(err) return reject(err)
+      messagedb.all(`SELECT *  FROM chat ORDER BY ROWID ASC`, async function (err, rows) {
+        if (err) return reject(err)
         rows = rows || []
 
-        for(var el of rows) {
+        // We need to do some manual parsing of these records.
+        // The timestamp information is stored in a binary blob named `properties`
+        // Which is formatted as a binary PLIST.
+        for (var el of rows) {
           if (el.properties) el.properties = bplist.parseBuffer(el.properties)[0]
-
 
           // Interestingly, some of these do not have dates attached.
           if (el.properties) {
@@ -190,25 +240,60 @@ class iPhoneBackup {
 
           var contact = await backup.getName(el.chat_identifier)
 
-          if(contact) {
+          if (contact) {
             el.display_name = `${contact.name} <${contact.query}>`
+          }
+
+          // Format as YY-MM-DD HH:MM:SS
+          try {
+            el.XFORMATTEDDATESTRING = el.date.toISOString()
+              .split('T')
+              .join(' ')
+              .split('Z')
+              .join(' ')
+              .split('.')[0]
+              .trim()
+          } catch (e) {
+            el.XFORMATTEDDATESTRING = ''
           }
         }
 
+        // Sort by the date.
         rows = rows.sort(function (a, b) {
-          // Turn your strings into dates, and then subtract them
-          // to get a value that is either negative, positive, or zero.
-          return new Date(b.date) - new Date(a.date);
-        });
+          return (a.date.getTime() || 0) - (b.date.getTime() || 0)
+        })
 
-        if(dumpAll) console.log(JSON.stringify(rows, null, 4))
+        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
 
         resolve(rows)
       })
     })
   }
 
-  getFileManifest() {
+  getConversationsiOS10iOS11 (dumpAll) {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.SMS)
+
+      messagedb.all(`SELECT *, datetime(last_read_message_timestamp / 1000000000 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM chat ORDER BY last_read_message_timestamp ASC`, async function (err, rows) {
+        if (err) return reject(err)
+        rows = rows || []
+
+        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
+
+        resolve(rows)
+      })
+    })
+  }
+
+  getConversations (dumpAll) {
+    if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
+      return this.getConversationsiOS9(dumpAll)
+    } else {
+      return this.getConversationsiOS10iOS11(dumpAll)
+    }
+  }
+
+  getFileManifest () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase('Manifest.db', true)
       messagedb.all('SELECT * from FILES', async function (err, rows) {
@@ -216,37 +301,36 @@ class iPhoneBackup {
 
         resolve(rows)
       })
-    
     })
   }
 
-  getOldNotes() {
+  getOldNotes () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Notes)
       messagedb.all(`SELECT *, datetime(ZCREATIONDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING from ZNOTE LEFT JOIN ZNOTEBODY ON ZBODY = ZNOTEBODY.Z_PK`, async function (err, rows) {
         if (err) reject(err)
-        
+
         resolve(rows)
       })
     })
   }
 
-  getNewNotesLegacyiOS9() {
+  getNewNotesiOS9 () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Notes2)
       messagedb.all(`SELECT *, datetime(ZCREATIONDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM ZICCLOUDSYNCINGOBJECT`, async function (err, rows) {
-        if(err) reject(err)
+        if (err) reject(err)
 
         resolve(rows)
       })
     })
   }
 
-  getNewNotesiOS10_iOS11() {
+  getNewNotesiOS10iOS11 () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Notes2)
       messagedb.all(`SELECT *, datetime(ZCREATIONDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING, datetime(ZCREATIONDATE1 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING1 FROM ZICCLOUDSYNCINGOBJECT`, async function (err, rows) {
-        if(err) reject(err)
+        if (err) reject(err)
 
         resolve(rows)
       })
@@ -257,9 +341,9 @@ class iPhoneBackup {
     if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
       // Legacy iOS 9 support
       // May work for earlier but I haven't tested it
-      return this.getNewNotesLegacyiOS9()
+      return this.getNewNotesiOS9()
     } else {
-      return this.getNewNotesiOS10_iOS11()
+      return this.getNewNotesiOS10iOS11()
     }
   }
 
@@ -325,7 +409,6 @@ class iPhoneBackup {
 
         resolve(rows)
       })
-    
     })
   }
 
