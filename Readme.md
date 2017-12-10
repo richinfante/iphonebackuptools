@@ -8,9 +8,9 @@ Check out my recently updated post about my work on backups here: [Reverse Engin
 Currently works on macOS, If someone wants to make the changes nessecary for windows, send a PR.
 
 ## iOS Support
-- iOS 9 (possibly earlier?) backup type: `2.4`
-- iOS 10 (no contact lookup) backup type: `3.2`
-- iOS 11 (no contact lookup) backup type: `3.2`
+- iOS 9 - backup version: `2.4`
+- iOS 10 - backup version: `3.2`
+- iOS 11 - backup version: `3.2`
 
 ## Installing
 
