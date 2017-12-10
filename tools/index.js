@@ -22,7 +22,7 @@ var reportTypes = {
 }
 
 program
-    .version('2.0.3')
+    .version('2.0.4')
     .option('-l, --list', 'List Backups')
     .option(`-b, --backup <backup>`, 'Backup ID')
     .option('-r, --report <report_type>', 'Select a report type. see below for a full list.')

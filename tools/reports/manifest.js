@@ -22,11 +22,11 @@ module.exports.func = function (program, base) {
 
       items = items.map(el => [
         el.fileID + '',
-        el.relativePath + ''
+        el.domain + ': ' + el.relativePath
       ])
 
-      items = [['ID', 'Path'], ['-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+      items = [['ID', 'Domain/Path'], ['-'], ...items]
+      items = normalizeCols(items, 1).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
 
       if (!program.color) { items = stripAnsi(items) }
 
