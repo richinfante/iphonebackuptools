@@ -17,7 +17,8 @@ const databases = {
   Locations: '4096c9ec676f2847dc283405900e284a7c815836',
   WebHistory: 'e74113c185fd8297e140cfcf9c99436c5cc06b57',
   Photos: '12b144c0bd44f2b3dffd9186d3f9c05b917cee25',
-  WiFi: 'ade0340f576ee14793c607073bd7e8e409af07a8'
+  WiFi: 'ade0340f576ee14793c607073bd7e8e409af07a8',
+  Voicemail: '992df473bbb9e132f4b3b6e4d33f72171e97bc7a'
 }
 
 var cache = {}
@@ -303,6 +304,28 @@ class iPhoneBackup {
 
         resolve(rows)
       })
+    })
+  }
+
+  getVoicemailsList () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Voicemail)
+      messagedb.all(`SELECT *, datetime(date, 'unixepoch') AS XFORMATTEDDATESTRING from voicemail ORDER BY date ASC`, async function (err, rows) {
+        if (err) reject(err)
+        resolve(rows)
+      })
+    })
+  }
+
+  getVoicemailFileList () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase('Manifest.db', true)
+      messagedb.all(`SELECT * from FILES where relativePath like 'Library/Voicemail/%.amr'`, async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    
     })
   }
 

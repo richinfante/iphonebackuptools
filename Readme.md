@@ -57,7 +57,7 @@ ibackuptool -b $UDID --report apps
 # List Recent Web History
 ibackuptool -b $UDID --report webhistory
 
-# List Recent Photos Geolocations
+# List Recent Photos Geolocations (iOS 9+)
 ibackuptool -b $UDID --report photolocations
 
 # List iOS Notes
@@ -65,6 +65,21 @@ ibackuptool -b $UDID --report notes
 
 # List iOS Notes from old database that may exist
 ibackuptool -b $UDID --report oldnotes
+
+# List calls
+ibackuptool -b $UDID --report calls
+
+# List voicemails 
+ibackuptool -b $UDID --report voicemail
+
+# List voicemail files (iOS 9+)
+ibackuptool -b $UDID --report voicemail-files
+
+# Export voicemail files (iOS 9+)
+ibackuptool -b $UDID --report voicemail-files --export ./ExportedVoicemails
+
+# List wifi networks 
+ibackuptool -b $UDID --report wifi
 ```
 
 ### Messages Access

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const chalk = require('chalk')
-const fs = require('fs')
+const fs = require('fs-extra')
 const program = require('commander')
 const path = require('path')
 const { URL } = require('url')
@@ -11,7 +11,7 @@ const normalizeCols = require('./util/normalize.js')
 var base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
 
 program
-    .version('2.0.0')
+    .version('2.0.2')
     .option('-l, --list', 'List Backups')
     .option('-c, --conversations', 'List Conversations')
     .option('-m, --messages <conversation_id>', 'List Conversations')
@@ -22,6 +22,7 @@ program
     .option(`-v, --verbose`, 'Verbose debugging output')
     .option(`-x, --no-color`, 'Disable colorized output')
     .option('-z, --dump', 'Dump a ton of raw JSON formatted data instead of formatted output')
+    .option(`-e, --extract <dir>`, 'Extract data for commands. reports: voicemail')
     
 program.on('--help', function(){
     console.log('')
@@ -373,7 +374,91 @@ if(program.list) {
             .catch((e) => {
                 console.log('[!] Encountered an Error:', e)
             })
-    }  else if(program.report == 'wifi') {
+    }  else if(program.report == 'voicemail') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getVoicemailsList()
+            .then((items) => {
+
+                if(program.dump) {
+                    console.log(JSON.stringify(items, null, 4))
+                    return
+                }
+
+                var items = items.map(el => [
+                    el.ROWID + '',
+                    el.XFORMATTEDDATESTRING,
+                    el.sender + '',
+                    el.token + '',
+                    el.duration + '',
+                    el.expiration + '',
+                    el.trashed_date + '',
+                    el.flags + ''
+                ])
+
+                items = [['ID', 'Date', 'Sender', 'Token', 'Duration', 'Expiration', 'Trashed', 'Flags'], ['-', '-', '-', '-', '-', '-', '-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+                
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
+            })
+    } else if(program.report == 'voicemail-files') {
+        if(!program.backup) {
+            console.log('use -b or --backup <id> to specify backup.')
+            process.exit(1)
+        }
+
+
+        // Grab the backup
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        backup.getVoicemailFileList()
+            .then((list) => {
+
+                if(program.dump) {
+                    console.log(JSON.stringify(list, null, 4))
+                    return
+                }
+
+                if(program.extract) {
+                    for(var item of list) {
+                        try {
+                        var outDir = path.join(program.extract, path.basename(item.relativePath))
+                        fs.ensureDirSync(path.dirname(outDir))
+                        fs.createReadStream(backup.getFileName(item.fileID)).pipe(fs.createWriteStream(outDir));
+                        item.output_dir = outDir
+                        }catch(e) {
+                            console.log(`Couldn't Export: ${item.relativePath}`, e)
+                        }
+                    }
+                }
+
+                var items = list.map(el => [
+                    el.fileID + '',
+                    el.relativePath,
+                    el.output_dir || '<not exported>'
+                ])
+
+                items = [['ID', 'Path', 'Exported Path'], ['-', '-', '-'], ...items]
+                items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+                
+                if(!program.color) { items = stripAnsi(items) }
+
+                console.log(items)
+            })
+            .catch((e) => {
+                console.log('[!] Encountered an Error:', e)
+            })
+    } else if(program.report == 'wifi') {
         if(!program.backup) {
             console.log('use -b or --backup <id> to specify backup.')
             process.exit(1)
@@ -413,6 +498,7 @@ if(program.list) {
     } else {
         console.log('')
         console.log('  [!] Unknown Option type:', program.report)
+        console.log('  [!] It\'s possible this tool is out-of date.')
         console.log('')
         program.outputHelp()
     }
