@@ -5,7 +5,7 @@ Check out my recently updated post about my work on backups here: [Reverse Engin
 
 **This tool is also still fairly experimental, so use at your own risk! Even though the tool opens the backup files as read-only, you should still make a copy of your backups before using this if they are important.**
 
-Currently works on macOS, If someone wants to make the changes nessecary for windows, send a PR.
+Currently works on macOS, not tested on windows but should work on windows by setting the attribute `--dir` to the backups directory location.
 
 ## iOS Support
 - iOS 9 - backup version: `2.4`
@@ -112,3 +112,14 @@ ibackuptool -b $UDID --report messages --messages $CONVERSATION_ID
 
 ## TODO
 - Contact name lookup for newer iOS10, iOS11 backups
+
+## Legal
+
+Copyright &copy; 2017 Richard Infante.
+
+**DISCLAIMER: This tool enables the extraction of personal information from iPhone backups located on a computer drive. The tool is for testing purposes and should ONLY be used on iPhone backups where the owner's consent has been given. Do not use this tool for illegal purposes, ever.**
+
+**The project contributors and Richard Infante will not be held responsible in the event any criminal charges be brought against any individuals misusing this tool and/or the information contained within, to break the law.**
+
+
+
