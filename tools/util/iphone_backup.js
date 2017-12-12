@@ -429,7 +429,6 @@ module.exports.availableBackups = function () {
   const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
   return new Promise((resolve, reject) => {
     resolve(fs.readdirSync(base, { encoding: 'utf8' })
-      .filter(el => el.length == 40)
       .map(file => iPhoneBackup.fromID(file)))
   })
 }

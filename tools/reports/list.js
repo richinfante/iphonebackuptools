@@ -9,7 +9,7 @@ module.exports.description = 'List of all backups. alias for -l'
 
 module.exports.func = function (program, base) {
   var items = fs.readdirSync(base, { encoding: 'utf8' })
-    .filter(el => (el.length === 40))
+    .filter(el => (el !== '.DS_Store'))
     .map(file => iPhoneBackup.fromID(file, base))
 
     // Possibly dump output
@@ -19,6 +19,7 @@ module.exports.func = function (program, base) {
   }
 
   items = items.map(el => {
+    if (!el.manifest || !el.status) { return null }
     return {
       encrypted: el.manifest ? el.manifest.IsEncrypted
                                     ? chalk.green('encrypted')
@@ -32,15 +33,16 @@ module.exports.func = function (program, base) {
       date: el.status ? new Date(el.status.Date).toLocaleString() : ''
     }
   })
-    .map(el => [
-      chalk.gray(el.device_id),
-      el.encrypted,
-      el.date,
-      el.device_name,
-      el.serial,
-      el.iOSVersion,
-      el.backupVersion
-    ])
+  .filter(el => el != null)
+  .map(el => [
+    chalk.gray(el.device_id),
+    el.encrypted,
+    el.date,
+    el.device_name,
+    el.serial,
+    el.iOSVersion,
+    el.backupVersion
+  ])
 
   items = [
     ['UDID', 'Encryption', 'Date', 'Device Name', 'Serial #', 'iOS Version', 'Backup Version'],
