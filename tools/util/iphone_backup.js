@@ -24,11 +24,12 @@ const databases = {
 var cache = {}
 
 class iPhoneBackup {
-  constructor (id, status, info, manifest) {
+  constructor (id, status, info, manifest, base) {
     this.id = id
     this.status = status
     this.info = info
     this.manifest = manifest
+    this.base = base
   }
 
   // Open a backup with a specified ID
@@ -58,33 +59,31 @@ class iPhoneBackup {
       console.log('Cannot open Info.plist', e)
     }
 
-    return new iPhoneBackup(id, status, info, manifest)
+    return new iPhoneBackup(id, status, info, manifest, base)
   }
 
   getFileName (fileID, isAbsoulte) {
     isAbsoulte = isAbsoulte || false
 
-    // Get the backup folder
-    const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', this.id)
+    //const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', this.id)
     // Return v2 filename
     if (this.status.Version < 3 || isAbsoulte) {
-      return path.join(base, fileID)
+      return path.join(this.base, fileID)
     } else {
       // v3 has folders
-      return path.join(base, fileID.substr(0, 2), fileID)
+      return path.join(this.base, fileID.substr(0, 2), fileID)
     }
   }
   getDatabase (fileID, isAbsoulte) {
     isAbsoulte = isAbsoulte || false
 
     // Get the backup folder
-    const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', this.id)
     // Return v2 filename
     if (this.status.Version < 3 || isAbsoulte) {
-      return new sqlite3.Database(path.join(base, fileID), sqlite3.OPEN_READONLY)
+      return new sqlite3.Database(path.join(this.base, fileID), sqlite3.OPEN_READONLY)
     } else {
       // v3 has folders
-      return new sqlite3.Database(path.join(base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY)
+      return new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY)
     }
   }
 
@@ -273,7 +272,6 @@ class iPhoneBackup {
   getConversationsiOS10iOS11 (dumpAll) {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
-
       messagedb.all(`SELECT *, datetime(last_read_message_timestamp / 1000000000 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM chat ORDER BY last_read_message_timestamp ASC`, async function (err, rows) {
         if (err) return reject(err)
         rows = rows || []
@@ -286,7 +284,7 @@ class iPhoneBackup {
   }
 
   getConversations (dumpAll) {
-    if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
+    if (parseInt(this.manifest.Lockdown.BuildVersion) <= 14) {
       return this.getConversationsiOS9(dumpAll)
     } else {
       return this.getConversationsiOS10iOS11(dumpAll)
