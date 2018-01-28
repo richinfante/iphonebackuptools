@@ -29,6 +29,7 @@ program
     .option('-c, --conversations', 'List Conversations')
     .option('-m, --messages <conversation_id>', 'List messages')
     .option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files')
+    .option(`-f, --filter <filter>`, 'Filter output for individual reports. See the README for usage.')
     .option(`-d, --dir <directory>`, `Backup Directory (default: ${base})`)
     .option(`-v, --verbose`, 'Verbose debugging output')
     .option(`-x, --no-color`, 'Disable colorized output')
