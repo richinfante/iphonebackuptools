@@ -117,6 +117,8 @@ ibackuptool -b $UDID --report messages --messages $CONVERSATION_ID
 
 Copyright &copy; 2017 Richard Infante.
 
+Available under the MIT License.
+
 **DISCLAIMER: This tool enables the extraction of personal information from iPhone backups located on a computer drive. The tool is for testing purposes and should ONLY be used on iPhone backups where the owner's consent has been given. Do not use this tool for illegal purposes, ever.**
 
 **The project contributors and Richard Infante will not be held responsible in the event any criminal charges be brought against any individuals misusing this tool and/or the information contained within, to break the law.**
