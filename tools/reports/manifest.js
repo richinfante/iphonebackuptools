@@ -21,10 +21,6 @@ module.exports.func = function (program, backup, resolve, reject) {
 
     backup.getFileManifest()
     .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
 
       // Extract items for analysis on-disk.
       if (program.extract) {
@@ -83,4 +79,5 @@ module.exports.func = function (program, backup, resolve, reject) {
     .catch((e) => {
         console.log('[!] Encountered an Error:', e)
     })
+  }
 }

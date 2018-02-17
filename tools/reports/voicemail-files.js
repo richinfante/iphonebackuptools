@@ -31,7 +31,6 @@ module.exports.func = function (program, backup, resolve, reject) {
             console.log(`Couldn't Export: ${item.relativePath}`, e)
           }
         }
-      }
 
       // Generate report.
       var result = program.formatter.format(list, {
