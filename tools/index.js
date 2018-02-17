@@ -68,18 +68,14 @@ if (program.list) {
     // Legacy shortcut for messages report
   reportTypes.messages.func(program, base)
 } else if (program.report) {
+  if (program.report === 'all'){
+    all();
+  }
     // If the report is valid
-  if (reportTypes[program.report]) {
+  else if (reportTypes[program.report]) {
     var report = reportTypes[program.report]
 
-        // Try to use it
-    if (report.func) {
-      try {
-        report.func(program, base)
-      } catch (e) {
-        console.log('[!] Encountered an error', e)
-      }
-    }
+    run_report(report);
   } else {
     console.log('')
     console.log('  [!] Unknown Option type:', program.report)
@@ -89,4 +85,39 @@ if (program.list) {
   }
 } else {
   program.outputHelp()
+}
+
+async function all() {
+  let dump = {}
+  for(let report of Object.entries(reportTypes)) {
+    const reportName = report[0]
+    report = report[1]
+    // Try to use it
+    if (report.func) {
+      try {
+        if (program.dump) {
+          dump[reportName] = await report.func(program, base)
+        }
+        else {
+          //console.log(reportName);
+          await report.func(program, base)
+        }
+      } catch (e) {
+        console.log('[!] Encountered an error', e)
+      }
+    }
+  }
+  if (program.dump) console.log(JSON.stringify(dump, null, 4));
+}
+
+async function run_report(report) {
+  // Try to use it
+  if (report.func) {
+    try {
+      if (program.dump) console.log(JSON.stringify(await report.func(program, base), null, 4))
+      else report.func(program, base)
+    } catch (e) {
+      console.log('[!] Encountered an error', e)
+    }
+  }
 }

@@ -15,26 +15,27 @@ module.exports.func = function (program, base) {
   // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
 
-  backup.getConversations(program.dump)
-    .then((items) => {
-      if (program.dump) return
+  if (program.dump) return backup.getConversations()
+  else {
+    backup.getConversations(program.dump)
+      .then((items) => {
+        items = items.map(el => [
+          el.ROWID + '',
+          chalk.gray(el.XFORMATTEDDATESTRING || '??'),
+          el.service_name + '', 
+          el.chat_identifier + '',
+          el.display_name + ''
+        ])
 
-      items = items.map(el => [
-        el.ROWID + '',
-        chalk.gray(el.XFORMATTEDDATESTRING || '??'),
-        el.service_name + '', 
-        el.chat_identifier + '',
-        el.display_name + ''
-      ])
+        items = [['ID', 'DATE', 'Service', 'Chat Name', 'Display Name'], ['-', '-', '-', '-', '-'], ...items]
+        items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
 
-      items = [['ID', 'DATE', 'Service', 'Chat Name', 'Display Name'], ['-', '-', '-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+        if (!program.color) { items = stripAnsi(items) }
 
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
-    })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+        console.log(items)
+      })
+      .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
+      })
+  }
 }
