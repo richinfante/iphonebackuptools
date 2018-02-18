@@ -13,32 +13,31 @@ module.exports.func = function (program, base) {
 
 // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getVoicemailsList()
-    .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
+  if (program.dump) return backup.getVoicemailsList()
+  else {
+    backup.getVoicemailsList()
+      .then((items) => {
 
-      items = items.map(el => [
-        el.ROWID + '',
-        el.XFORMATTEDDATESTRING,
-        el.sender + '',
-        el.token + '',
-        el.duration + '',
-        el.expiration + '',
-        el.trashed_date + '',
-        el.flags + ''
-      ])
+        items = items.map(el => [
+          el.ROWID + '',
+          el.XFORMATTEDDATESTRING,
+          el.sender + '',
+          el.token + '',
+          el.duration + '',
+          el.expiration + '',
+          el.trashed_date + '',
+          el.flags + ''
+        ])
 
-      items = [['ID', 'Date', 'Sender', 'Token', 'Duration', 'Expiration', 'Trashed', 'Flags'], ['-', '-', '-', '-', '-', '-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+        items = [['ID', 'Date', 'Sender', 'Token', 'Duration', 'Expiration', 'Trashed', 'Flags'], ['-', '-', '-', '-', '-', '-', '-', '-'], ...items]
+        items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
 
-      if (!program.color) { items = stripAnsi(items) }
+        if (!program.color) { items = stripAnsi(items) }
 
-      console.log(items)
-    })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+        console.log(items)
+      })
+      .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
+      })
+  }
 }

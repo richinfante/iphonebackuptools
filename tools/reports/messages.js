@@ -15,23 +15,25 @@ module.exports.func = function (program, base) {
   // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
 
-  backup.getMessages(program.messages, program.dump)
-    .then((items) => {
-      if (program.dump) return
+  if (program.dump) return backup.getMessages(program.messages, program.dump)
+  else {
+    backup.getMessages(program.messages, program.dump)
+      .then((items) => {
 
-      items = items.map(el => [
-        chalk.gray(el.XFORMATTEDDATESTRING + ''),
-        chalk.blue(el.x_sender + ''),
-        el.text || ''
-      ])
+        items = items.map(el => [
+          chalk.gray(el.XFORMATTEDDATESTRING + ''),
+          chalk.blue(el.x_sender + ''),
+          el.text || ''
+        ])
 
-      items = normalizeCols(items, 2).map(el => el.join(' | ')).join('\n')
+        items = normalizeCols(items, 2).map(el => el.join(' | ')).join('\n')
 
-      if (!program.color) { items = stripAnsi(items) }
+        if (!program.color) { items = stripAnsi(items) }
 
-      console.log(items)
-    })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+        console.log(items)
+      })
+      .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
+      })
+  }
 }

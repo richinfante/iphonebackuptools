@@ -13,12 +13,10 @@ module.exports.func = function (program, base) {
 
 // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getFileManifest()
+  if (program.dump) return backup.getFileManifest()
+  else {
+    backup.getFileManifest()
     .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
 
       items = items.map(el => [
         el.fileID + '',
@@ -35,4 +33,5 @@ module.exports.func = function (program, base) {
     .catch((e) => {
       console.log('[!] Encountered an Error:', e)
     })
+  }
 }

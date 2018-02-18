@@ -13,28 +13,30 @@ module.exports.func = function (program, base) {
 
 // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getPhotoLocationHistory(program.dump)
-    .then((history) => {
-      if (program.dump) {
-        console.log(JSON.stringify(history, null, 4))
-        return
-      }
+  if (program.dump) return backup.getPhotoLocationHistory(program.dump)
+  else {
+    backup.getPhotoLocationHistory(program.dump)
+      .then((history) => {
+        if (program.dump) {
+          return history
+        }
 
-      var items = history.map(el => [
-        el.XFORMATTEDDATESTRING + '' || '',
-        el.ZLATITUDE + '' || '',
-        el.ZLONGITUDE + '' || '',
-        el.ZFILENAME + '' || ''
-      ])
+        var items = history.map(el => [
+          el.XFORMATTEDDATESTRING + '' || '',
+          el.ZLATITUDE + '' || '',
+          el.ZLONGITUDE + '' || '',
+          el.ZFILENAME + '' || ''
+        ])
 
-      items = [['Time', 'Latitude', 'Longitude', 'Photo Name'], ['-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+        items = [['Time', 'Latitude', 'Longitude', 'Photo Name'], ['-', '-', '-'], ...items]
+        items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
 
-      if (!program.color) { items = stripAnsi(items) }
+        if (!program.color) { items = stripAnsi(items) }
 
-      console.log(items)
-    })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+        console.log(items)
+      })
+      .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
+      })
+  }
 }

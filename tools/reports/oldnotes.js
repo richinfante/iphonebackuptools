@@ -13,29 +13,31 @@ module.exports.func = function (program, base) {
 
   // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getOldNotes(program.dump)
-    .then((items) => {
-      // Dump if needed
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
+  if (program.dump) return backup.getOldNotes(program.dump)
+  else {
+    backup.getOldNotes(program.dump)
+      .then((items) => {
+        // Dump if needed
+        if (program.dump) {
+          return items
+        }
 
-      // Otherwise, format table
-      items = items.map(el => [el.XFORMATTEDDATESTRING + '', (el.Z_PK + ''), (el.ZTITLE + '').substring(0, 128)])
-      items = [
-        ['Modified', 'ID', 'Title'],
-        ['-', '-', '-'], ...items
-      ]
-      items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+        // Otherwise, format table
+        items = items.map(el => [el.XFORMATTEDDATESTRING + '', (el.Z_PK + ''), (el.ZTITLE + '').substring(0, 128)])
+        items = [
+          ['Modified', 'ID', 'Title'],
+          ['-', '-', '-'], ...items
+        ]
+        items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
 
-      if (!program.color) {
-        items = stripAnsi(items)
-      }
+        if (!program.color) {
+          items = stripAnsi(items)
+        }
 
-      console.log(items)
-    })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+        console.log(items)
+      })
+      .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
+      })
+  }
 }

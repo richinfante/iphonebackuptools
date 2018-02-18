@@ -14,8 +14,7 @@ module.exports.func = function (program, base) {
 
     // Possibly dump output
   if (program.dump) {
-    console.log(JSON.stringify(items, null, 4))
-    return
+    return items
   }
 
   items = items.map(el => {

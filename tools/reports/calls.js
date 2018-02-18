@@ -13,34 +13,33 @@ module.exports.func = function (program, base) {
 
 // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getCallsList()
-    .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
+  if (program.dump) return backup.getCallsList()
+  else {
+    backup.getCallsList()
+      .then((items) => {
 
-      items = items.map(el => [
-        el.Z_PK + '',
-        el.XFORMATTEDDATESTRING,
-        el.ZANSWERED + '',
-        el.ZORIGINATED + '',
-        el.ZCALLTYPE + '',
-        el.ZDURATION + '',
-        el.ZLOCATION + '',
-        el.ZISO_COUNTRY_CODE + '',
-        el.ZSERVICE_PROVIDER + '',
-        (el.ZADDRESS || '').toString()
-      ])
+        items = items.map(el => [
+          el.Z_PK + '',
+          el.XFORMATTEDDATESTRING,
+          el.ZANSWERED + '',
+          el.ZORIGINATED + '',
+          el.ZCALLTYPE + '',
+          el.ZDURATION + '',
+          el.ZLOCATION + '',
+          el.ZISO_COUNTRY_CODE + '',
+          el.ZSERVICE_PROVIDER + '',
+          (el.ZADDRESS || '').toString()
+        ])
 
-      items = [['ID', 'Date', 'Answered', 'Originated', 'Type', 'Duration', 'Location', 'Country', 'Service', 'Address'], ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+        items = [['ID', 'Date', 'Answered', 'Originated', 'Type', 'Duration', 'Location', 'Country', 'Service', 'Address'], ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-'], ...items]
+        items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
 
-      if (!program.color) { items = stripAnsi(items) }
+        if (!program.color) { items = stripAnsi(items) }
 
-      console.log(items)
-    })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+        console.log(items)
+      })
+      .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
+      })
+  }
 }
