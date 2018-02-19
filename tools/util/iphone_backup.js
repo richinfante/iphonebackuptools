@@ -391,6 +391,47 @@ class iPhoneBackup {
     })
   }
 
+  getCallsStatistics () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls)
+      messagedb.all(`SELECT * from _SqliteDatabaseProperties`, async function (err, rows) {
+        if (err) reject(err)
+        resolve(rows)
+      })
+    })
+  }
+
+  getCallsList () {
+    if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
+      // Legacy iOS 9 support
+      // May work for earlier but I haven't tested it
+      return this.getCallsListiOS7()
+    } else {
+      return this.getCallsList()
+    }
+  }
+
+  getCallsListiOS7 () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls)
+      messagedb.all(`SELECT 
+        ROWID as Z_PK, 
+        datetime(date, 'unixepoch') AS XFORMATTEDDATESTRING, 
+        answered as ZANSWERED,
+        duration as ZDURATION,
+        address as ZADDRESS,
+        country_code as ZISO_COUNTRY_CODE, 
+        country_code as ZISO_COUNTRY_CODE, 
+        * from call ORDER BY date ASC`, async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    })
+  }
+
+
+
   getCallsList () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Calls2)

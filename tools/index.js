@@ -20,6 +20,7 @@ var reportTypes = {
   'voicemail-files': require('./reports/voicemail-files'),
   'voicemail': require('./reports/voicemail'),
   'webhistory': require('./reports/webhistory'),
+  'calls_statistics': require('./reports/calls_statistics'),
   'wifi': require('./reports/wifi')
 }
 
