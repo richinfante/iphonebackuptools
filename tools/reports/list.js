@@ -11,48 +11,21 @@ module.exports.func = function (program, base) {
   var items = fs.readdirSync(base, { encoding: 'utf8' })
     .filter(el => (el !== '.DS_Store'))
     .map(file => iPhoneBackup.fromID(file, base))
+    .filter(el => el.manifest && el.status)
 
-    // Possibly dump output
-  if (program.dump) {
-    console.log(JSON.stringify(items, null, 4))
-    return
-  }
-
-  items = items.map(el => {
-    if (!el.manifest || !el.status) { return null }
-    return {
-      encrypted: el.manifest ? el.manifest.IsEncrypted
-                                    ? chalk.green('encrypted')
-                                    : chalk.red('not encrypted')
-                            : 'unknown encryption',
-      device_name: el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
-      device_id: el.id,
-      serial: el.manifest.Lockdown.SerialNumber,
-      iOSVersion: el.manifest.Lockdown.ProductVersion + '(' + el.manifest.Lockdown.BuildVersion + ')',
-      backupVersion: el.status ? el.status.Version : '?',
-      date: el.status ? new Date(el.status.Date).toLocaleString() : ''
+  program.formatter.format(items, {
+    color: program.color,
+    columns: {
+      'UDID': el => el.id,
+      'Encryption': el => el.manifest ? el.manifest.IsEncrypted
+                                      ? chalk.green('encrypted')
+                                        : chalk.red('not encrypted')
+                                      : 'unknown encryption',
+      'Date': el => el.status ? new Date(el.status.Date).toLocaleString() : '',
+      'Device Name': el => el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
+      'Serial #': el => el.manifest.Lockdown.SerialNumber,
+      'iOS Version': el => el.status ? el.status.Version : '?',
+      'Backup Version': el => el.status ? el.status.Version : '?'
     }
   })
-  .filter(el => el != null)
-  .map(el => [
-    chalk.gray(el.device_id),
-    el.encrypted,
-    el.date,
-    el.device_name,
-    el.serial,
-    el.iOSVersion,
-    el.backupVersion
-  ])
-
-  items = [
-    ['UDID', 'Encryption', 'Date', 'Device Name', 'Serial #', 'iOS Version', 'Backup Version'],
-    ['-', '-', '-', '-', '-', '-', '-'],
-    ...items
-  ]
-  items = normalizeCols(items)
-  items = items.map(el => el.join(' | ')).join('\n')
-
-  if (!program.color) { items = stripAnsi(items) }
-
-  console.log(items)
 }

@@ -44,22 +44,29 @@ class iPhoneBackup {
 
     // Parse manifest bplist files
     try {
+      if (global.verbose) console.log('parsing status', base)
       var status = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Status.plist')))[0]
     } catch (e) {
       console.log('Cannot open Status.plist', e)
     }
     try {
+      if (global.verbose) console.log('parsing manifest', base)
       var manifest = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Manifest.plist')))[0]
     } catch (e) {
       console.log('Cannot open Manifest.plist', e)
     }
     try {
+      if (global.verbose) console.log('parsing status', base)
       var info = plist.parse(fs.readFileSync(path.join(base, 'Info.plist'), 'utf8'))
     } catch (e) {
       console.log('Cannot open Info.plist', e)
     }
 
     return new iPhoneBackup(id, status, info, manifest, base)
+  }
+
+  get iOSVersion () {
+    return this.manifest.Lockdown.ProductVersion
   }
 
   getFileName (fileID, isAbsoulte) {
@@ -85,6 +92,17 @@ class iPhoneBackup {
       // v3 has folders
       return new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY)
     }
+  }
+
+  queryDatabase (databaseID, sql) {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databaseID)
+      messagedb.all(sql, async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    })
   }
 
   getName (messageDest) {

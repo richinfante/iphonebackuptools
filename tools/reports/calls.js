@@ -1,46 +1,45 @@
-const stripAnsi = require('strip-ansi')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
-
 module.exports.name = 'calls'
 module.exports.description = 'List all call records contained in the backup.'
+module.exports.requiresBackup = true
+module.exports.functions = {
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+  //
+  // iOS 9+ Call Log Extraction
+  //
+  '>=9.0': function (program, backup) {
+    // File ID for calls is `5a4935c78a5255723f707230a451d79c540d2741`
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getCallsList()
+    backup.queryDatabase('5a4935c78a5255723f707230a451d79c540d2741',
+    `
+      SELECT *, 
+      datetime(ZDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING 
+      FROM ZCALLRECORD 
+      ORDER BY ZDATE ASC
+    `)
     .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
+      // Use the configured formatter to print the rows.
+      program.formatter.format(items, {
+        // Color formatting?
+        color: program.color,
 
-      items = items.map(el => [
-        el.Z_PK + '',
-        el.XFORMATTEDDATESTRING,
-        el.ZANSWERED + '',
-        el.ZORIGINATED + '',
-        el.ZCALLTYPE + '',
-        el.ZDURATION + '',
-        el.ZLOCATION + '',
-        el.ZISO_COUNTRY_CODE + '',
-        el.ZSERVICE_PROVIDER + '',
-        (el.ZADDRESS || '').toString()
-      ])
-
-      items = [['ID', 'Date', 'Answered', 'Originated', 'Type', 'Duration', 'Location', 'Country', 'Service', 'Address'], ['-', '-', '-', '-', '-', '-', '-', '-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+        // Columns to be displayed in human-readable printouts.
+        // Some formatters, like raw or CSV, ignore these.
+        columns: {
+          'ID': el => el.Z_PK,
+          'Date': el => el.XFORMATTEDDATESTRING,
+          'Answered': el => el.ZANSWERED + '',
+          'Originated': el => el.ZORIGINATED + '',
+          'Call Type': el => el.ZCALLTYPE + '',
+          'Duration': el => el.ZDURATION + '',
+          'Location': el => el.ZLOCATION + '',
+          'Country': el => el.ZISO_COUNTRY_CODE + '',
+          'Service': el => el.ZSERVICE_PROVIDER + '',
+          'Address': el => (el.ZADDRESS || '').toString()
+        }
+      })
     })
     .catch((e) => {
       console.log('[!] Encountered an Error:', e)
     })
+  }
 }
