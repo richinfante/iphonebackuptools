@@ -14,27 +14,26 @@ module.exports.func = function (program, base) {
 
 // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getWebHistory(program.dump)
-    .then((history) => {
-      if (program.dump) {
-        console.log(JSON.stringify(history, null, 4))
-        return
-      }
+  if (program.dump) return backup.getWebHistory(program.dump)
+  else {
+    backup.getWebHistory(program.dump)
+      .then((history) => {
 
-      var items = history.map(el => [
-        el.XFORMATTEDDATESTRING + '' || '',
-        new URL(el.url || '').origin || '',
-        (el.title || '').substring(0, 64)
-      ])
+        var items = history.map(el => [
+          el.XFORMATTEDDATESTRING + '' || '',
+          new URL(el.url || '').origin || '',
+          (el.title || '').substring(0, 64)
+        ])
 
-      items = [['Time', 'URL', 'Title'], ['-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+        items = [['Time', 'URL', 'Title'], ['-', '-', '-'], ...items]
+        items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
 
-      if (!program.color) { items = stripAnsi(items) }
+        if (!program.color) { items = stripAnsi(items) }
 
-      console.log(items)
-    })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+        console.log(items)
+      })
+      .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
+      })
+  }
 }

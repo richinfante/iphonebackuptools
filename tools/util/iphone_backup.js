@@ -145,7 +145,10 @@ class iPhoneBackup {
        if (err) return reject(err)
 
        chats = chats || []
-       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
+       if (dumpAll) {
+        resolve(chats)
+        return
+       }
 
         // Compute the user's name
        for (var i in chats) {
@@ -186,7 +189,10 @@ class iPhoneBackup {
        if (err) return reject(err)
 
        chats = chats || []
-       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
+       if (dumpAll) {
+        resolve(chats)
+        return
+       }
 
         // Compute the user's name
        for (var i in chats) {
@@ -262,7 +268,7 @@ class iPhoneBackup {
           return (a.date.getTime() || 0) - (b.date.getTime() || 0)
         })
 
-        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
+        //if (dumpAll) console.log(JSON.stringify(rows, null, 4))
 
         resolve(rows)
       })
@@ -276,7 +282,7 @@ class iPhoneBackup {
         if (err) return reject(err)
         rows = rows || []
 
-        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
+        //if (dumpAll) console.log(JSON.stringify(rows, null, 4))
 
         resolve(rows)
       })

@@ -13,29 +13,25 @@ module.exports.func = function (program, base) {
 
 // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getNotes(program.dump)
-    .then((items) => {
-        // Dump if needed
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
+  if (program.dump) return backup.getNotes(program.dump)
+  else {
+    backup.getNotes(program.dump)
+      .then((items) => {
+        items = items.map(el => [
+          (el.XFORMATTEDDATESTRING || el.XFORMATTEDDATESTRING1) + '',
+              (el.Z_PK + ''),
+          (el.ZTITLE2 + '').trim().substring(0, 128),
+          (el.ZTITLE1 + '').trim() || ''
+        ])
+        items = [['Modified', 'ID', 'Title2', 'Title1'], ['-', '-', '-', '-'], ...items]
+        items = normalizeCols(items, 3).map(el => el.join(' | ')).join('\n')
 
-        // Otherwise, format table
-      items = items.map(el => [
-        (el.XFORMATTEDDATESTRING || el.XFORMATTEDDATESTRING1) + '',
-            (el.Z_PK + ''),
-        (el.ZTITLE2 + '').trim().substring(0, 128),
-        (el.ZTITLE1 + '').trim() || ''
-      ])
-      items = [['Modified', 'ID', 'Title2', 'Title1'], ['-', '-', '-', '-'], ...items]
-      items = normalizeCols(items, 3).map(el => el.join(' | ')).join('\n')
+        if (!program.color) { items = stripAnsi(items) }
 
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
-    })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+        console.log(items)
+      })
+      .catch((e) => {
+        console.log('[!] Encountered an Error:', e)
+      })
+  }
 }
