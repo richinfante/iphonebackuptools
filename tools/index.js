@@ -31,15 +31,16 @@ var formatters = {
 }
 
 program
-    .version('2.0.5')
+    .version('3.0.0')
     .option('-l, --list', 'List Backups')
     .option(`-b, --backup <backup>`, 'Backup ID')
-    .option('-r, --report <report_type>', 'Select a report type. see below for a full list.')
     .option(`-d, --dir <directory>`, `Backup Directory (default: ${base})`)
-    .option(`-v, --verbose`, 'Verbose debugging output')
-    .option(`-x, --no-color`, 'Disable colorized output')
+    .option('-r, --report <report_type>', 'Select a report type. see below for a full list.')
     .option('-f, --formatter <type>', 'Specify output format. default: table')
     .option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files')
+    .option(`-f, --filter <filter>`, 'Filter output for individual reports. See the README for usage.')
+    .option(`-v, --verbose`, 'Verbose debugging output')
+    .option(`-x, --no-color`, 'Disable colorized output')
 
 program.on('--help', function () {
   console.log('')
