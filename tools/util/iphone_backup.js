@@ -143,7 +143,7 @@ class iPhoneBackup {
     })
   }
 
-  getMessagesiOS9 (chatId, dumpAll) {
+  getMessagesiOS9 (chatId) {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
@@ -163,7 +163,6 @@ class iPhoneBackup {
        if (err) return reject(err)
 
        chats = chats || []
-       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
 
         // Compute the user's name
        for (var i in chats) {
@@ -184,7 +183,7 @@ class iPhoneBackup {
     })
   }
 
-  getMessagesiOS10iOS11 (chatId, dumpAll) {
+  getMessagesiOS10iOS11 (chatId) {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
@@ -204,7 +203,6 @@ class iPhoneBackup {
        if (err) return reject(err)
 
        chats = chats || []
-       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
 
         // Compute the user's name
        for (var i in chats) {
@@ -225,15 +223,15 @@ class iPhoneBackup {
     })
   }
 
-  getMessages (chatId, dumpAll) {
+  getMessages (chatId) {
     if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
-      return this.getMessagesiOS9(chatId, dumpAll)
+      return this.getMessagesiOS9(chatId)
     } else {
-      return this.getMessagesiOS10iOS11(chatId, dumpAll)
+      return this.getMessagesiOS10iOS11(chatId)
     }
   }
 
-  getConversationsiOS9 (dumpAll) {
+  getConversationsiOS9 () {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
@@ -280,32 +278,28 @@ class iPhoneBackup {
           return (a.date.getTime() || 0) - (b.date.getTime() || 0)
         })
 
-        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
-
         resolve(rows)
       })
     })
   }
 
-  getConversationsiOS10iOS11 (dumpAll) {
+  getConversationsiOS10iOS11 () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
       messagedb.all(`SELECT *, datetime(last_read_message_timestamp / 1000000000 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM chat ORDER BY last_read_message_timestamp ASC`, async function (err, rows) {
         if (err) return reject(err)
         rows = rows || []
 
-        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
-
         resolve(rows)
       })
     })
   }
 
-  getConversations (dumpAll) {
+  getConversations () {
     if (parseInt(this.manifest.Lockdown.BuildVersion) <= 14) {
-      return this.getConversationsiOS9(dumpAll)
+      return this.getConversationsiOS9()
     } else {
-      return this.getConversationsiOS10iOS11(dumpAll)
+      return this.getConversationsiOS10iOS11()
     }
   }
 

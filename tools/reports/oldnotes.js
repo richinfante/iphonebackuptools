@@ -15,25 +15,15 @@ module.exports.func = function (program, base) {
   var backup = iPhoneBackup.fromID(program.backup, base)
   backup.getOldNotes(program.dump)
     .then((items) => {
-      // Dump if needed
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
 
-      // Otherwise, format table
-      items = items.map(el => [el.XFORMATTEDDATESTRING + '', (el.Z_PK + ''), (el.ZTITLE + '').substring(0, 128)])
-      items = [
-        ['Modified', 'ID', 'Title'],
-        ['-', '-', '-'], ...items
-      ]
-      items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
-
-      if (!program.color) {
-        items = stripAnsi(items)
-      }
-
-      console.log(items)
+      program.formatter.format(items, {
+        color: program.color,
+        columns: {
+          'Modified': el => el.XFORMATTEDDATESTRING,
+          'ID': el => el.Z_PK,
+          'Title': el => (el.ZTITLE + '').substring(0, 128)
+        }
+      })
     })
     .catch((e) => {
       console.log('[!] Encountered an Error:', e)

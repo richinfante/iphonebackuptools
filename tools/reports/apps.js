@@ -3,8 +3,6 @@ const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
 module.exports.name = 'apps'
 module.exports.description = 'List all installed applications and container IDs.'
 
-module.exports.compatible_versions = [ '>=10.0' ]
-
 module.exports.func = function (program, base) {
   if (!program.backup) {
     console.log('use -b or --backup <id> to specify backup.')

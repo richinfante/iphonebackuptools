@@ -36,6 +36,7 @@ program
     .option(`-b, --backup <backup>`, 'Backup ID')
     .option(`-d, --dir <directory>`, `Backup Directory (default: ${base})`)
     .option('-r, --report <report_type>', 'Select a report type. see below for a full list.')
+    .option('-i, --id <id>', 'Specify an ID for filtering certain reports')
     .option('-f, --formatter <type>', 'Specify output format. default: table')
     .option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files')
     .option(`-f, --filter <filter>`, 'Filter output for individual reports. See the README for usage.')
@@ -79,17 +80,12 @@ if (program.verbose) console.log('Using source:', base)
 if (program.list) {
     // Shortcut for list report
   reportTypes.list.func(program, base)
-} else if (program.conversations) {
-    // Legacy shortcut for conversations report
-  reportTypes.conversations.func(program, base)
-} else if (program.messages) {
-    // Legacy shortcut for messages report
-  reportTypes.messages.func(program, base)
 } else if (program.report) {
     // If the report is valid
   if (reportTypes[program.report]) {
     var report = reportTypes[program.report]
 
+    // Check if there's a backup specified and one is required.
     if (report.requiresBackup) {
       if (!program.backup) {
         console.log('use -b or --backup <id> to specify backup.')
@@ -100,7 +96,31 @@ if (program.list) {
     // Try to use it
     if (report.func) {
       try {
-        report.func(program, base)
+        // New type of reports
+        var backup = iPhoneBackup.fromID(program.backup, base)
+        
+        if (report.supportedVersions !== undefined) {
+          if (version.versionCheck(backup.iOSVersion, report.supportedVersions)) {
+            if (report.requiresBackup) {
+              report.func(program, backup)
+            } else {
+              report.func(program, base)
+            }
+          } else {
+            console.log('[!] The report generator "' + program.report + '" does not support iOS', backup.iOSVersion)
+            console.log('')
+            console.log('    If you think it should, file an issue here:')
+            console.log('    https://github.com/richinfante/iphonebackuptools/issues')
+            console.log('')
+            process.exit(1)
+          }
+        } else {
+          if (report.requiresBackup) {
+            report.func(program, backup)
+          } else {
+            report.func(program, base)
+          }
+        }
       } catch (e) {
         console.log('[!] Encountered an error', e)
       }
@@ -120,9 +140,9 @@ if (program.list) {
       }
 
       if (!flag) {
-        console.log('[!] No compatible reporter for', backup.iOSVersion, 'and type', program.report)
+        console.log('[!] The report generator "', program.report,'" does not support iOS', backup.iOSVersion)
         console.log('')
-        console.log('    If you think one should exist, file an issue here:')
+        console.log('    If you think it should, file an issue here:')
         console.log('    https://github.com/richinfante/iphonebackuptools/issues')
         console.log('')
         process.exit(1)

@@ -24,7 +24,7 @@ module.exports.func = function (program, base) {
       'Date': el => el.status ? new Date(el.status.Date).toLocaleString() : '',
       'Device Name': el => el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
       'Serial #': el => el.manifest.Lockdown.SerialNumber,
-      'iOS Version': el => el.status ? el.status.Version : '?',
+      'iOS Version': el => el.manifest ? el.manifest.Lockdown.ProductVersion : '?',
       'Backup Version': el => el.status ? el.status.Version : '?'
     }
   })

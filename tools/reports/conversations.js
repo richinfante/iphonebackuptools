@@ -15,24 +15,19 @@ module.exports.func = function (program, base) {
   // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
 
-  backup.getConversations(program.dump)
+  backup.getConversations()
     .then((items) => {
-      if (program.dump) return
 
-      items = items.map(el => [
-        el.ROWID + '',
-        chalk.gray(el.XFORMATTEDDATESTRING || '??'),
-        el.service_name + '', 
-        el.chat_identifier + '',
-        el.display_name + ''
-      ])
-
-      items = [['ID', 'DATE', 'Service', 'Chat Name', 'Display Name'], ['-', '-', '-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+      program.formatter.format(items, {
+        color: program.color,
+        columns: {
+          'ID': el => el.ROWID,
+          'Date': el => el.XFORMATTEDDATESTRING || '??',
+          'Service': el => el.service_name + '',
+          'Chat Name': el => el.chat_identifier + '',
+          'Display Name': el => el.display_name + '',
+        }
+      })
     })
     .catch((e) => {
       console.log('[!] Encountered an Error:', e)

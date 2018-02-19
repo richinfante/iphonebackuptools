@@ -5,31 +5,30 @@ const normalizeCols = require('../util/normalize.js')
 
 module.exports.name = 'messages'
 module.exports.description = 'List all SMS and iMessage messages in a conversation'
+module.exports.requiresBackup = true
 
 module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
+  if (!program.id) {
+    console.log('use -i or --id <id> to specify conversation ID.')
     process.exit(1)
   }
 
   // Grab the backup
   var backup = iPhoneBackup.fromID(program.backup, base)
 
-  backup.getMessages(program.messages, program.dump)
+  backup.getMessages(program.id)
     .then((items) => {
-      if (program.dump) return
+      console.log(items.length)
 
-      items = items.map(el => [
-        chalk.gray(el.XFORMATTEDDATESTRING + ''),
-        chalk.blue(el.x_sender + ''),
-        el.text || ''
-      ])
-
-      items = normalizeCols(items, 2).map(el => el.join(' | ')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+      program.formatter.format(items, {
+        color: program.color,
+        columns: {
+          'ID' : el => el.ROWID,
+          'Date': el => el.XFORMATTEDDATESTRING,
+          'Sender': el => el.x_sender,
+          'Text': el => (el.text || '').trim()
+        }
+      })
     })
     .catch((e) => {
       console.log('[!] Encountered an Error:', e)

@@ -15,27 +15,19 @@ module.exports.func = function (program, base) {
   var backup = iPhoneBackup.fromID(program.backup, base)
   backup.getWifiList()
     .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
 
-      items = items['List of known networks'].map(el => [
-        el.lastJoined + '' || '',
-        el.lastAutoJoined + '' || '',
-        el.SSID_STR + '',
-        el.BSSID + '',
-        el.SecurityMode || '',
-        el.HIDDEN_NETWORK + '',
-        el.enabled + ''
-      ]).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-
-      items = [['Last Joined', 'Last AutoJoined', 'SSID', 'BSSID', 'Security', 'Hidden', 'Enabled'], ['-', '-', '-', '-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+      program.formatter.format(items['List of known networks'], {
+        color: program.color,
+        columns: {
+          'Last Joined': el => el.lastJoined,
+          'Last AutoJoined': el => el.lastAutoJoined,
+          'SSID': el => el.SSID_STR,
+          'BSSID': el => el.BSSID,
+          'Security': el => el.SecurityMode || '',
+          'Hidden': el => el.HIDDEN_NETWORK || '',
+          'Enabled': el => el.enabled
+        }
+      })
     })
     .catch((e) => {
       console.log('[!] Encountered an Error:', e)
