@@ -22,13 +22,14 @@ var reportTypes = {
 }
 
 program
-    .version('2.0.5')
+    .version('2.0.6')
     .option('-l, --list', 'List Backups')
     .option(`-b, --backup <backup>`, 'Backup ID')
     .option('-r, --report <report_type>', 'Select a report type. see below for a full list.')
     .option('-c, --conversations', 'List Conversations')
     .option('-m, --messages <conversation_id>', 'List messages')
     .option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files')
+    .option(`-f, --filter <filter>`, 'Filter output for individual reports. See the README for usage.')
     .option(`-d, --dir <directory>`, `Backup Directory (default: ${base})`)
     .option(`-v, --verbose`, 'Verbose debugging output')
     .option(`-x, --no-color`, 'Disable colorized output')

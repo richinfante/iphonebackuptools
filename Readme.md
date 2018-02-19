@@ -87,6 +87,13 @@ ibackuptool -b $UDID --report voicemail-files --export ./ExportedVoicemails
 
 # List wifi networks 
 ibackuptool -b $UDID --report wifi
+
+# Extract all files into a new directory called "BACKUP"
+ibackuptool -b $UDID --report manifest --extract BACKUP --filter all
+
+# Extract all Camera Roll data into a new directory called "BACKUP".
+# See the wiki for additonal info about filtering.
+ibackuptool -b $UDID --report manifest --extract BACKUP --filter CameraRollDomain
 ```
 
 ### Messages Access
