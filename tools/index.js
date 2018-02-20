@@ -9,6 +9,7 @@ var reportTypes = {
   'apps': require('./reports/apps'),
   'calls': require('./reports/calls'),
   'conversations': require('./reports/conversations'),
+  'conversations_full': require('./reports/conversations_full'),
   'list': require('./reports/list'),
   'manifest': require('./reports/manifest'),
   'messages': require('./reports/messages'),
@@ -19,7 +20,8 @@ var reportTypes = {
   'voicemail': require('./reports/voicemail'),
   'webhistory': require('./reports/webhistory'),
   'calls_statistics': require('./reports/calls_statistics'),
-  'wifi': require('./reports/wifi')
+  'wifi': require('./reports/wifi'),
+  'all': require('./reports/all')
 }
 
 program
@@ -97,7 +99,10 @@ async function all() {
     if (report.func) {
       try {
         if (program.dump) {
-          dump[reportName] = await report.func(program, base)
+          if (reportName !== "all"
+           && reportName !== "conversations"
+           && reportName !== "messages")
+            dump[reportName] = await report.func(program, base)
         }
         else {
           //console.log(reportName);
