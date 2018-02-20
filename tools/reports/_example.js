@@ -8,12 +8,27 @@ module.exports.description = 'An example module to show how it works'
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = true
 
+// Should this report be skipped in automated reports?
+// This is used when the 'all' report type is specified, and all possible reports are generated.
+// with this set to true, the report WILL NOT run when report type = 'all'
+module.exports.requiresInteractivity = true
+
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
 // Specify this only works for iOS 10+
 module.exports.supportedVersions = '>=10.0'
 
-// Reporting function
+// Reporting function (for usesPromises = false)
 module.exports.func = function (program, backup) {
   // This function will be called with the `commander` program, and the iPhoneBackup instance as arguments
+  // This is deprecated.
+}
+
+// Reporting function (for usesPromises = true)
+module.exports.func = function (program, backup, resolve, reject) {
+    // This function will be called with the `commander` program, and the iPhoneBackup instance as arguments
+    // It MUST resolve() the final result, or reject() if there's an error
 }
 
 // --- OR ---

@@ -5,17 +5,21 @@ module.exports.description = 'List all call records contained in the backup.'
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = true
 
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
 // Specify this only works for iOS 10+
 module.exports.supportedVersions = '>=10.0'
 
-module.exports.func = function (program, backup) {
+module.exports.func = function (program, backup, resolve, reject) {
 
   backup.getCallsList()
   .then((items) => {
+
     // Use the configured formatter to print the rows.
-    program.formatter.format(items, {
+    const result = program.formatter.format(items, {
       // Color formatting?
-      color: program.color,
+      program: program,
 
       // Columns to be displayed in human-readable printouts.
       // Some formatters, like raw or CSV, ignore these.
@@ -32,8 +36,9 @@ module.exports.func = function (program, backup) {
         'Address': el => (el.ZADDRESS || '').toString()
       }
     })
+
+    // If using promises, we must call resolve()
+    resolve(result)
   })
-  .catch((e) => {
-    console.log('[!] Encountered an Error:', e)
-  })
+  .catch(reject)
 }

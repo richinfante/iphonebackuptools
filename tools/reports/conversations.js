@@ -6,20 +6,19 @@ const normalizeCols = require('../util/normalize.js')
 module.exports.name = 'conversations'
 module.exports.description = 'List all SMS and iMessage conversations'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-  // Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
 
+module.exports.func = function (program, backup, resolve, reject) {
   backup.getConversations()
     .then((items) => {
 
-      program.formatter.format(items, {
-        color: program.color,
+      var result = program.formatter.format(items, {
+        program: program,
         columns: {
           'ID': el => el.ROWID,
           'Date': el => el.XFORMATTEDDATESTRING || '??',
@@ -28,8 +27,8 @@ module.exports.func = function (program, base) {
           'Display Name': el => el.display_name + '',
         }
       })
+
+      resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }

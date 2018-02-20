@@ -7,21 +7,19 @@ const fs = require('fs-extra')
 module.exports.name = 'voicemail-files'
 module.exports.description = 'List all or extract voicemail files (iOS 10+)'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+module.exports.func = function (program, backup, resolve, reject) {
+
   backup.getVoicemailFileList()
     .then((list) => {
-      if (program.dump) {
-        console.log(JSON.stringify(list, null, 4))
-        return
-      }
 
+      // Extract to the specified location
       if (program.extract) {
         for (var item of list) {
           try {
@@ -35,18 +33,17 @@ module.exports.func = function (program, base) {
         }
       }
 
-      var items = list.map(el => [
-        el.fileID + '',
-        el.relativePath,
-        el.output_dir || '<not exported>'
-      ])
+      // Generate report.
+      var result = program.formatter.format(list, {
+        program: program,
+        columns: {
+          'ID': el => el.fileID,
+          'Path': el => el.relativePath,
+          'Export Path': el => el.output_dir || '<not exported>'
+        }
+      })
 
-      items = [['ID', 'Path', 'Exported Path'], ['-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+      resolve(result)
     })
     .catch((e) => {
       console.log('[!] Encountered an Error:', e)

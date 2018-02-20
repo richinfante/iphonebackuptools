@@ -5,19 +5,20 @@ const normalizeCols = require('../util/normalize.js')
 module.exports.name = 'wifi'
 module.exports.description = 'List associated wifi networks and their usage information'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+module.exports.func = function (program, backup, resolve, reject) {
+
   backup.getWifiList()
     .then((items) => {
 
-      program.formatter.format(items['List of known networks'], {
-        color: program.color,
+      var result = program.formatter.format(items['List of known networks'], {
+        program: program,
         columns: {
           'Last Joined': el => el.lastJoined,
           'Last AutoJoined': el => el.lastAutoJoined,
@@ -28,8 +29,8 @@ module.exports.func = function (program, base) {
           'Enabled': el => el.enabled
         }
       })
+
+      resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }

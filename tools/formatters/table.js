@@ -62,10 +62,40 @@ module.exports.format = function (data, options) {
       return el.join(' | ').replace(/\n/g, '')
     }).join('\n')
 
-    if (!options.color) { items = stripAnsi(items) }
+    
 
-    console.log(items)
+    if(options.program) {
+
+      // Disable color output
+      if (!options.program.color) { items = stripAnsi(items) }
+
+      // If reporting output is defined, ignore console log here.
+      if (options.program.reportOutput === undefined) {
+        console.log(items)
+      }
+    } else {
+      console.log(items)
+    }
     
     return items
 }
-  
+
+const fs = require('fs-extra')
+const path = require('path')
+
+module.exports.finalReport = async function(reports, program) {
+    if (program.reportOutput === undefined) {
+      return
+    }
+    
+    // Ensure the output directory exists.
+    fs.ensureDirSync(program.reportOutput)
+
+    // Write each report to the disk
+    for(var report of reports) {
+      console.log('saving report', report.name)
+      var outPath = path.join(program.reportOutput, report.name + '.txt')
+      console.log('writing to', outPath)
+      fs.writeFileSync(outPath, report.contents, 'utf8')
+    }
+  }

@@ -5,16 +5,19 @@ module.exports.description = 'List all or extract voicemails on device'
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = true
 
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
 // Specify this only works for iOS 10+
 module.exports.supportedVersions = '>=9.0'
 
-module.exports.func = function (program, backup) {
+module.exports.func = function (program, backup, resolve, reject) {
 
   backup.getVoicemailsList()
     .then((items) => {
 
-      program.formatter.format(items, {
-        color: program.color,
+      var result = program.formatter.format(items, {
+        program: program,
         columns: {
           'ID': el => el.ROWID,
           'Date': el => el.XFORMATTEDDATESTRING,
@@ -27,8 +30,8 @@ module.exports.func = function (program, backup) {
           'Flags': el => el.flags
         }
       })
+
+      resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }
