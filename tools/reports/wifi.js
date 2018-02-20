@@ -1,7 +1,6 @@
 const stripAnsi = require('strip-ansi')
 const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
 const normalizeCols = require('../util/normalize.js')
-const zpad = require('zpad')
 
 module.exports.name = 'wifi'
 module.exports.description = 'List associated wifi networks and their usage information'
