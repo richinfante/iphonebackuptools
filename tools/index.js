@@ -11,8 +11,9 @@ var reportTypes = {
   'apps': require('./reports/apps'),
   'calls': require('./reports/calls'),
   'conversations': require('./reports/conversations'),
-  'list': require('./reports/list'),
-  'manifest': require('./reports/manifest'),
+  'conversations_full': require('./reports/conversations_full'),
+  //'list': require('./reports/list'),
+  //'manifest': require('./reports/manifest'),
   'messages': require('./reports/messages'),
   'notes': require('./reports/notes'),
   'oldnotes': require('./reports/oldnotes'),
@@ -21,7 +22,8 @@ var reportTypes = {
   'voicemail': require('./reports/voicemail'),
   'webhistory': require('./reports/webhistory'),
   'calls_statistics': require('./reports/calls_statistics'),
-  'wifi': require('./reports/wifi')
+  'wifi': require('./reports/wifi'),
+  'all': require('./reports/all')
 }
 
 var formatters = {
