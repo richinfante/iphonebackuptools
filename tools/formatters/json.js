@@ -57,9 +57,8 @@ module.exports.finalReport = async function(reports, program) {
     fs.ensureDirSync(program.reportOutput)
 
     for(var report of reports) {
-      console.log('saving report', report.name)
       var outPath = path.join(program.reportOutput, report.name + '.json')
-      console.log('writing to', outPath)
+      console.log('saving', outPath)
       fs.writeFileSync(outPath, JSON.stringify(report.contents, null, 2), 'utf8')
     }
   }

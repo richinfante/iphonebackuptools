@@ -11,9 +11,8 @@ module.exports.finalReport = async function(reports, program) {
 
     // Write each report to the disk
     for(var report of reports) {
-      console.log('saving report', report.name)
       var outPath = path.join(program.reportOutput, report.name + '.json')
-      console.log('writing to', outPath)
+      console.log('saving', outPath)
       fs.writeFileSync(outPath, JSON.stringify(report.contents), 'utf8')
     }
   }

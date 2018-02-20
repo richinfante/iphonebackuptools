@@ -41,13 +41,13 @@ module.exports.finalReport = async function(reports, program) {
       fs.writeFileSync(outPath, JSON.stringify(out), 'utf8')
     }
   } else {
-    console.log(program.reportOutput)
+    // Ensure the output directory exists.
     fs.ensureDirSync(program.reportOutput)
 
+    // Write each report to the disk
     for(var report of reports) {
-      console.log('saving report', report.name)
       var outPath = path.join(program.reportOutput, report.name + '.json')
-      console.log('writing to', outPath)
+      console.log('saving', outPath)
       fs.writeFileSync(outPath, JSON.stringify(report.contents), 'utf8')
     }
   }

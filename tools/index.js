@@ -26,8 +26,10 @@ var reportTypes = {
 var formatters = {
   'json': require('./formatters/json'),
   'table': require('./formatters/table'),
-  'raw': require('./formatters/raw'),
-  'csv': require('./formatters/csv')
+  'raw':  require('./formatters/raw-json'),
+  'raw-json': require('./formatters/raw-json'),
+  'csv': require('./formatters/csv'),
+  'raw-csv': require('./formatters/raw-csv'),
 }
 
 program

@@ -2,17 +2,6 @@ const json2csv = require('json2csv')
 
 
 module.exports.format = function (data, options) {
-  var data = data.map(el => {
-    var row = {}
-    
-    // Iterate over the columns and add each item to the new row.
-    for (var key in options.columns) {
-      row[key] = options.columns[key](el)
-    }
-    
-    return row
-  })
-
   const csv = json2csv({ data })
   
   
