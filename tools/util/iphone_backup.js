@@ -3,7 +3,7 @@ const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
-const zpad = require('zpad')
+const mac_address_parse = require('./mac_address_parse')
 const tz_offset = 5
 
 const databases = {
@@ -463,7 +463,7 @@ class iPhoneBackup {
         wifiList['List of known networks'] = wifiList['List of known networks']
           .map(el => {
             if (el.BSSID)
-              el.BSSID = el.BSSID.split(':').map((hex) => zpad(hex)).join(':') + ''
+              el.BSSID = mac_address_parse.pad_zeros(el.BSSID) + ''
             return el;
           });
         resolve(wifiList);
