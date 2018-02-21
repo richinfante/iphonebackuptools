@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
+const mac_address_parse = require('./mac_address_parse')
 const tz_offset = 5
 
 const databases = {
@@ -415,7 +416,14 @@ class iPhoneBackup {
       var filename = this.getFileName(databases.WiFi)
 
       try {
-        resolve(bplist.parseBuffer(fs.readFileSync(filename))[0])
+        let wifiList = bplist.parseBuffer(fs.readFileSync(filename))[0];
+         wifiList['List of known networks'] = wifiList['List of known networks']
+           .map(el => {
+              if (el.BSSID)
+                el.BSSID = mac_address_parse.pad_zeros(el.BSSID) + ''
+              return el;
+           });
+         resolve(wifiList);
       } catch (e) {
         reject(e)
       }
