@@ -12,6 +12,7 @@ var reportTypes = {
   'calls': require('./reports/calls'),
   'conversations': require('./reports/conversations'),
   'conversations_full': require('./reports/conversations_full'),
+  'cookies': require('./reports/cookies'),
   'list': require('./reports/list'),
   'manifest': require('./reports/manifest'),
   'messages': require('./reports/messages'),

@@ -4,6 +4,7 @@ const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
 const mac_address_parse = require('./mac_address_parse')
+const cookieParser = require('binary-cookies')()
 const tz_offset = 5
 
 const databases = {
@@ -480,6 +481,24 @@ class iPhoneBackup {
       } catch (e) {
         reject(e)
       }
+    })
+  }
+
+  getCookies () {
+    return new Promise((resolve, reject) => {
+      const self = this
+      var manifestdb = this.getDatabase('Manifest.db', true)
+      manifestdb.all(`SELECT fileID,domain,relativePath from FILES where relativePath like 'Library/Cookies/Cookies.binarycookies'`, async function (err, rows) {
+        if (err) reject(err)
+        let cookies = [];
+        for (let row of rows) {
+          console.log(self.getFileName(row.fileID), row.domain)
+          cookieParser.parse(self.getFileName(row.fileID), (err, cookies) => {
+            if (err) reject(err)
+            resolve(cookies)
+          })
+        }
+      })
     })
   }
 }
