@@ -9,6 +9,7 @@ var reportTypes = {
   'apps': require('./reports/apps'),
   'calls': require('./reports/calls'),
   'conversations': require('./reports/conversations'),
+  'conversations_full': require('./reports/conversations_full'),
   'list': require('./reports/list'),
   'manifest': require('./reports/manifest'),
   'messages': require('./reports/messages'),
@@ -18,7 +19,9 @@ var reportTypes = {
   'voicemail-files': require('./reports/voicemail-files'),
   'voicemail': require('./reports/voicemail'),
   'webhistory': require('./reports/webhistory'),
-  'wifi': require('./reports/wifi')
+  'calls_statistics': require('./reports/calls_statistics'),
+  'wifi': require('./reports/wifi'),
+  'all': require('./reports/all')
 }
 
 program
@@ -69,18 +72,14 @@ if (program.list) {
     // Legacy shortcut for messages report
   reportTypes.messages.func(program, base)
 } else if (program.report) {
+  if (program.report === 'all'){
+    all();
+  }
     // If the report is valid
-  if (reportTypes[program.report]) {
+  else if (reportTypes[program.report]) {
     var report = reportTypes[program.report]
 
-        // Try to use it
-    if (report.func) {
-      try {
-        report.func(program, base)
-      } catch (e) {
-        console.log('[!] Encountered an error', e)
-      }
-    }
+    run_report(report);
   } else {
     console.log('')
     console.log('  [!] Unknown Option type:', program.report)
@@ -90,4 +89,42 @@ if (program.list) {
   }
 } else {
   program.outputHelp()
+}
+
+async function all() {
+  let dump = {}
+  for(let report of Object.entries(reportTypes)) {
+    const reportName = report[0]
+    report = report[1]
+    // Try to use it
+    if (report.func) {
+      try {
+        if (program.dump) {
+          if (reportName !== "all"
+           && reportName !== "conversations"
+           && reportName !== "messages")
+            dump[reportName] = await report.func(program, base)
+        }
+        else {
+          //console.log(reportName);
+          await report.func(program, base)
+        }
+      } catch (e) {
+        console.log('[!] Encountered an error', e)
+      }
+    }
+  }
+  if (program.dump) console.log(JSON.stringify(dump, null, 4));
+}
+
+async function run_report(report) {
+  // Try to use it
+  if (report.func) {
+    try {
+      if (program.dump) console.log(JSON.stringify(await report.func(program, base), null, 4))
+      else report.func(program, base)
+    } catch (e) {
+      console.log('[!] Encountered an error', e)
+    }
+  }
 }

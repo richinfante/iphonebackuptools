@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
+const mac_address_parse = require('./mac_address_parse')
 const tz_offset = 5
 
 const databases = {
@@ -145,7 +146,10 @@ class iPhoneBackup {
        if (err) return reject(err)
 
        chats = chats || []
-       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
+       if (dumpAll) {
+        resolve(chats)
+        return
+       }
 
         // Compute the user's name
        for (var i in chats) {
@@ -186,7 +190,10 @@ class iPhoneBackup {
        if (err) return reject(err)
 
        chats = chats || []
-       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
+       if (dumpAll) {
+        resolve(chats)
+        return
+       }
 
         // Compute the user's name
        for (var i in chats) {
@@ -215,7 +222,7 @@ class iPhoneBackup {
     }
   }
 
-  getConversationsiOS9 (dumpAll) {
+  getConversationsiOS9 () {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
@@ -262,8 +269,6 @@ class iPhoneBackup {
           return (a.date.getTime() || 0) - (b.date.getTime() || 0)
         })
 
-        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
-
         resolve(rows)
       })
     })
@@ -276,18 +281,16 @@ class iPhoneBackup {
         if (err) return reject(err)
         rows = rows || []
 
-        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
-
         resolve(rows)
       })
     })
   }
 
-  getConversations (dumpAll) {
+  getConversations () {
     if (parseInt(this.manifest.Lockdown.BuildVersion) <= 14) {
-      return this.getConversationsiOS9(dumpAll)
+      return this.getConversationsiOS9()
     } else {
-      return this.getConversationsiOS10iOS11(dumpAll)
+      return this.getConversationsiOS10iOS11()
     }
   }
 
@@ -378,6 +381,47 @@ class iPhoneBackup {
     })
   }
 
+  getCallsStatistics () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls)
+      messagedb.all(`SELECT * from _SqliteDatabaseProperties`, async function (err, rows) {
+        if (err) reject(err)
+        resolve(rows)
+      })
+    })
+  }
+
+  getCallsList () {
+    if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
+      // Legacy iOS 9 support
+      // May work for earlier but I haven't tested it
+      return this.getCallsListiOS7()
+    } else {
+      return this.getCallsList()
+    }
+  }
+
+  getCallsListiOS7 () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls)
+      messagedb.all(`SELECT 
+        ROWID as Z_PK, 
+        datetime(date, 'unixepoch') AS XFORMATTEDDATESTRING, 
+        answered as ZANSWERED,
+        duration as ZDURATION,
+        address as ZADDRESS,
+        country_code as ZISO_COUNTRY_CODE, 
+        country_code as ZISO_COUNTRY_CODE, 
+        * from call ORDER BY date ASC`, async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    })
+  }
+
+
+
   getCallsList () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Calls2)
@@ -415,7 +459,14 @@ class iPhoneBackup {
       var filename = this.getFileName(databases.WiFi)
 
       try {
-        resolve(bplist.parseBuffer(fs.readFileSync(filename))[0])
+        let wifiList = bplist.parseBuffer(fs.readFileSync(filename))[0];
+        wifiList['List of known networks'] = wifiList['List of known networks']
+          .map(el => {
+            if (el.BSSID)
+              el.BSSID = mac_address_parse.pad_zeros(el.BSSID) + ''
+            return el;
+          });
+        resolve(wifiList);
       } catch (e) {
         reject(e)
       }

@@ -16,8 +16,7 @@ module.exports.func = function (program, base) {
 
         // Possibly dump output
   if (program.dump) {
-    console.log(JSON.stringify(backup.manifest, null, 4))
-    return
+    return backup.manifest
   }
 
         // Enumerate the apps in the backup
