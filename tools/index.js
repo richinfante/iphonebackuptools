@@ -46,10 +46,13 @@ program
 .option(`    --filter <filter>`, 'Filter output for individual reports. See the README for usage.')
 .option('    --join-reports', 'Join JSON reports together. (available for -f json or -f raw only!)')
 .option(`    --no-color`, 'Disable colorized output')
+.option(`    --dump`, 'alias for "--formatter raw"')
 
 program.on('--help', function () {
   console.log('')
   console.log('Supported Report Types:')
+
+  // Generate a list of report types.
   for (var i in reportTypes) {
     var r = reportTypes[i]
     if (program.isTTY) {
@@ -76,6 +79,11 @@ global.verbose = program.verbose
 
 // Save the formatter
 program.formatter = formatters[program.formatter] || formatters.table
+
+// Legacy support for `--dump` flag.
+if (program.dump) {
+  program.formatter = formatters.raw
+}
 
 // Disable color for non-ttys.
 if (!process.stdout.isTTY) { program.color = false }
