@@ -21,7 +21,8 @@ var reportTypes = {
   'webhistory': require('./reports/webhistory'),
   'calls_statistics': require('./reports/calls_statistics'),
   'wifi': require('./reports/wifi'),
-  'all': require('./reports/all')
+  'all': require('./reports/all'),
+  'address_book': require('./reports/address_book')
 }
 
 program
