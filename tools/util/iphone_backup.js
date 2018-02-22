@@ -11,6 +11,7 @@ const databases = {
   SMS: '3d0d7e5fb2ce288813306e4d4636395e047a3d28',
   Contacts: '31bb7ba8914766d4ba40d6dfb6113c8b614be442',
   Calendar: '2041457d5fe04d39d0ab481178355df6781e6858',
+  'Cookies.binarycookies': 'fdda2f81cc0b838dc00e3050b14da7ef2d835f3c',
   Reminders: '2041457d5fe04d39d0ab481178355df6781e6858',
   Notes: 'ca3bc056d4da0bbf88b5fb3be254f3b7147e639c',
   Notes2: '4f98687d8ab0d6d1a371110e6b7300f6e465bef2',
@@ -486,19 +487,16 @@ class iPhoneBackup {
 
   getCookies () {
     return new Promise((resolve, reject) => {
-      const self = this
-      var manifestdb = this.getDatabase('Manifest.db', true)
-      manifestdb.all(`SELECT fileID,domain,relativePath from FILES where relativePath like 'Library/Cookies/Cookies.binarycookies'`, async function (err, rows) {
+      cookieParser.parse(this.getFileName(databases["Cookies.binarycookies"]), (err, cookies) => {
         if (err) reject(err)
-        let cookies = [];
-        for (let row of rows) {
-          console.log(self.getFileName(row.fileID), row.domain)
-          cookieParser.parse(self.getFileName(row.fileID), (err, cookies) => {
-            if (err) reject(err)
-            resolve(cookies)
-          })
-        }
-      })
+        cookies.forEach(cookie => {
+          cookie.url = cookie.url.replace(/\0/g, '')
+          cookie.name = cookie.name.replace(/\0/g, '')
+          cookie.path = cookie.path.replace(/\0/g, '')
+          cookie.value = cookie.value.replace(/\0/g, '')
+        });
+        resolve(cookies)
+      });
     })
   }
 }
