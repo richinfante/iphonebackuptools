@@ -22,7 +22,8 @@
     "json2csv": "^3.11.5",
     "plist": "^2.0.1",
     "sqlite3": "^3.1.8",
-    "strip-ansi": "^4.0.0"
+    "strip-ansi": "^4.0.0",
+    "zpad": "^0.5.0"
   },
   "devDependencies": {
     "tap": "^11.1.0"
