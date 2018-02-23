@@ -47,7 +47,7 @@ UDID="0c1bc52c50016933679b0980ccff3680e5831162"
     - `conversations` - List all SMS and iMessage conversations
     - `list` - List of all backups. alias for -l
     - `manifest` - List all the files contained in the backup (iOS 10+)
-    - `messages` - List all SMS and iMessage messages in a conversation
+    - `messages` - List all SMS and iMessage messages in a conversation. This requires using the `--id` flag to specify a conversation to inspect.
     - `notes` - List all iOS notes
     - `oldnotes` - List all iOS notes (from older unused database)
     - `photolocations` - List all geolocation information for iOS photos (iOS 10+)
@@ -96,18 +96,42 @@ ibackuptool -b $UDID --report manifest --extract BACKUP --filter all
 ibackuptool -b $UDID --report manifest --extract BACKUP --filter CameraRollDomain
 ```
 
+### Reporting formats
+iBackupTool now supports multiple kinds of data export:
+- `table` - Selected data columns in an ascii table
+- `json` - Selected data columns for display (same data as `table`)
+- `csv` - CSV file containing selected columns (same data as `table`)
+
+Additionally, there are more comprehensive export functions that will export ALL the data collected, and keep original formatting and columns:
+- `raw-csv` - Full-data CSV export from each of the tables.
+- `raw`, `raw-json` - Full-data JSON export from each of the tables. This output can be quite large.
+
+### Multiple-Reporting 
+You can also provide a comma separated list of reports to generate. Additionally, there is a special `all` report type which will run all available reports. This is best paired with the `-o` option for saving to disk and the `-f` option for selecting a format such as CSV, or JSON.
+
+```bash
+ibackuptool -b $UDID --report wifi,calls,voicemail
+```
+
+the `-o` option specifies a folder to export reports to:
+```bash
+ibackuptool -b $UDID --report wifi,calls,voicemail -o exported
+```
+
+#### Joined Reports
+Additionally, for the `json` and `raw-json` types, there's a `--join-reports` flag which will merge all of the data into a single JSON file, where the top level object has a key for each report type that is selected.
+
+
 ### Messages Access
 
 ```bash
 # List of all conversations, indexed by ID.
 # Each row starts with an ID number, which is needed for the next step.
-ibackuptool -b $UDID --conversations
 ibackuptool -b $UDID --report conversations
 
 # Now, Fetch the messages with the following command
 # Replace $CONVERSATION_ID with a row ID from `ibackuptool -b $UDID --conversations`
-ibackuptool -b $UDID --messages $CONVERSATION_ID
-ibackuptool -b $UDID --report messages --messages $CONVERSATION_ID
+ibackuptool -b $UDID --report messages --id $CONVERSATION_ID
 ```
 
 ## Need More Data?

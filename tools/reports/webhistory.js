@@ -6,35 +6,31 @@ const normalizeCols = require('../util/normalize.js')
 module.exports.name = 'webhistory'
 module.exports.description = 'List all web history'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+// Specify this only works for iOS 6+
+module.exports.supportedVersions = '>=9.0'
+
+module.exports.func = function (program, backup, resolve, reject) {
+
   backup.getWebHistory(program.dump)
     .then((history) => {
-      if (program.dump) {
-        console.log(JSON.stringify(history, null, 4))
-        return
-      }
+      
+      var result = program.formatter.format(history, {
+        program: program,
+        columns: {
+          'Time': el => el.XFORMATTEDDATESTRING,
+          'URL': el => new URL(el.url || '').origin || '',
+          'Title': el => (el.title || '').substring(0, 64)
+        }
+      })
 
-      var items = history.map(el => [
-        el.XFORMATTEDDATESTRING + '' || '',
-        new URL(el.url || '').origin || '',
-        (el.title || '').substring(0, 64)
-      ])
-
-      items = [['Time', 'URL', 'Title'], ['-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+      resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }

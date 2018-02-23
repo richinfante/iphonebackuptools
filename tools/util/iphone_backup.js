@@ -45,22 +45,29 @@ class iPhoneBackup {
 
     // Parse manifest bplist files
     try {
+      if (global.verbose) console.log('parsing status', base)
       var status = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Status.plist')))[0]
     } catch (e) {
       console.log('Cannot open Status.plist', e)
     }
     try {
+      if (global.verbose) console.log('parsing manifest', base)
       var manifest = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Manifest.plist')))[0]
     } catch (e) {
       console.log('Cannot open Manifest.plist', e)
     }
     try {
+      if (global.verbose) console.log('parsing status', base)
       var info = plist.parse(fs.readFileSync(path.join(base, 'Info.plist'), 'utf8'))
     } catch (e) {
       console.log('Cannot open Info.plist', e)
     }
 
     return new iPhoneBackup(id, status, info, manifest, base)
+  }
+
+  get iOSVersion () {
+    return this.manifest.Lockdown.ProductVersion
   }
 
   getFileName (fileID, isAbsoulte) {
@@ -86,6 +93,17 @@ class iPhoneBackup {
       // v3 has folders
       return new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY)
     }
+  }
+
+  queryDatabase (databaseID, sql) {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databaseID)
+      messagedb.all(sql, async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    })
   }
 
   getName (messageDest) {
@@ -126,7 +144,7 @@ class iPhoneBackup {
     })
   }
 
-  getMessagesiOS9 (chatId, dumpAll) {
+  getMessagesiOS9 (chatId) {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
@@ -146,7 +164,6 @@ class iPhoneBackup {
        if (err) return reject(err)
 
        chats = chats || []
-       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
 
         // Compute the user's name
        for (var i in chats) {
@@ -167,7 +184,7 @@ class iPhoneBackup {
     })
   }
 
-  getMessagesiOS10iOS11 (chatId, dumpAll) {
+  getMessagesiOS10iOS11 (chatId) {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
@@ -187,7 +204,6 @@ class iPhoneBackup {
        if (err) return reject(err)
 
        chats = chats || []
-       if (dumpAll) console.log(JSON.stringify(chats, null, 4))
 
         // Compute the user's name
        for (var i in chats) {
@@ -208,15 +224,15 @@ class iPhoneBackup {
     })
   }
 
-  getMessages (chatId, dumpAll) {
+  getMessages (chatId) {
     if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
-      return this.getMessagesiOS9(chatId, dumpAll)
+      return this.getMessagesiOS9(chatId)
     } else {
-      return this.getMessagesiOS10iOS11(chatId, dumpAll)
+      return this.getMessagesiOS10iOS11(chatId)
     }
   }
 
-  getConversationsiOS9 (dumpAll) {
+  getConversationsiOS9 () {
     var backup = this
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
@@ -263,32 +279,28 @@ class iPhoneBackup {
           return (a.date.getTime() || 0) - (b.date.getTime() || 0)
         })
 
-        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
-
         resolve(rows)
       })
     })
   }
 
-  getConversationsiOS10iOS11 (dumpAll) {
+  getConversationsiOS10iOS11 () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.SMS)
       messagedb.all(`SELECT *, datetime(last_read_message_timestamp / 1000000000 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM chat ORDER BY last_read_message_timestamp ASC`, async function (err, rows) {
         if (err) return reject(err)
         rows = rows || []
 
-        if (dumpAll) console.log(JSON.stringify(rows, null, 4))
-
         resolve(rows)
       })
     })
   }
 
-  getConversations (dumpAll) {
+  getConversations () {
     if (parseInt(this.manifest.Lockdown.BuildVersion) <= 14) {
-      return this.getConversationsiOS9(dumpAll)
+      return this.getConversationsiOS9()
     } else {
-      return this.getConversationsiOS10iOS11(dumpAll)
+      return this.getConversationsiOS10iOS11()
     }
   }
 

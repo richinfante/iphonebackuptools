@@ -5,37 +5,28 @@ const normalizeCols = require('../util/normalize.js')
 module.exports.name = 'oldnotes'
 module.exports.description = 'List all iOS notes (from older unused database)'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-  // Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+module.exports.func = function (program, backup, resolve, reject) {
+
   backup.getOldNotes(program.dump)
     .then((items) => {
-      // Dump if needed
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
 
-      // Otherwise, format table
-      items = items.map(el => [el.XFORMATTEDDATESTRING + '', (el.Z_PK + ''), (el.ZTITLE + '').substring(0, 128)])
-      items = [
-        ['Modified', 'ID', 'Title'],
-        ['-', '-', '-'], ...items
-      ]
-      items = normalizeCols(items).map(el => el.join(' | ')).join('\n')
+      var result = program.formatter.format(items, {
+        program: program,
+        columns: {
+          'Modified': el => el.XFORMATTEDDATESTRING,
+          'ID': el => el.Z_PK,
+          'Title': el => (el.ZTITLE + '').substring(0, 128)
+        }
+      })
 
-      if (!program.color) {
-        items = stripAnsi(items)
-      }
-
-      console.log(items)
+      resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }

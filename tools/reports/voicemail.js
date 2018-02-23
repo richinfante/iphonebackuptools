@@ -1,44 +1,37 @@
-const stripAnsi = require('strip-ansi')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
-
 module.exports.name = 'voicemail'
 module.exports.description = 'List all or extract voicemails on device'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+// Specify this only works for iOS 10+
+module.exports.supportedVersions = '>=9.0'
+
+module.exports.func = function (program, backup, resolve, reject) {
+
   backup.getVoicemailsList()
     .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
 
-      items = items.map(el => [
-        el.ROWID + '',
-        el.XFORMATTEDDATESTRING,
-        el.sender + '',
-        el.token + '',
-        el.duration + '',
-        el.expiration + '',
-        el.trashed_date + '',
-        el.flags + ''
-      ])
+      var result = program.formatter.format(items, {
+        program: program,
+        columns: {
+          'ID': el => el.ROWID,
+          'Date': el => el.XFORMATTEDDATESTRING,
+          'Sender': el => el.sender,
+          'Token': el => el.token,
+          'Duration': el => el.duration,
+          'Expiration': el => el.expiration,
+          'Duration': el => el.duration,
+          'Trashed': el => el.trashed_date,
+          'Flags': el => el.flags
+        }
+      })
 
-      items = [['ID', 'Date', 'Sender', 'Token', 'Duration', 'Expiration', 'Trashed', 'Flags'], ['-', '-', '-', '-', '-', '-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+      resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }

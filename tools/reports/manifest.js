@@ -7,15 +7,19 @@ const path = require('path')
 module.exports.name = 'manifest'
 module.exports.description = 'List all the files contained in the backup (iOS 10+)'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
-  backup.getFileManifest()
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+// Specify this only works for iOS 10+
+module.exports.supportedVersions = '>=10.0'
+
+module.exports.func = function (program, backup, resolve, reject) {
+
+    backup.getFileManifest()
     .then((items) => {
       if (program.dump) {
         console.log(JSON.stringify(items, null, 4))
@@ -61,22 +65,22 @@ module.exports.func = function (program, base) {
             console.log(chalk.red('fail'), item.relativePath, e.toString())
           }
         }
+
+        resolve(result)
       } else {
-        // Otherwise, output the table of items.
-        items = items.map(el => [
-          el.fileID + '',
-          el.domain + ': ' + el.relativePath
-        ])
 
-        items = [['ID', 'Domain/Path'], ['-'], ...items]
-        items = normalizeCols(items, 1).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+        var result = program.formatter.format(items, {
+          program: program,
+          columns: {
+            'ID': el => el.fileID,
+            'Domain/Path': el => el.domain + ': ' + el.relativePath
+          }
+        })
 
-        if (!program.color) { items = stripAnsi(items) }
-
-        console.log(items)
+        resolve(result)
       }
     })
     .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
+        console.log('[!] Encountered an Error:', e)
     })
 }

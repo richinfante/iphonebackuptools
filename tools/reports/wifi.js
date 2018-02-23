@@ -5,39 +5,32 @@ const normalizeCols = require('../util/normalize.js')
 module.exports.name = 'wifi'
 module.exports.description = 'List associated wifi networks and their usage information'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+module.exports.func = function (program, backup, resolve, reject) {
+
   backup.getWifiList()
     .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
 
-      items = items['List of known networks'].map(el => [
-        el.lastJoined + '' || '',
-        el.lastAutoJoined + '' || '',
-        el.SSID_STR + '',
-        el.BSSID + '',
-        el.SecurityMode || '',
-        el.HIDDEN_NETWORK + '',
-        el.enabled + ''
-      ]).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+      var result = program.formatter.format(items['List of known networks'], {
+        program: program,
+        columns: {
+          'Last Joined': el => el.lastJoined,
+          'Last AutoJoined': el => el.lastAutoJoined,
+          'SSID': el => el.SSID_STR,
+          'BSSID': el => el.BSSID,
+          'Security': el => el.SecurityMode || '',
+          'Hidden': el => el.HIDDEN_NETWORK || '',
+          'Enabled': el => el.enabled
+        }
+      })
 
-      items = [['Last Joined', 'Last AutoJoined', 'SSID', 'BSSID', 'Security', 'Hidden', 'Enabled'], ['-', '-', '-', '-', '-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+      resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }

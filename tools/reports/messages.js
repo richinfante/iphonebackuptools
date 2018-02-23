@@ -6,32 +6,38 @@ const normalizeCols = require('../util/normalize.js')
 module.exports.name = 'messages'
 module.exports.description = 'List all SMS and iMessage messages in a conversation'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
+
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+// Should this report be skipped in automated reports?
+// This is used when the 'all' report type is specified, and all possible reports are generated.
+// with this set to true, the report WILL NOT run when report type = 'all'
+module.exports.requiresInteractivity = true
+
+module.exports.func = function (program, backup, resolve, reject) {
+  if (!program.id) {
+    console.log('use -i or --id <id> to specify conversation ID.')
     process.exit(1)
   }
 
-  // Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
-
-  backup.getMessages(program.messages, program.dump)
+  backup.getMessages(program.id)
     .then((items) => {
-      if (program.dump) return
+  
+      var result = program.formatter.format(items, {
+        program: program,
+        columns: {
+          'ID' : el => el.ROWID,
+          'Date': el => el.XFORMATTEDDATESTRING,
+          'Sender': el => el.x_sender,
+          'Text': el => (el.text || '').trim()
+        }
+      })
 
-      items = items.map(el => [
-        chalk.gray(el.XFORMATTEDDATESTRING + ''),
-        chalk.blue(el.x_sender + ''),
-        el.text || ''
-      ])
-
-      items = normalizeCols(items, 2).map(el => el.join(' | ')).join('\n')
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
+      resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }

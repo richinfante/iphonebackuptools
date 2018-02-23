@@ -3,29 +3,32 @@ const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
 module.exports.name = 'apps'
 module.exports.description = 'List all installed applications and container IDs.'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-        // Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
 
-  if (!backup.manifest) return {}
+module.exports.func = function (program, backup, resolve, reject) {
 
-        // Possibly dump output
-  if (program.dump) {
-    console.log(JSON.stringify(backup.manifest, null, 4))
-    return
-  }
+  if (!backup.manifest) return reject(new Error('Manifest does not exist in this version'))
 
-        // Enumerate the apps in the backup
+  // Enumerate the apps in the backup
   var apps = []
   for (var key in backup.manifest.Applications) {
-    apps.push(key)
+    var app = backup.manifest.Applications[key]
+
+    apps.push({ bundleID: app.CFBundleIdentifier, path:  app.Path})
   }
 
-  console.log(`Apps installed inside backup: ${backup.id}`)
-  console.log(apps.map(el => '- ' + el).join('\n'))
+  var result = program.formatter.format(apps, {
+    program: program,
+    columns: {
+      'Bundle ID': el => el.bundleID,
+      'Bundle Path': el => el.path
+    }
+  })
+
+  resolve(result)
 }
