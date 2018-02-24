@@ -1,13 +1,10 @@
-const stripAnsi = require('strip-ansi')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
 const path = require('path')
 const fs = require('fs-extra')
 
 module.exports.name = 'voicemail-files'
 module.exports.description = 'List all or extract voicemail files (iOS 10+)'
 
-// Specify this reporter requires a backup. 
+// Specify this reporter requires a backup.
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = true
 
@@ -15,10 +12,8 @@ module.exports.requiresBackup = true
 module.exports.usesPromises = true
 
 module.exports.func = function (program, backup, resolve, reject) {
-
   backup.getVoicemailFileList()
     .then((list) => {
-
       // Extract to the specified location
       if (program.extract) {
         for (var item of list) {

@@ -1,14 +1,10 @@
-const stripAnsi = require('strip-ansi')
 const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
-const chalk = require('chalk')
 const fs = require('fs-extra')
 
 module.exports.name = 'list'
 module.exports.description = 'List of all backups. alias for -l'
 
-
-// Specify this reporter requires a backup. 
+// Specify this reporter requires a backup.
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = false
 

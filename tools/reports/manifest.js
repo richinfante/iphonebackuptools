@@ -1,13 +1,10 @@
-const stripAnsi = require('strip-ansi')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
 const fs = require('fs-extra')
 const chalk = require('chalk')
 const path = require('path')
 module.exports.name = 'manifest'
 module.exports.description = 'List all the files contained in the backup (iOS 10+)'
 
-// Specify this reporter requires a backup. 
+// Specify this reporter requires a backup.
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = true
 
@@ -18,8 +15,7 @@ module.exports.usesPromises = true
 module.exports.supportedVersions = '>=10.0'
 
 module.exports.func = function (program, backup, resolve, reject) {
-
-    backup.getFileManifest()
+  backup.getFileManifest()
     .then((items) => {
       if (program.dump) {
         console.log(JSON.stringify(items, null, 4))
@@ -47,14 +43,14 @@ module.exports.func = function (program, backup, resolve, reject) {
             if (stat.isFile() && fs.existsSync(sourceFile)) {
               console.log(chalk.green('export'), item.relativePath)
 
-                // Calculate the output dir.
+              // Calculate the output dir.
               var outDir = path.join(program.extract, item.domain, item.relativePath)
 
-                // Create the directory and copy
+              // Create the directory and copy
               fs.ensureDirSync(path.dirname(outDir))
               fs.copySync(sourceFile, outDir)
 
-                // Save output info to the data item.
+              // Save output info to the data item.
               item.output_dir = outDir
             } else if (stat.isDirectory()) {
               // Do nothing..
@@ -66,9 +62,8 @@ module.exports.func = function (program, backup, resolve, reject) {
           }
         }
 
-        resolve(result)
+        resolve([])
       } else {
-
         var result = program.formatter.format(items, {
           program: program,
           columns: {
@@ -81,6 +76,6 @@ module.exports.func = function (program, backup, resolve, reject) {
       }
     })
     .catch((e) => {
-        console.log('[!] Encountered an Error:', e)
+      console.log('[!] Encountered an Error:', e)
     })
 }

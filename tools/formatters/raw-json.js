@@ -1,12 +1,12 @@
 module.exports.format = function (data, options) {
   var output = JSON.stringify(data)
 
-  if(options.program) {
+  if (options.program) {
     // If reporting output is defined, ignore console log here.
     if (options.program.reportOutput === undefined) {
       console.log(output)
     } else {
-        return data
+      return data
     }
   } else {
     console.log(output)
@@ -18,7 +18,7 @@ module.exports.format = function (data, options) {
 const fs = require('fs-extra')
 const path = require('path')
 
-module.exports.finalReport = async function(reports, program) {
+module.exports.finalReport = async function (reports, program) {
   if (program.reportOutput === undefined) {
     return
   }
@@ -26,17 +26,17 @@ module.exports.finalReport = async function(reports, program) {
   if (program.joinReports) {
     var out = {}
 
-    for(var report of reports) {
+    for (var report of reports) {
       console.log('saving report', report.name)
       out[report.name] = report.contents
     }
 
-    if (program.reportOutput == '-') {
+    if (program.reportOutput === '-') {
       console.log(JSON.stringify(out, null, 2))
     } else {
       // fs.ensureDirSync(path.dirname(program.reportOutput))
-      //fs.copySync(sourceFile, outDir)
-      var outPath = program.reportOutput + '.json'
+      // fs.copySync(sourceFile, outDir)
+      let outPath = program.reportOutput + '.json'
       console.log('writing joined to', outPath)
       fs.writeFileSync(outPath, JSON.stringify(out), 'utf8')
     }
@@ -45,11 +45,10 @@ module.exports.finalReport = async function(reports, program) {
     fs.ensureDirSync(program.reportOutput)
 
     // Write each report to the disk
-    for(var report of reports) {
-      var outPath = path.join(program.reportOutput, report.name + '.json')
+    for (let report of reports) {
+      let outPath = path.join(program.reportOutput, report.name + '.json')
       console.log('saving', outPath)
       fs.writeFileSync(outPath, JSON.stringify(report.contents), 'utf8')
     }
   }
 }
-

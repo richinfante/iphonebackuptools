@@ -96,6 +96,18 @@ ibackuptool -b $UDID --report manifest --extract BACKUP --filter all
 ibackuptool -b $UDID --report manifest --extract BACKUP --filter CameraRollDomain
 ```
 
+### Messages Access
+
+```bash
+# List of all conversations, indexed by ID.
+# Each row starts with an ID number, which is needed for the next step.
+ibackuptool -b $UDID -r conversations
+
+# Now, Fetch the messages with the following command
+# Replace $CONVERSATION_ID with a row ID from `ibackuptool -b $UDID -r conversations`
+ibackuptool -b $UDID -r messages --id $CONVERSATION_ID
+```
+
 ### Reporting formats
 iBackupTool now supports multiple kinds of data export:
 - `table` - Selected data columns in an ascii table
@@ -106,47 +118,49 @@ Additionally, there are more comprehensive export functions that will export ALL
 - `raw-csv` - Full-data CSV export from each of the tables.
 - `raw`, `raw-json` - Full-data JSON export from each of the tables. This output can be quite large.
 
-### Multiple-Reporting 
+#### Multiple-Reporting 
 You can also provide a comma separated list of reports to generate. Additionally, there is a special `all` report type which will run all available reports. This is best paired with the `-o` option for saving to disk and the `-f` option for selecting a format such as CSV, or JSON.
 
 ```bash
+# Report wifi, calls, voicemail
 ibackuptool -b $UDID --report wifi,calls,voicemail
-```
 
-the `-o` option specifies a folder to export reports to:
-```bash
-ibackuptool -b $UDID --report wifi,calls,voicemail -o exported
+# Report all possible
+ibackuptool -b $UDID --report all
 ```
 
 #### Joined Reports
 Additionally, for the `json` and `raw-json` types, there's a `--join-reports` flag which will merge all of the data into a single JSON file, where the top level object has a key for each report type that is selected.
 
-
-### Messages Access
-
 ```bash
-# List of all conversations, indexed by ID.
-# Each row starts with an ID number, which is needed for the next step.
-ibackuptool -b $UDID --report conversations
-
-# Now, Fetch the messages with the following command
-# Replace $CONVERSATION_ID with a row ID from `ibackuptool -b $UDID --conversations`
-ibackuptool -b $UDID --report messages --id $CONVERSATION_ID
+# Generate both wifi and calls reports, joined as JSON
+ibackuptool -b $UDID -r wifi,calls -f json --join-reports
 ```
 
-## Need More Data?
-- !! This will cause the program to output **Everything** to STDOUT as formatted JSON. !!
-- Append the `--dump` flag to the program.
-- I'd recommend piping this output to a file.
+### Output to disk
+the `-o <path>` (`--output <path>`option specifies a folder to export reports to. If the directory does not exist, it will be created. For joined JSON reports, a single json file is exported instead of multiple files in a directory.
 
-- You should make a backup of the backups you look at using this tool, even though they are opened as read-only, you should still do that do you don't accidentally do something to lose data.
+```bash
+# Export wifi, calls, voicemail as CSV files to disk in a folder named "exported/"
+ibackuptool -b $UDID --report wifi,calls,voicemail -f csv -o exported
+```
+## Running Tests
+first, install [tap](https://www.npmjs.com/package/tap)
+
+next, run `npm test`.
+
+## Important!
+You should make a backup of the backups you look at using this tool, even though they are opened as read-only, you should still do that do you don't accidentally do something to lose data.
+
+## Contributing
+See [Contributing.md](Contributing.md)
 
 ## TODO
-- Contact name lookup for newer iOS10, iOS11 backups
+See [Roadmap](https://github.com/richinfante/iphonebackuptools/wiki/Roadmap-and-Vision)
 
 ## Legal
 
-Copyright &copy; 2017 Richard Infante.
+Copyright &copy; 2017-2018 Richard Infante.
 
 Available under the MIT License.
 

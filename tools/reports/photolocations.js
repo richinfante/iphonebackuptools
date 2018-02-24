@@ -1,7 +1,7 @@
 module.exports.name = 'photolocations'
 module.exports.description = 'List all geolocation information for iOS photos (iOS 10+)'
 
-// Specify this reporter requires a backup. 
+// Specify this reporter requires a backup.
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = true
 
@@ -22,7 +22,7 @@ module.exports.func = function (program, backup, resolve, reject) {
           'Time': el => el.XFORMATTEDDATESTRING,
           'Latitude': el => el.ZLATITUDE,
           'Longitude': el => el.ZLONGITUDE,
-          'File': el => el.ZFILENAME,
+          'File': el => el.ZFILENAME
         }
       })
 
