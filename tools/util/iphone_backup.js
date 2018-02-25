@@ -8,7 +8,7 @@ const plist = require('plist')
 const macParse = require('./mac_address_parse')
 
 // Derive filenames based on domain + file path
-const fileHash = require('./baskup_filehash')
+const fileHash = require('./backup_filehash')
 
 const databases = {
   SMS: fileHash('Library/SMS/sms.db'),
