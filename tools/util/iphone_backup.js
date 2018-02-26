@@ -394,10 +394,20 @@ class iPhoneBackup {
     })
   }
 
-  getCallsStatistics () {
+  getCallsStatisticsiOS7 () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Calls)
       messagedb.all(`SELECT * from _SqliteDatabaseProperties`, async function (err, rows) {
+        if (err) reject(err)
+        resolve(rows)
+      })
+    })
+  }
+
+  getCallsStatistics () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls2)
+      messagedb.all(`SELECT * from ZCALLDBPROPERTIES`, async function (err, rows) {
         if (err) reject(err)
         resolve(rows)
       })

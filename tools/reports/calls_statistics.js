@@ -8,11 +8,30 @@ module.exports.requiresBackup = true
 // Specify this reporter supports the promises API for allowing chaining of reports.
 module.exports.usesPromises = true
 
-// Specify this only works for iOS 7 and earlier
-module.exports.supportedVersions = '<=7.1.2'
+// You can also provide an array of functions instead of using `module.exports.func`.
+// These functions *should* be independent ranges to ensure reliable execution
+module.exports.functions = {
+  '>=9.0': function(program,backup,resolve,reject) {
+    // This function would be called for iOS 10+
+    backup.getCallsStatistics()
+    .then((items) => {
+      
+      var result = program.formatter.format(Object.entries(items[0]), {
+        program: program,
+        columns: {
+          'Key': el => el[0] + '',
+          'Value': el => el[1] + ''
+        }
+      })
 
-module.exports.func = function (program, backup, resolve, reject) {
-  backup.getCallsStatistics()
+      resolve(result)
+
+    })
+    .catch(reject)
+  }, 
+  '>=1.0,<9.0': function(program,backup,resolve,reject) {
+    // This function would be called for all iOS 9.
+    backup.getCallsStatisticsiOS7()
     .then((items) => {
 
       var result = program.formatter.format(items, {
@@ -27,4 +46,5 @@ module.exports.func = function (program, backup, resolve, reject) {
 
     })
     .catch(reject)
+  }
 }
