@@ -1,39 +1,30 @@
-const stripAnsi = require('strip-ansi')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
-
 module.exports.name = 'calls_statistics'
 module.exports.description = 'Get statistics about all calls'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
+
+// Specify this only works for iOS 7 and earlier
+module.exports.supportedVersions = '<=7.1.2'
+
+module.exports.func = function (program, backup, resolve, reject) {
   backup.getCallsStatistics()
     .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
 
-    items = items.map(el => [
-        el.key + '',
-        el.value + ''
-      ])
+      var result = program.formatter.format(items, {
+        program: program,
+        columns: {
+          'Key': el => el.key + '',
+          'Value': el => el.value + ''
+        }
+      })
 
-      items = [['key', 'value'], ['-', '-'], ...items]
-      items = normalizeCols(items).map(el => el.join(' | ').replace(/\n/g, '')).join('\n')
+      resolve(result)
 
-
-      if (!program.color) { items = stripAnsi(items) }
-
-      console.log(items)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }
