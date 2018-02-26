@@ -1,39 +1,31 @@
-const stripAnsi = require('strip-ansi')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
-
 module.exports.name = 'cookies'
 module.exports.description = 'List all iOS cookies'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-// Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
-  return backup.getCookies()
-  /*
-  if (program.dump) return backup.getNotes(program.dump)
-  else {
-    backup.getNotes(program.dump)
-      .then((items) => {
-        items = items.map(el => [
-          (el.XFORMATTEDDATESTRING || el.XFORMATTEDDATESTRING1) + '',
-              (el.Z_PK + ''),
-          (el.ZTITLE2 + '').trim().substring(0, 128),
-          (el.ZTITLE1 + '').trim() || ''
-        ])
-        items = [['Modified', 'ID', 'Title2', 'Title1'], ['-', '-', '-', '-'], ...items]
-        items = normalizeCols(items, 3).map(el => el.join(' | ')).join('\n')
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
 
-        if (!program.color) { items = stripAnsi(items) }
+module.exports.func = function (program, backup, resolve, reject) {
 
-        console.log(items)
-      })
-      .catch((e) => {
-        console.log('[!] Encountered an Error:', e)
-      })
-  }*/
+  backup.getCookies()
+  .then((items) => {
+    // Use the configured formatter to print the rows.
+    const result = program.formatter.format(items, {
+      // Color formatting?
+      program: program,
+
+      // Columns to be displayed in human-readable printouts.
+      // Some formatters, like raw or CSV, ignore these.
+      columns: {
+        'domain': el => el.domain,
+        'url': el => el.cookie.url
+      }
+    })
+
+    resolve(result)
+  })
+  .catch(reject)
 }

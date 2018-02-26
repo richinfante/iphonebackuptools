@@ -511,11 +511,11 @@ class iPhoneBackup {
                 cookie.name = cookie.name.replace(/\0/g, '')
                 cookie.path = cookie.path.replace(/\0/g, '')
                 cookie.value = cookie.value.replace(/\0/g, '')
+                cookiesResult.push({
+                  domain: ele.domain,
+                  cookie: cookie
+                })
               });
-              cookiesResult.push({
-                domain: ele.domain,
-                cookies: cookies
-              })
             }
             iterateElements(elements, index+1, callback);
           })
@@ -523,16 +523,6 @@ class iPhoneBackup {
         iterateElements(rows, 0, () => {
           resolve(cookiesResult)
         })
-        /*
-        for (let row of rows) {
-          console.log(self.getFileName(row.fileID), row.domain)
-          cookieParser.parse(self.getFileName(row.fileID), (err, cookies) => {
-            if (err) {
-              console.error(row.domain, ': ', err)
-            }
-            resolve(cookies)
-          })
-        }*/
       })
     })
   }
