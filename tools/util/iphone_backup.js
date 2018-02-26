@@ -529,7 +529,6 @@ class iPhoneBackup {
   }
 
   getAddressBook () {
-    console.log("OK");
     return new Promise((resolve, reject) => {
       var addressbookdb = this.getDatabase(databases.AddressBook);
       try {

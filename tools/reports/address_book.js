@@ -1,39 +1,38 @@
-const stripAnsi = require('strip-ansi')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
-
 module.exports.name = 'address_book'
-module.exports.description = 'List all iOS Address Book contents'
+module.exports.description = 'List all address book records contained in the backup.'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-  // Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
-  return backup.getAddressBook()
-  /*
-  if (program.dump) return backup.getAddressBook()
-  else {
-    backup.getNotes(program.dump)
-      .then((items) => {
-        items = items.map(el => [
-          (el.XFORMATTEDDATESTRING || el.XFORMATTEDDATESTRING1) + '',
-              (el.Z_PK + ''),
-          (el.ZTITLE2 + '').trim().substring(0, 128),
-          (el.ZTITLE1 + '').trim() || ''
-        ])
-        items = [['Modified', 'ID', 'Title2', 'Title1'], ['-', '-', '-', '-'], ...items]
-        items = normalizeCols(items, 3).map(el => el.join(' | ')).join('\n')
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
 
-        if (!program.color) { items = stripAnsi(items) }
+module.exports.func = function (program, backup, resolve, reject) {
+  backup.getAddressBook()
+  .then((items) => {
 
-        console.log(items)
-      })
-      .catch((e) => {
-        console.log('[!] Encountered an Error:', e)
-      })
-  }*/
+    // Use the configured formatter to print the rows.
+    const result = program.formatter.format(items, {
+      // Color formatting?
+      program: program,
+
+      // Columns to be displayed in human-readable printouts.
+      // Some formatters, like raw or CSV, ignore these.
+      columns: {
+        'ID': el => el.ROWID,
+        'First': el => el.First ? el.First.substring(0,10) + '' : '',
+        'Last': el => el.Last ? el.Last.substring(0,10) + '' : '',
+        'Organization': el => el.organization ? el.organization.substring(0,10) + '' : '',
+        'Phone Work': el => el.phone_work ? el.phone_work.substring(0,14) + '' : '',
+        'Phone Mobile': el => el.phone_mobile ? el.phone_mobile.substring(0,14) + '' : '',
+        'Phone Home': el => el.phone_home ? el.phone_home.substring(0,14) + '' : '',
+        'Email': el => el.email ? el.email.substring(0,28) + '' : ''
+      }
+    })
+
+    // If using promises, we must call resolve()
+    resolve(result)
+  })
+  .catch(reject)
 }
