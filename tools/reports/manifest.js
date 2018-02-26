@@ -17,11 +17,6 @@ module.exports.supportedVersions = '>=10.0'
 module.exports.func = function (program, backup, resolve, reject) {
   backup.getFileManifest()
     .then((items) => {
-      if (program.dump) {
-        console.log(JSON.stringify(items, null, 4))
-        return
-      }
-
       // Extract items for analysis on-disk.
       if (program.extract) {
         for (var item of items) {

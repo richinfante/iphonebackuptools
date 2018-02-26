@@ -4,6 +4,9 @@ const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
 
+// Cookie Parser
+const cookieParser = require('binary-cookies')()
+
 // Normalize mac addresses in wifi output
 const macParse = require('./mac_address_parse')
 
@@ -17,6 +20,8 @@ const databases = {
   Reminders: fileHash('Library/Calendar/Calendar.sqlitedb'),
   Notes: fileHash('Library/Notes/notes.sqlite'),
   Notes2: fileHash('NoteStore.sqlite', 'AppDomainGroup-group.com.apple.notes'),
+  AddressBook: fileHash('Library/AddressBook/AddressBook.sqlitedb'),
+  'Cookies.binarycookies': '69b1865768101bacde5b77ccc44445cea9ce1261',
   Calls: '2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca',
   Calls2: fileHash('Library/CallHistoryDB/CallHistory.storedata'),
   Locations: fileHash('Library/Caches/locationd/consolidated.db', 'RootDomain'),
@@ -395,7 +400,56 @@ class IPhoneBackup {
     })
   }
 
+  getCallsStatisticsiOS7 () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls)
+      messagedb.all(`SELECT * from _SqliteDatabaseProperties`, async function (err, rows) {
+        if (err) reject(err)
+        resolve(rows)
+      })
+    })
+  }
+
+  getCallsStatistics () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls2)
+      messagedb.all(`SELECT * from ZCALLDBPROPERTIES`, async function (err, rows) {
+        if (err) reject(err)
+        resolve(rows)
+      })
+    })
+  }
+
   getCallsList () {
+    if (parseInt(this.manifest.Lockdown.BuildVersion) <= 13) {
+      // Legacy iOS 9 support
+      // May work for earlier but I haven't tested it
+      return this.getCallsListiOS7()
+    } else {
+      return this.getCallsListLater()
+    }
+  }
+
+  getCallsListiOS7 () {
+    return new Promise((resolve, reject) => {
+      var messagedb = this.getDatabase(databases.Calls)
+      messagedb.all(`SELECT 
+        ROWID as Z_PK, 
+        datetime(date, 'unixepoch') AS XFORMATTEDDATESTRING, 
+        answered as ZANSWERED,
+        duration as ZDURATION,
+        address as ZADDRESS,
+        country_code as ZISO_COUNTRY_CODE, 
+        country_code as ZISO_COUNTRY_CODE, 
+        * from call ORDER BY date ASC`, async function (err, rows) {
+        if (err) reject(err)
+
+        resolve(rows)
+      })
+    })
+  }
+
+  getCallsListLater () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Calls2)
       messagedb.all(`SELECT *, datetime(ZDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING from ZCALLRECORD ORDER BY ZDATE ASC`, async function (err, rows) {
@@ -435,10 +489,89 @@ class IPhoneBackup {
         let wifiList = bplist.parseBuffer(fs.readFileSync(filename))[0]
         wifiList['List of known networks'] = wifiList['List of known networks']
           .map(el => {
-            if (el.BSSID) { el.BSSID = macParse.pad_zeros(el.BSSID) + '' }
+            if (el.BSSID) {
+              el.BSSID = macParse.pad_zeros(el.BSSID) + ''
+            }
             return el
           })
         resolve(wifiList)
+      } catch (e) {
+        reject(e)
+      }
+    })
+  }
+
+  getCookies () {
+    return new Promise((resolve, reject) => {
+      const self = this
+      var manifestdb = this.getDatabase('Manifest.db', true)
+      manifestdb.all(`SELECT fileID,domain,relativePath from FILES where relativePath like 'Library/Cookies/Cookies.binarycookies'`, async function (err, rows) {
+        if (err) reject(err)
+        let cookiesResult = []
+        const iterateElements = (elements, index, callback) => {
+          if (index === elements.length) { return callback() }
+          // do parse call with element
+          var ele = elements[index]
+          cookieParser.parse(self.getFileName(ele.fileID), function (err, cookies) {
+            // console.log(ele.domain, ':', cookies)
+
+            if (err) {
+              cookiesResult.push({
+                domain: ele.domain,
+                error: err
+              })
+            } else {
+              cookies.forEach(cookie => {
+                cookie.url = cookie.url.replace(/\0/g, '')
+                cookie.name = cookie.name.replace(/\0/g, '')
+                cookie.path = cookie.path.replace(/\0/g, '')
+                cookie.value = cookie.value.replace(/\0/g, '')
+                cookiesResult.push({
+                  domain: ele.domain,
+                  cookie: cookie
+                })
+              })
+            }
+            iterateElements(elements, index + 1, callback)
+          })
+        }
+        iterateElements(rows, 0, () => {
+          resolve(cookiesResult)
+        })
+      })
+    })
+  }
+
+  getAddressBook () {
+    return new Promise((resolve, reject) => {
+      var addressbookdb = this.getDatabase(databases.AddressBook)
+      try {
+        const query = `
+        select ABPerson.ROWID
+            , ABPerson.first
+            , ABPerson.middle
+            , ABPerson.last
+            , ABPerson.Organization as organization
+            , ABPerson.Department as department
+            , ABPerson.Birthday as birthday
+            , ABPerson.JobTitle as jobtitle
+
+            , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Work>!$_')) as phone_work
+            , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Mobile>!$_')) as phone_mobile
+            , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Home>!$_')) as phone_home
+
+            , (select value from ABMultiValue where property = 4 and record_id = ABPerson.ROWID) as email
+            
+            , (select value from ABMultiValueEntry where parent_id in (select ROWID from ABMultiValue where record_id = ABPerson.ROWID) and key = (select ROWID from ABMultiValueEntryKey where lower(value) = 'street')) as address
+            , (select value from ABMultiValueEntry where parent_id in (select ROWID from ABMultiValue where record_id = ABPerson.ROWID) and key = (select ROWID from ABMultiValueEntryKey where lower(value) = 'city')) as city
+          from ABPerson
+        order by ABPerson.ROWID
+        `
+        addressbookdb.all(query, async function (err, rows) {
+          if (err) reject(err)
+
+          resolve(rows)
+        })
       } catch (e) {
         reject(e)
       }
@@ -449,7 +582,9 @@ class IPhoneBackup {
 module.exports.availableBackups = function () {
   const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
   return new Promise((resolve, reject) => {
-    resolve(fs.readdirSync(base, { encoding: 'utf8' })
+    resolve(fs.readdirSync(base, {
+      encoding: 'utf8'
+    })
       .map(file => IPhoneBackup.fromID(file)))
   })
 }
