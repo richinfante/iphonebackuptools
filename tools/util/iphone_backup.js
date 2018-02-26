@@ -9,6 +9,7 @@ const tz_offset = 5
 
 const databases = {
   SMS: '3d0d7e5fb2ce288813306e4d4636395e047a3d28',
+  AddressBook: '31bb7ba8914766d4ba40d6dfb6113c8b614be442',
   Contacts: '31bb7ba8914766d4ba40d6dfb6113c8b614be442',
   Calendar: '2041457d5fe04d39d0ab481178355df6781e6858',
   'Cookies.binarycookies': '69b1865768101bacde5b77ccc44445cea9ce1261',
@@ -524,6 +525,43 @@ class iPhoneBackup {
           resolve(cookiesResult)
         })
       })
+    })
+  }
+
+  getAddressBook () {
+    console.log("OK");
+    return new Promise((resolve, reject) => {
+      var addressbookdb = this.getDatabase(databases.AddressBook);
+      try {
+        const query = `
+        select ABPerson.ROWID
+            , ABPerson.first
+            , ABPerson.middle
+            , ABPerson.last
+            , ABPerson.Organization as organization
+            , ABPerson.Department as department
+            , ABPerson.Birthday as birthday
+            , ABPerson.JobTitle as jobtitle
+
+            , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Work>!$_')) as phone_work
+            , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Mobile>!$_')) as phone_mobile
+            , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Home>!$_')) as phone_home
+
+            , (select value from ABMultiValue where property = 4 and record_id = ABPerson.ROWID) as email
+            
+            , (select value from ABMultiValueEntry where parent_id in (select ROWID from ABMultiValue where record_id = ABPerson.ROWID) and key = (select ROWID from ABMultiValueEntryKey where lower(value) = 'street')) as address
+            , (select value from ABMultiValueEntry where parent_id in (select ROWID from ABMultiValue where record_id = ABPerson.ROWID) and key = (select ROWID from ABMultiValueEntryKey where lower(value) = 'city')) as city
+          from ABPerson
+        order by ABPerson.ROWID
+        `
+        addressbookdb.all(query, async function (err, rows) {
+          if (err) reject(err)
+  
+          resolve(rows)
+        })
+      } catch (e) {
+        reject(e)
+      }
     })
   }
 }

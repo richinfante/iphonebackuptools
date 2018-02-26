@@ -25,6 +25,7 @@ var reportTypes = {
   'calls_statistics': require('./reports/calls_statistics'),
   'wifi': require('./reports/wifi'),
   'all': require('./reports/all')
+  'address_book': require('./reports/address_book')
 }
 
 var formatters = {
