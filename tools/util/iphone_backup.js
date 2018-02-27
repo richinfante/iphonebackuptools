@@ -6,6 +6,7 @@ const plist = require('plist')
 const mac_address_parse = require('./mac_address_parse')
 const cookieParser = require('binary-cookies')()
 const tz_offset = 5
+const manifest_mbdb_parse = require('./manifest_mbdb_parse')
 
 const databases = {
   SMS: '3d0d7e5fb2ce288813306e4d4636395e047a3d28',
@@ -315,6 +316,13 @@ class iPhoneBackup {
 
         resolve(rows)
       })
+    })
+  }
+
+  getOldFileManifest () {
+    return new Promise((resolve, reject) => {
+      let mbdbPath = this.getFileName('Manifest.mbdb', true)
+      manifest_mbdb_parse.process(mbdbPath, resolve, reject)
     })
   }
 
