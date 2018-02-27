@@ -557,26 +557,30 @@ class IPhoneBackup {
               // do parse call with element
               var ele = elements[index]
               try {
-                cookieParser.parse(this.getFileName(ele.fileID), function (err, cookies) {
-                  if (err) {
-                    cookiesResult.push({
-                      domain: ele.domain,
-                      error: err
-                    })
-                  } else {
-                    cookies.forEach(cookie => {
-                      cookie.url = cookie.url.replace(/\0/g, '')
-                      cookie.name = cookie.name.replace(/\0/g, '')
-                      cookie.path = cookie.path.replace(/\0/g, '')
-                      cookie.value = cookie.value.replace(/\0/g, '')
-                      cookiesResult.push({
-                        domain: ele.domain,
-                        cookie: cookie
-                      })
-                    })
-                  }
+
+                require('./cookies').parse(this.getFileName(ele.fileID))
+                  .catch(reject)
+
+                // cookieParser.parse(this.getFileName(ele.fileID), function (err, cookies) {
+                //   if (err) {
+                //     cookiesResult.push({
+                //       domain: ele.domain,
+                //       error: err
+                //     })
+                //   } else {
+                //     cookies.forEach(cookie => {
+                //       cookie.url = cookie.url.replace(/\0/g, '')
+                //       cookie.name = cookie.name.replace(/\0/g, '')
+                //       cookie.path = cookie.path.replace(/\0/g, '')
+                //       cookie.value = cookie.value.replace(/\0/g, '')
+                //       cookiesResult.push({
+                //         domain: ele.domain,
+                //         cookie: cookie
+                //       })
+                //     })
+                //   }
                   iterateElements(elements, index + 1, callback)
-                })
+                // })
               } catch (e) {
                 cookiesResult.push({
                   domain: ele.domain,
