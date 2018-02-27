@@ -15,7 +15,7 @@ module.exports.format = function (data, options) {
     return row
   })
 
-  const csv = json2csv({ processedData })
+  const csv = json2csv({ data: processedData })
 
   if (options.program) {
     // If reporting output is defined, ignore console log here.

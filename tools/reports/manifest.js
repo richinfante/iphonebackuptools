@@ -15,6 +15,12 @@ module.exports.usesPromises = true
 module.exports.supportedVersions = '>=10.0'
 
 module.exports.func = function (program, backup, resolve, reject) {
+  function isIncludedByFilter (item) {
+    return program.filter === 'all' ||
+      program.filter === undefined ||
+      (program.filter && item.domain.indexOf(program.filter) > -1)
+  }
+
   backup.getFileManifest()
     .then((items) => {
       // Extract items for analysis on-disk.
@@ -22,7 +28,7 @@ module.exports.func = function (program, backup, resolve, reject) {
         for (var item of items) {
           // Filter by the domain.
           // Simple "Contains" Search
-          if (program.filter === 'all' || (program.filter && item.domain.indexOf(program.filter) > -1)) {
+          if (isIncludedByFilter(item)) {
             // Do nothing, we'll process later.
           } else {
             // Skip to the next iteration of the loop.

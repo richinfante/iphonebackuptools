@@ -58,8 +58,10 @@ module.exports.begin = function (action, ...args) {
 module.exports.end = function () {
   if (!isVerbose(1)) { return }
 
-  wasRaw = false
-  console.log('')
+  if (wasRaw) {
+    console.log('')
+    wasRaw = false
+  }
 
   lvl -= 1
 }
