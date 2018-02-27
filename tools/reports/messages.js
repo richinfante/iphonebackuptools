@@ -1,3 +1,5 @@
+const log = require('../util/log')
+
 module.exports.name = 'messages'
 module.exports.description = 'List all SMS and iMessage messages in a conversation'
 
@@ -15,7 +17,7 @@ module.exports.requiresInteractivity = true
 
 module.exports.func = function (program, backup, resolve, reject) {
   if (!program.id) {
-    console.log('use -i or --id <id> to specify conversation ID.')
+    log.error('use -i or --id <id> to specify conversation ID.')
     process.exit(1)
   }
 

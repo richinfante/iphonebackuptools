@@ -1,3 +1,7 @@
+const fs = require('fs-extra')
+const path = require('path')
+const log = require('../util/log')
+
 module.exports.format = function (data, options) {
   var processedData = data.map(el => {
     var row = {}
@@ -15,23 +19,20 @@ module.exports.format = function (data, options) {
 
   if (options.program) {
     // If reporting output is defined, ignore console log here.
-    if (options.program.reportOutput === undefined) {
-      console.log(output)
+    if (options.program.output === undefined) {
+      log.raw(output)
     } else {
       return processedData
     }
   } else {
-    console.log(output)
+    log.raw(output)
   }
 
   return processedData
 }
 
-const fs = require('fs-extra')
-const path = require('path')
-
 module.exports.finalReport = async function (reports, program) {
-  if (program.reportOutput === undefined) {
+  if (program.output === undefined) {
     return
   }
 
@@ -39,26 +40,25 @@ module.exports.finalReport = async function (reports, program) {
     var out = {}
 
     for (var report of reports) {
-      console.log('saving report', report.name)
+      log.action('compiling', report.name)
       out[report.name] = report.contents
     }
 
-    if (program.reportOutput === '-') {
-      console.log(JSON.stringify(out, null, 2))
+    if (program.output === '-') {
+      log.raw(JSON.stringify(out, null, 2))
     } else {
-      // fs.ensureDirSync(path.dirname(program.reportOutput))
+      // fs.ensureDirSync(path.dirname(program.output))
       // fs.copySync(sourceFile, outDir)
-      let outPath = program.reportOutput + '.json'
-      console.log('writing joined to', outPath)
+      let outPath = program.output + '.json'
+      log.action('saving', outPath)
       fs.writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf8')
     }
   } else {
-    console.log(program.reportOutput)
-    fs.ensureDirSync(program.reportOutput)
+    fs.ensureDirSync(program.output)
 
     for (let report of reports) {
-      let outPath = path.join(program.reportOutput, report.name + '.json')
-      console.log('saving', outPath)
+      let outPath = path.join(program.output, report.name + '.json')
+      log.action('saving', outPath)
       fs.writeFileSync(outPath, JSON.stringify(report.contents, null, 2), 'utf8')
     }
   }

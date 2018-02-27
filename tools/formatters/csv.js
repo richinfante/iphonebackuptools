@@ -1,6 +1,7 @@
 const json2csv = require('json2csv')
 const fs = require('fs-extra')
 const path = require('path')
+const log = require('../util/log')
 
 module.exports.format = function (data, options) {
   var processedData = data.map(el => {
@@ -18,28 +19,28 @@ module.exports.format = function (data, options) {
 
   if (options.program) {
     // If reporting output is defined, ignore console log here.
-    if (options.program.reportOutput === undefined) {
-      console.log(csv)
+    if (options.program.output === undefined) {
+      log.raw(csv)
     }
   } else {
-    console.log(csv)
+    log.raw(csv)
   }
 
   return csv
 }
 
 module.exports.finalReport = async function (reports, program) {
-  if (program.reportOutput === undefined) {
+  if (program.output === undefined) {
     return
   }
 
   // Ensure the output directory exists.
-  fs.ensureDirSync(program.reportOutput)
+  fs.ensureDirSync(program.output)
 
   // Write each report to the disk
   for (var report of reports) {
-    var outPath = path.join(program.reportOutput, report.name + '.csv')
-    console.log('saving', outPath)
+    var outPath = path.join(program.output, report.name + '.csv')
+    log.action('saving', outPath)
     fs.writeFileSync(outPath, report.contents, 'utf8')
   }
 }

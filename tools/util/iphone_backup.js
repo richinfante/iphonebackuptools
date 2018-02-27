@@ -1,3 +1,4 @@
+const log = require('./log')
 const path = require('path')
 const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
@@ -54,22 +55,22 @@ class IPhoneBackup {
 
     // Parse manifest bplist files
     try {
-      if (global.verbose) console.log('parsing status', base)
+      log.verbose('parsing status', base)
       var status = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Status.plist')))[0]
     } catch (e) {
-      console.log('Cannot open Status.plist', e)
+      log.error('Cannot open Status.plist', e)
     }
     try {
-      if (global.verbose) console.log('parsing manifest', base)
+      log.verbose('parsing manifest', base)
       var manifest = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Manifest.plist')))[0]
     } catch (e) {
-      console.log('Cannot open Manifest.plist', e)
+      log.error('Cannot open Manifest.plist', e)
     }
     try {
-      if (global.verbose) console.log('parsing status', base)
+      log.verbose('parsing status', base)
       var info = plist.parse(fs.readFileSync(path.join(base, 'Info.plist'), 'utf8'))
     } catch (e) {
-      console.log('Cannot open Info.plist', e)
+      log.error('Cannot open Info.plist', e)
     }
 
     return new IPhoneBackup(id, status, info, manifest, base)
@@ -91,16 +92,55 @@ class IPhoneBackup {
       return path.join(this.base, fileID.substr(0, 2), fileID)
     }
   }
+
+  openDatabase (fileID, isAbsoulte) {
+    return new Promise((resolve, reject) => {
+      isAbsoulte = isAbsoulte || false
+
+      // Get the backup folder
+      // Return v2 filename
+      if (this.status.Version < 3 || isAbsoulte) {
+        let db = new sqlite3.Database(path.join(this.base, fileID), sqlite3.OPEN_READONLY, (err) => {
+          if (err) {
+            return reject(err)
+          }
+
+          resolve(db)
+        })
+      } else {
+        // v3 has folders
+        let db = new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY, (err) => {
+          if (err) {
+            return reject(err)
+          }
+
+          resolve(db)
+        })
+      }
+    })
+  }
+
+  /// This is deprecated. Use openDatabase Instead.
   getDatabase (fileID, isAbsoulte) {
     isAbsoulte = isAbsoulte || false
 
     // Get the backup folder
     // Return v2 filename
     if (this.status.Version < 3 || isAbsoulte) {
-      return new sqlite3.Database(path.join(this.base, fileID), sqlite3.OPEN_READONLY)
+      return new sqlite3.Database(path.join(this.base, fileID), sqlite3.OPEN_READONLY, (err) => {
+        if (err) {
+          log.error('PANIC::', err)
+          process.exit(1)
+        }
+      })
     } else {
       // v3 has folders
-      return new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY)
+      return new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY, (err) => {
+        if (err) {
+          log.error('PANIC::', err)
+          process.exit(1)
+        }
+      })
     }
   }
 
@@ -472,12 +512,15 @@ class IPhoneBackup {
 
   getVoicemailFileList () {
     return new Promise((resolve, reject) => {
-      var messagedb = this.getDatabase('Manifest.db', true)
-      messagedb.all(`SELECT * from FILES where relativePath like 'Library/Voicemail/%.amr'`, async function (err, rows) {
-        if (err) reject(err)
+      this.openDatabase('Manifest.db', true)
+        .then(manifestdb => {
+          manifestdb.all(`SELECT * from FILES where relativePath like 'Library/Voicemail/%.amr'`, async (err, rows) => {
+            if (err) reject(err)
 
-        resolve(rows)
-      })
+            resolve(rows)
+          })
+        })
+        .catch(reject)
     })
   }
 
@@ -502,43 +545,51 @@ class IPhoneBackup {
   }
 
   getCookies () {
-    return new Promise((resolve, reject) => {
-      const self = this
-      var manifestdb = this.getDatabase('Manifest.db', true)
-      manifestdb.all(`SELECT fileID,domain,relativePath from FILES where relativePath like 'Library/Cookies/Cookies.binarycookies'`, async function (err, rows) {
-        if (err) reject(err)
-        let cookiesResult = []
-        const iterateElements = (elements, index, callback) => {
-          if (index === elements.length) { return callback() }
-          // do parse call with element
-          var ele = elements[index]
-          cookieParser.parse(self.getFileName(ele.fileID), function (err, cookies) {
-            // console.log(ele.domain, ':', cookies)
+    return new Promise(async (resolve, reject) => {
+      this.openDatabase('Manifest.db', true)
+        .then(manifestdb => {
+          manifestdb.all(`SELECT fileID,domain,relativePath from FILES where relativePath like 'Library/Cookies/Cookies.binarycookies'`, async (err, rows) => {
+            if (err) return reject(err)
 
-            if (err) {
-              cookiesResult.push({
-                domain: ele.domain,
-                error: err
-              })
-            } else {
-              cookies.forEach(cookie => {
-                cookie.url = cookie.url.replace(/\0/g, '')
-                cookie.name = cookie.name.replace(/\0/g, '')
-                cookie.path = cookie.path.replace(/\0/g, '')
-                cookie.value = cookie.value.replace(/\0/g, '')
+            let cookiesResult = []
+            const iterateElements = (elements, index, callback) => {
+              if (index === elements.length) { return callback() }
+              // do parse call with element
+              var ele = elements[index]
+              try {
+                cookieParser.parse(this.getFileName(ele.fileID), function (err, cookies) {
+                  if (err) {
+                    cookiesResult.push({
+                      domain: ele.domain,
+                      error: err
+                    })
+                  } else {
+                    cookies.forEach(cookie => {
+                      cookie.url = cookie.url.replace(/\0/g, '')
+                      cookie.name = cookie.name.replace(/\0/g, '')
+                      cookie.path = cookie.path.replace(/\0/g, '')
+                      cookie.value = cookie.value.replace(/\0/g, '')
+                      cookiesResult.push({
+                        domain: ele.domain,
+                        cookie: cookie
+                      })
+                    })
+                  }
+                  iterateElements(elements, index + 1, callback)
+                })
+              } catch (e) {
                 cookiesResult.push({
                   domain: ele.domain,
-                  cookie: cookie
+                  error: e
                 })
-              })
+              }
             }
-            iterateElements(elements, index + 1, callback)
+            iterateElements(rows, 0, () => {
+              resolve(cookiesResult)
+            })
           })
-        }
-        iterateElements(rows, 0, () => {
-          resolve(cookiesResult)
         })
-      })
+        .catch(reject)
     })
   }
 

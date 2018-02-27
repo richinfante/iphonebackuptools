@@ -1,3 +1,4 @@
+const log = require('../util/log')
 const path = require('path')
 const fs = require('fs-extra')
 
@@ -23,7 +24,7 @@ module.exports.func = function (program, backup, resolve, reject) {
             fs.createReadStream(backup.getFileName(item.fileID)).pipe(fs.createWriteStream(outDir))
             item.output_dir = outDir
           } catch (e) {
-            console.log(`Couldn't Export: ${item.relativePath}`, e)
+            log.error(`Couldn't Export: ${item.relativePath}`, e)
           }
         }
       }
@@ -40,7 +41,5 @@ module.exports.func = function (program, backup, resolve, reject) {
 
       resolve(result)
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }

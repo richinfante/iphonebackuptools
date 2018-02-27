@@ -1,4 +1,5 @@
 const stripAnsi = require('strip-ansi')
+const log = require('../util/log')
 
 function normalizeCols (rows, max) {
   function padEnd (string, maxLength, fillString) {
@@ -67,11 +68,11 @@ module.exports.format = function (data, options) {
     if (!options.program.color) { items = stripAnsi(items) }
 
     // If reporting output is defined, ignore console log here.
-    if (options.program.reportOutput === undefined) {
-      console.log(items)
+    if (options.program.output === undefined) {
+      log.raw(items)
     }
   } else {
-    console.log(items)
+    log.raw(items)
   }
 
   return items
@@ -81,17 +82,17 @@ const fs = require('fs-extra')
 const path = require('path')
 
 module.exports.finalReport = async function (reports, program) {
-  if (program.reportOutput === undefined) {
+  if (program.output === undefined) {
     return
   }
 
   // Ensure the output directory exists.
-  fs.ensureDirSync(program.reportOutput)
+  fs.ensureDirSync(program.output)
 
   // Write each report to the disk
   for (var report of reports) {
-    var outPath = path.join(program.reportOutput, report.name + '.txt')
-    console.log('saving', outPath)
+    var outPath = path.join(program.output, report.name + '.txt')
+    log.action('saving', outPath)
     fs.writeFileSync(outPath, report.contents, 'utf8')
   }
 }

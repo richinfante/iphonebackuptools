@@ -1,5 +1,6 @@
 const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
 const fs = require('fs-extra')
+const chalk = require('chalk')
 
 module.exports.name = 'list'
 module.exports.description = 'List of all backups. alias for -l'

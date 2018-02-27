@@ -1,5 +1,5 @@
 const fs = require('fs-extra')
-const chalk = require('chalk')
+const log = require('../util/log')
 const path = require('path')
 module.exports.name = 'manifest'
 module.exports.description = 'List all the files contained in the backup (iOS 10+)'
@@ -26,7 +26,7 @@ module.exports.func = function (program, backup, resolve, reject) {
             // Do nothing, we'll process later.
           } else {
             // Skip to the next iteration of the loop.
-            console.log(chalk.yellow('skipped'), item.relativePath)
+            log.action('skipped', item.relativePath)
             continue
           }
 
@@ -36,7 +36,7 @@ module.exports.func = function (program, backup, resolve, reject) {
 
             // Only process files that exist.
             if (stat.isFile() && fs.existsSync(sourceFile)) {
-              console.log(chalk.green('export'), item.relativePath)
+              log.action('export', item.relativePath)
 
               // Calculate the output dir.
               var outDir = path.join(program.extract, item.domain, item.relativePath)
@@ -50,10 +50,10 @@ module.exports.func = function (program, backup, resolve, reject) {
             } else if (stat.isDirectory()) {
               // Do nothing..
             } else {
-              console.log(chalk.blue('not found'), item.relativePath)
+              log.error('not found', item.relativePath)
             }
           } catch (e) {
-            console.log(chalk.red('fail'), item.relativePath, e.toString())
+            log.error(item.relativePath, e.toString())
           }
         }
 
@@ -70,7 +70,5 @@ module.exports.func = function (program, backup, resolve, reject) {
         resolve(result)
       }
     })
-    .catch((e) => {
-      console.log('[!] Encountered an Error:', e)
-    })
+    .catch(reject)
 }
