@@ -1,30 +1,40 @@
-const stripAnsi = require('strip-ansi')
-const chalk = require('chalk')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
-
 module.exports.name = 'conversations_full'
 module.exports.description = 'List all SMS and iMessage conversations and their messages (dump only)'
 
-module.exports.func = function (program, base) {
-  if (!program.backup) {
-    console.log('use -b or --backup <id> to specify backup.')
-    process.exit(1)
-  }
+// Specify this reporter requires a backup. 
+// The second parameter to func() is now a backup instead of the path to one.
+module.exports.requiresBackup = true
 
-  // Grab the backup
-  var backup = iPhoneBackup.fromID(program.backup, base)
+// Specify this reporter supports the promises API for allowing chaining of reports.
+module.exports.usesPromises = true
 
-  if (program.dump) {
-    return new Promise(async (resolve, reject) => {
-      let conversations = await backup.getConversations();
-      for (let el of conversations) {
-        el.messages = await backup.getMessages(el.ROWID, true);
+module.exports.func = async function (program, backup, resolve, reject) {
+  //if (program.dump) {
+    //return new Promise(async (resolve, reject) => {
+    let conversations = await backup.getConversations();
+    for (let el of conversations) {
+      el.messages = await backup.getMessages(el.ROWID, true);
+    }
+
+      // Use the configured formatter to print the rows.
+    const result = program.formatter.format(conversations, {
+      // Color formatting?
+      program: program,
+
+      // Columns to be displayed in human-readable printouts.
+      // Some formatters, like raw or CSV, ignore these.
+      columns: {
+        'ID': el => el.ROWID,
+        'Date': el => el.XFORMATTEDDATESTRING || '??',
+        'Service': el => el.service_name + '',
+        'Chat Name': el => el.chat_identifier + '',
+        'Display Name': el => el.display_name + '',
       }
+    })
       
-      resolve(conversations);
-    });
-  } 
+    resolve(conversations);
+    //});
+  /*} 
   else {
     backup.getConversations(program.dump)
       .then((items) => {
@@ -46,5 +56,5 @@ module.exports.func = function (program, base) {
       .catch((e) => {
         console.log('[!] Encountered an Error:', e)
       })
-  }
+  }*/
 }

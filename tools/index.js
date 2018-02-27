@@ -12,6 +12,7 @@ var reportTypes = {
   'calls': require('./reports/calls'),
   'conversations': require('./reports/conversations'),
   'conversations_full': require('./reports/conversations_full'),
+  'cookies': require('./reports/cookies'),
   'list': require('./reports/list'),
   'manifest': require('./reports/manifest'),
   'messages': require('./reports/messages'),
@@ -23,7 +24,8 @@ var reportTypes = {
   'webhistory': require('./reports/webhistory'),
   'calls_statistics': require('./reports/calls_statistics'),
   'wifi': require('./reports/wifi'),
-  'all': require('./reports/all')
+  'all': require('./reports/all'),
+  'address_book': require('./reports/address_book')
 }
 
 var formatters = {
