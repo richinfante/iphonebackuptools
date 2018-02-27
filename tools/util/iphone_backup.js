@@ -14,6 +14,9 @@ const macParse = require('./mac_address_parse')
 // Derive filenames based on domain + file path
 const fileHash = require('./backup_filehash')
 
+// Manifest.mbdb parser
+const manifestMBDBParse = require('./manifest_mbdb_parse')
+
 const databases = {
   SMS: fileHash('Library/SMS/sms.db'),
   Contacts: fileHash('Library/AddressBook/AddressBook.sqlitedb'),
@@ -361,6 +364,13 @@ class IPhoneBackup {
 
         resolve(rows)
       })
+    })
+  }
+
+  getOldFileManifest () {
+    return new Promise((resolve, reject) => {
+      let mbdbPath = this.getFileName('Manifest.mbdb', true)
+      manifestMBDBParse.process(mbdbPath, resolve, reject)
     })
   }
 
