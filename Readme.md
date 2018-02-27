@@ -44,8 +44,11 @@ UDID="0c1bc52c50016933679b0980ccff3680e5831162"
 - Current types:
     - `apps` - List all installed applications and container IDs.
     - `calls` - List all call records contained in the backup.
+    - `calls-statistics` List call statistics
     - `conversations` - List all SMS and iMessage conversations
-    - `list` - List of all backups. alias for -l
+    - `conversations_full` - Output raw message contents along with conversations. Requires `-f raw-json` or `--dump`.
+    - `cookies` - List cookie domains for all apps
+    - `list` - List of all backups. alias for `-l`. Does not require the `-b` flag.
     - `manifest` - List all the files contained in the backup (iOS 10+)
     - `messages` - List all SMS and iMessage messages in a conversation. This requires using the `--id` flag to specify a conversation to inspect.
     - `notes` - List all iOS notes
