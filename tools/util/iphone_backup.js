@@ -6,7 +6,7 @@ const fs = require('fs')
 const plist = require('plist')
 
 // Cookie Parser
-const cookieParser = require('binary-cookies')()
+const cookieParser = require('./cookies.js')
 
 // Normalize mac addresses in wifi output
 const macParse = require('./mac_address_parse')
@@ -552,42 +552,25 @@ class IPhoneBackup {
             if (err) return reject(err)
 
             let cookiesResult = []
+
             const iterateElements = (elements, index, callback) => {
               if (index === elements.length) { return callback() }
               // do parse call with element
               var ele = elements[index]
-              try {
 
-                require('./cookies').parse(this.getFileName(ele.fileID))
-                  .catch(reject)
+              cookieParser.parse(this.getFileName(ele.fileID))
+                .then(cookies => {
+                  // Map to include domain
+                  let formatted = cookies.map(el => { return { domain: ele.domain, cookie: el } })
 
-                // cookieParser.parse(this.getFileName(ele.fileID), function (err, cookies) {
-                //   if (err) {
-                //     cookiesResult.push({
-                //       domain: ele.domain,
-                //       error: err
-                //     })
-                //   } else {
-                //     cookies.forEach(cookie => {
-                //       cookie.url = cookie.url.replace(/\0/g, '')
-                //       cookie.name = cookie.name.replace(/\0/g, '')
-                //       cookie.path = cookie.path.replace(/\0/g, '')
-                //       cookie.value = cookie.value.replace(/\0/g, '')
-                //       cookiesResult.push({
-                //         domain: ele.domain,
-                //         cookie: cookie
-                //       })
-                //     })
-                //   }
+                  // Append result
+                  cookiesResult = [...cookiesResult, ...formatted]
+
+                  // Next file.
                   iterateElements(elements, index + 1, callback)
-                // })
-              } catch (e) {
-                cookiesResult.push({
-                  domain: ele.domain,
-                  error: e
                 })
-              }
             }
+
             iterateElements(rows, 0, () => {
               resolve(cookiesResult)
             })
