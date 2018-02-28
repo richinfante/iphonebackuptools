@@ -23,7 +23,12 @@ module.exports.func = function (program, backup, resolve, reject) {
         // Some formatters, like raw or CSV, ignore these.
         columns: {
           'domain': el => el.domain,
-          'url': el => el.cookie.url
+          'url': el => el.cookie.url,
+          'path': el => el.cookie.name,
+          'value': el => el.cookie.value,
+          'creation': el => el.cookie.creation,
+          'expiration': el => el.cookie.expiration,
+          'flags': el => el.cookie.flags
         }
       })
 

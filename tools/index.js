@@ -53,6 +53,7 @@ program
   .option('    --join-reports', 'Join JSON reports together. (available for -f json or -f raw only!)')
   .option(`    --no-color`, 'Disable colorized output')
   .option(`    --dump`, 'alias for "--formatter raw"')
+  .option(`    --quiet`, 'quiet all messages, except for errors and raw output')
 
 program.on('--help', function () {
   console.log('')
@@ -80,7 +81,7 @@ process.on('unhandledRejection', (e) => {
 // Parse argv.
 program.parse(process.argv)
 
-log.setVerbose(program.verbose ? 2 : 1)
+log.setVerbose(program.quiet ? 0 : (program.verbose ? 2 : 1))
 
 // Save the formatter
 program.formatter = formatters[program.formatter] || formatters.table
