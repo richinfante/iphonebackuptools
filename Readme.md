@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/richinfante/iphonebackuptools.svg?branch=master)](https://travis-ci.org/richinfante/iphonebackuptools)
 [![npm](https://img.shields.io/npm/v/ibackuptool.svg)](http://npmjs.com/ibackuptool)
+![license](https://img.shields.io/github/license/richinfante/iphonebackuptools.svg)
 
 Are _you_ storing unencrypted iPhone backups on your personal computer? With very little effort, we can dump **all** the saved messages from the backup, as well as notes, photo locations, and other data. 
 
