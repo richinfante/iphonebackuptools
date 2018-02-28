@@ -15,7 +15,6 @@
   "author": "@richinfante",
   "license": "MIT",
   "dependencies": {
-    "binary-cookies": "^0.1.1",
     "bplist-parser": "^0.1.1",
     "buffer-reader": "^0.1.0",
     "chalk": "^1.1.3",
