@@ -96,7 +96,7 @@ module.exports.functions = {
           for (var item of items) {
           // Filter by the domain.
           // Simple "Contains" Search
-            if (program.filter === 'all' || (program.filter && item.domain.indexOf(program.filter) > -1)) {
+            if (isIncludedByFilter(program, item)) {
             // Do nothing, we'll process later.
             } else {
             // Skip to the next iteration of the loop.
