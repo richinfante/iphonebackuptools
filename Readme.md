@@ -1,4 +1,8 @@
 # iPhone backup tools
+
+[![Build Status](https://travis-ci.org/richinfante/iphonebackuptools.svg?branch=master)](https://travis-ci.org/richinfante/iphonebackuptools)
+[![npm](https://img.shields.io/npm/v/ibackuptool.svg)](http://npmjs.com/ibackuptool)
+
 Are _you_ storing unencrypted iPhone backups on your personal computer? With very little effort, we can dump **all** the saved messages from the backup, as well as notes, photo locations, and other data. 
 
 Check out my recently updated post about my work on backups here: [Reverse Engineering the iOS Backup](https://www.richinfante.com/2017/3/16/reverse-engineering-the-ios-backup)
@@ -8,9 +12,7 @@ Check out my recently updated post about my work on backups here: [Reverse Engin
 Currently works on macOS, not tested on windows but should work on windows by setting the attribute `--dir` to the backups directory location.
 
 ## iOS Support
-- iOS 9 - backup version: `2.4`
-- iOS 10 - backup version: `3.2`
-- iOS 11 - backup version: `3.2`
+iOS Support depends on the individual reporting types and which files are specifically present inside of the backup. When a report type is not supported, an error message is outputted to the terminal. Some reports, such as the manifest report, support iOS versions as early as iOS 5 to the latest iOS (iOS 11 as of this writing).
 
 ## Installing
 
