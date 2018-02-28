@@ -1,4 +1,9 @@
 # iPhone backup tools
+
+[![Build Status](https://travis-ci.org/richinfante/iphonebackuptools.svg?branch=master)](https://travis-ci.org/richinfante/iphonebackuptools)
+[![npm](https://img.shields.io/npm/v/ibackuptool.svg)](http://npmjs.com/ibackuptool)
+![license](https://img.shields.io/github/license/richinfante/iphonebackuptools.svg)
+
 Are _you_ storing unencrypted iPhone backups on your personal computer? With very little effort, we can dump **all** the saved messages from the backup, as well as notes, photo locations, and other data. 
 
 Check out my recently updated post about my work on backups here: [Reverse Engineering the iOS Backup](https://www.richinfante.com/2017/3/16/reverse-engineering-the-ios-backup)
@@ -8,9 +13,7 @@ Check out my recently updated post about my work on backups here: [Reverse Engin
 Currently works on macOS, not tested on windows but should work on windows by setting the attribute `--dir` to the backups directory location.
 
 ## iOS Support
-- iOS 9 - backup version: `2.4`
-- iOS 10 - backup version: `3.2`
-- iOS 11 - backup version: `3.2`
+iOS Support depends on the individual reporting types and which files are specifically present inside of the backup. When a report type is not supported, an error message is outputted to the terminal. Some reports, such as the manifest report, support iOS versions as early as iOS 5 to the latest iOS (iOS 11 as of this writing).
 
 ## Installing
 
@@ -44,8 +47,11 @@ UDID="0c1bc52c50016933679b0980ccff3680e5831162"
 - Current types:
     - `apps` - List all installed applications and container IDs.
     - `calls` - List all call records contained in the backup.
+    - `calls-statistics` List call statistics
     - `conversations` - List all SMS and iMessage conversations
-    - `list` - List of all backups. alias for -l
+    - `conversations_full` - Output raw message contents along with conversations. Requires `-f raw-json` or `--dump`.
+    - `cookies` - List cookie domains for all apps
+    - `list` - List of all backups. alias for `-l`. Does not require the `-b` flag.
     - `manifest` - List all the files contained in the backup (iOS 10+)
     - `messages` - List all SMS and iMessage messages in a conversation. This requires using the `--id` flag to specify a conversation to inspect.
     - `notes` - List all iOS notes
@@ -96,6 +102,18 @@ ibackuptool -b $UDID --report manifest --extract BACKUP --filter all
 ibackuptool -b $UDID --report manifest --extract BACKUP --filter CameraRollDomain
 ```
 
+### Messages Access
+
+```bash
+# List of all conversations, indexed by ID.
+# Each row starts with an ID number, which is needed for the next step.
+ibackuptool -b $UDID -r conversations
+
+# Now, Fetch the messages with the following command
+# Replace $CONVERSATION_ID with a row ID from `ibackuptool -b $UDID -r conversations`
+ibackuptool -b $UDID -r messages --id $CONVERSATION_ID
+```
+
 ### Reporting formats
 iBackupTool now supports multiple kinds of data export:
 - `table` - Selected data columns in an ascii table
@@ -106,47 +124,49 @@ Additionally, there are more comprehensive export functions that will export ALL
 - `raw-csv` - Full-data CSV export from each of the tables.
 - `raw`, `raw-json` - Full-data JSON export from each of the tables. This output can be quite large.
 
-### Multiple-Reporting 
+#### Multiple-Reporting 
 You can also provide a comma separated list of reports to generate. Additionally, there is a special `all` report type which will run all available reports. This is best paired with the `-o` option for saving to disk and the `-f` option for selecting a format such as CSV, or JSON.
 
 ```bash
+# Report wifi, calls, voicemail
 ibackuptool -b $UDID --report wifi,calls,voicemail
-```
 
-the `-o` option specifies a folder to export reports to:
-```bash
-ibackuptool -b $UDID --report wifi,calls,voicemail -o exported
+# Report all possible
+ibackuptool -b $UDID --report all
 ```
 
 #### Joined Reports
 Additionally, for the `json` and `raw-json` types, there's a `--join-reports` flag which will merge all of the data into a single JSON file, where the top level object has a key for each report type that is selected.
 
-
-### Messages Access
-
 ```bash
-# List of all conversations, indexed by ID.
-# Each row starts with an ID number, which is needed for the next step.
-ibackuptool -b $UDID --report conversations
-
-# Now, Fetch the messages with the following command
-# Replace $CONVERSATION_ID with a row ID from `ibackuptool -b $UDID --conversations`
-ibackuptool -b $UDID --report messages --id $CONVERSATION_ID
+# Generate both wifi and calls reports, joined as JSON
+ibackuptool -b $UDID -r wifi,calls -f json --join-reports
 ```
 
-## Need More Data?
-- !! This will cause the program to output **Everything** to STDOUT as formatted JSON. !!
-- Append the `--dump` flag to the program.
-- I'd recommend piping this output to a file.
+### Output to disk
+the `-o <path>` (`--output <path>`option specifies a folder to export reports to. If the directory does not exist, it will be created. For joined JSON reports, a single json file is exported instead of multiple files in a directory.
 
-- You should make a backup of the backups you look at using this tool, even though they are opened as read-only, you should still do that do you don't accidentally do something to lose data.
+```bash
+# Export wifi, calls, voicemail as CSV files to disk in a folder named "exported/"
+ibackuptool -b $UDID --report wifi,calls,voicemail -f csv -o exported
+```
+## Running Tests
+first, install [tap](https://www.npmjs.com/package/tap)
+
+next, run `npm test`.
+
+## Important!
+You should make a backup of the backups you look at using this tool, even though they are opened as read-only, you should still do that do you don't accidentally do something to lose data.
+
+## Contributing
+See [Contributing.md](Contributing.md)
 
 ## TODO
-- Contact name lookup for newer iOS10, iOS11 backups
+See [Roadmap](https://github.com/richinfante/iphonebackuptools/wiki/Roadmap-and-Vision)
 
 ## Legal
 
-Copyright &copy; 2017 Richard Infante.
+Copyright &copy; 2017-2018 Richard Infante.
 
 Available under the MIT License.
 

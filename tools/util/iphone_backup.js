@@ -1,34 +1,43 @@
+const log = require('./log')
 const path = require('path')
 const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
-const mac_address_parse = require('./mac_address_parse')
-const cookieParser = require('binary-cookies')()
-const tz_offset = 5
-const manifest_mbdb_parse = require('./manifest_mbdb_parse')
+
+// Cookie Parser
+const cookieParser = require('./cookies.js')
+
+// Normalize mac addresses in wifi output
+const macParse = require('./mac_address_parse')
+
+// Derive filenames based on domain + file path
+const fileHash = require('./backup_filehash')
+
+// Manifest.mbdb parser
+const manifestMBDBParse = require('./manifest_mbdb_parse')
 
 const databases = {
-  SMS: '3d0d7e5fb2ce288813306e4d4636395e047a3d28',
-  AddressBook: '31bb7ba8914766d4ba40d6dfb6113c8b614be442',
-  Contacts: '31bb7ba8914766d4ba40d6dfb6113c8b614be442',
-  Calendar: '2041457d5fe04d39d0ab481178355df6781e6858',
+  SMS: fileHash('Library/SMS/sms.db'),
+  Contacts: fileHash('Library/AddressBook/AddressBook.sqlitedb'),
+  Calendar: fileHash('Library/Calendar/Calendar.sqlitedb'),
+  Reminders: fileHash('Library/Calendar/Calendar.sqlitedb'),
+  Notes: fileHash('Library/Notes/notes.sqlite'),
+  Notes2: fileHash('NoteStore.sqlite', 'AppDomainGroup-group.com.apple.notes'),
+  AddressBook: fileHash('Library/AddressBook/AddressBook.sqlitedb'),
   'Cookies.binarycookies': '69b1865768101bacde5b77ccc44445cea9ce1261',
-  Reminders: '2041457d5fe04d39d0ab481178355df6781e6858',
-  Notes: 'ca3bc056d4da0bbf88b5fb3be254f3b7147e639c',
-  Notes2: '4f98687d8ab0d6d1a371110e6b7300f6e465bef2',
   Calls: '2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca',
-  Calls2: '5a4935c78a5255723f707230a451d79c540d2741',
-  Locations: '4096c9ec676f2847dc283405900e284a7c815836',
-  WebHistory: 'e74113c185fd8297e140cfcf9c99436c5cc06b57',
-  Photos: '12b144c0bd44f2b3dffd9186d3f9c05b917cee25',
-  WiFi: 'ade0340f576ee14793c607073bd7e8e409af07a8',
-  Voicemail: '992df473bbb9e132f4b3b6e4d33f72171e97bc7a'
+  Calls2: fileHash('Library/CallHistoryDB/CallHistory.storedata'),
+  Locations: fileHash('Library/Caches/locationd/consolidated.db', 'RootDomain'),
+  WebHistory: fileHash('Library/Safari/History.db', 'AppDomain-com.apple.mobilesafari'),
+  Photos: fileHash('Media/PhotoData/Photos.sqlite', 'CameraRollDomain'),
+  WiFi: fileHash('SystemConfiguration/com.apple.wifi.plist', 'SystemPreferencesDomain'),
+  Voicemail: fileHash('Library/Voicemail/voicemail.db')
 }
 
 var cache = {}
 
-class iPhoneBackup {
+class IPhoneBackup {
   constructor (id, status, info, manifest, base) {
     this.id = id
     this.status = status
@@ -49,25 +58,25 @@ class iPhoneBackup {
 
     // Parse manifest bplist files
     try {
-      if (global.verbose) console.log('parsing status', base)
+      log.verbose('parsing status', base)
       var status = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Status.plist')))[0]
     } catch (e) {
-      console.log('Cannot open Status.plist', e)
+      log.error('Cannot open Status.plist', e)
     }
     try {
-      if (global.verbose) console.log('parsing manifest', base)
+      log.verbose('parsing manifest', base)
       var manifest = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Manifest.plist')))[0]
     } catch (e) {
-      console.log('Cannot open Manifest.plist', e)
+      log.error('Cannot open Manifest.plist', e)
     }
     try {
-      if (global.verbose) console.log('parsing status', base)
+      log.verbose('parsing status', base)
       var info = plist.parse(fs.readFileSync(path.join(base, 'Info.plist'), 'utf8'))
     } catch (e) {
-      console.log('Cannot open Info.plist', e)
+      log.error('Cannot open Info.plist', e)
     }
 
-    return new iPhoneBackup(id, status, info, manifest, base)
+    return new IPhoneBackup(id, status, info, manifest, base)
   }
 
   get iOSVersion () {
@@ -77,7 +86,7 @@ class iPhoneBackup {
   getFileName (fileID, isAbsoulte) {
     isAbsoulte = isAbsoulte || false
 
-    //const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', this.id)
+    // const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', this.id)
     // Return v2 filename
     if (this.status.Version < 3 || isAbsoulte) {
       return path.join(this.base, fileID)
@@ -86,16 +95,55 @@ class iPhoneBackup {
       return path.join(this.base, fileID.substr(0, 2), fileID)
     }
   }
+
+  openDatabase (fileID, isAbsoulte) {
+    return new Promise((resolve, reject) => {
+      isAbsoulte = isAbsoulte || false
+
+      // Get the backup folder
+      // Return v2 filename
+      if (this.status.Version < 3 || isAbsoulte) {
+        let db = new sqlite3.Database(path.join(this.base, fileID), sqlite3.OPEN_READONLY, (err) => {
+          if (err) {
+            return reject(err)
+          }
+
+          resolve(db)
+        })
+      } else {
+        // v3 has folders
+        let db = new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY, (err) => {
+          if (err) {
+            return reject(err)
+          }
+
+          resolve(db)
+        })
+      }
+    })
+  }
+
+  /// This is deprecated. Use openDatabase Instead.
   getDatabase (fileID, isAbsoulte) {
     isAbsoulte = isAbsoulte || false
 
     // Get the backup folder
     // Return v2 filename
     if (this.status.Version < 3 || isAbsoulte) {
-      return new sqlite3.Database(path.join(this.base, fileID), sqlite3.OPEN_READONLY)
+      return new sqlite3.Database(path.join(this.base, fileID), sqlite3.OPEN_READONLY, (err) => {
+        if (err) {
+          log.error('PANIC::', err)
+          process.exit(1)
+        }
+      })
     } else {
       // v3 has folders
-      return new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY)
+      return new sqlite3.Database(path.join(this.base, fileID.substr(0, 2), fileID), sqlite3.OPEN_READONLY, (err) => {
+        if (err) {
+          log.error('PANIC::', err)
+          process.exit(1)
+        }
+      })
     }
   }
 
@@ -114,7 +162,7 @@ class iPhoneBackup {
     return new Promise((resolve, reject) => {
       if (messageDest.indexOf('@') === -1) {
         messageDest = messageDest.replace(/[\s+\-()]*/g, '')
-        if (messageDest.length == 11 && messageDest[0] == '1') {
+        if (messageDest.length === 11 && messageDest[0] === '1') {
           messageDest = messageDest.substring(1)
         }
       }
@@ -164,27 +212,27 @@ class iPhoneBackup {
         INNER JOIN handle
           ON handle.rowid = message.handle_id
         WHERE chat_message_join.chat_id = ?`, [parseInt(chatId)],
-     async function (err, chats) {
-       if (err) return reject(err)
+      async function (err, chats) {
+        if (err) return reject(err)
 
-       chats = chats || []
+        chats = chats || []
 
         // Compute the user's name
-       for (var i in chats) {
-         var el = chats[i]
-         el.x_sender = el.is_from_me ? 'Me' : el.sender_name
+        for (var i in chats) {
+          var el = chats[i]
+          el.x_sender = el.is_from_me ? 'Me' : el.sender_name
 
-         if (!el.is_from_me) {
-           var contact = await backup.getName(el.sender_name)
+          if (!el.is_from_me) {
+            var contact = await backup.getName(el.sender_name)
 
-           if (contact) {
-             el.x_sender = `${contact.name} <${contact.query}>`
-           }
-         }
-       }
+            if (contact) {
+              el.x_sender = `${contact.name} <${contact.query}>`
+            }
+          }
+        }
 
-       resolve(chats)
-     })
+        resolve(chats)
+      })
     })
   }
 
@@ -204,27 +252,27 @@ class iPhoneBackup {
         INNER JOIN handle
           ON handle.rowid = message.handle_id
         WHERE chat_message_join.chat_id = ?`, [parseInt(chatId)],
-     async function (err, chats) {
-       if (err) return reject(err)
+      async function (err, chats) {
+        if (err) return reject(err)
 
-       chats = chats || []
+        chats = chats || []
 
         // Compute the user's name
-       for (var i in chats) {
-         var el = chats[i]
-         el.x_sender = el.is_from_me ? 'Me' : el.sender_name
+        for (var i in chats) {
+          var el = chats[i]
+          el.x_sender = el.is_from_me ? 'Me' : el.sender_name
 
-         if (!el.is_from_me) {
-           var contact = await backup.getName(el.sender_name)
+          if (!el.is_from_me) {
+            var contact = await backup.getName(el.sender_name)
 
-           if (contact) {
-             el.x_sender = `${contact.name} <${contact.query}>`
-           }
-         }
-       }
+            if (contact) {
+              el.x_sender = `${contact.name} <${contact.query}>`
+            }
+          }
+        }
 
-       resolve(chats)
-     })
+        resolve(chats)
+      })
     })
   }
 
@@ -322,7 +370,7 @@ class iPhoneBackup {
   getOldFileManifest () {
     return new Promise((resolve, reject) => {
       let mbdbPath = this.getFileName('Manifest.mbdb', true)
-      manifest_mbdb_parse.process(mbdbPath, resolve, reject)
+      manifestMBDBParse.process(mbdbPath, resolve, reject)
     })
   }
 
@@ -428,7 +476,7 @@ class iPhoneBackup {
       // May work for earlier but I haven't tested it
       return this.getCallsListiOS7()
     } else {
-      return this.getCallsList()
+      return this.getCallsListLater()
     }
   }
 
@@ -451,9 +499,7 @@ class iPhoneBackup {
     })
   }
 
-
-
-  getCallsList () {
+  getCallsListLater () {
     return new Promise((resolve, reject) => {
       var messagedb = this.getDatabase(databases.Calls2)
       messagedb.all(`SELECT *, datetime(ZDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING from ZCALLRECORD ORDER BY ZDATE ASC`, async function (err, rows) {
@@ -476,12 +522,15 @@ class iPhoneBackup {
 
   getVoicemailFileList () {
     return new Promise((resolve, reject) => {
-      var messagedb = this.getDatabase('Manifest.db', true)
-      messagedb.all(`SELECT * from FILES where relativePath like 'Library/Voicemail/%.amr'`, async function (err, rows) {
-        if (err) reject(err)
+      this.openDatabase('Manifest.db', true)
+        .then(manifestdb => {
+          manifestdb.all(`SELECT * from FILES where relativePath like 'Library/Voicemail/%.amr'`, async (err, rows) => {
+            if (err) reject(err)
 
-        resolve(rows)
-      })
+            resolve(rows)
+          })
+        })
+        .catch(reject)
     })
   }
 
@@ -490,14 +539,15 @@ class iPhoneBackup {
       var filename = this.getFileName(databases.WiFi)
 
       try {
-        let wifiList = bplist.parseBuffer(fs.readFileSync(filename))[0];
-         wifiList['List of known networks'] = wifiList['List of known networks']
-           .map(el => {
-              if (el.BSSID)
-                el.BSSID = mac_address_parse.pad_zeros(el.BSSID) + ''
-              return el;
-           });
-         resolve(wifiList);
+        let wifiList = bplist.parseBuffer(fs.readFileSync(filename))[0]
+        wifiList['List of known networks'] = wifiList['List of known networks']
+          .map(el => {
+            if (el.BSSID) {
+              el.BSSID = macParse.pad_zeros(el.BSSID) + ''
+            }
+            return el
+          })
+        resolve(wifiList)
       } catch (e) {
         reject(e)
       }
@@ -505,50 +555,44 @@ class iPhoneBackup {
   }
 
   getCookies () {
-    return new Promise((resolve, reject) => {
-      const self = this
-      var manifestdb = this.getDatabase('Manifest.db', true)
-      manifestdb.all(`SELECT fileID,domain,relativePath from FILES where relativePath like 'Library/Cookies/Cookies.binarycookies'`, async function (err, rows) {
-        if (err) reject(err)
-        let cookiesResult = [];
-        const iterateElements = (elements, index, callback) => {
-          if (index == elements.length)
-            return callback();
-          // do parse call with element
-          var ele = elements[index];
-          cookieParser.parse(self.getFileName(ele.fileID), function(err, cookies) {
-            //console.log(ele.domain, ':', cookies)
-            
-            if (err) {
-              cookiesResult.push({
-                domain: ele.domain,
-                error: err
-              })
-            } else {
-              cookies.forEach(cookie => {
-                cookie.url = cookie.url.replace(/\0/g, '')
-                cookie.name = cookie.name.replace(/\0/g, '')
-                cookie.path = cookie.path.replace(/\0/g, '')
-                cookie.value = cookie.value.replace(/\0/g, '')
-                cookiesResult.push({
-                  domain: ele.domain,
-                  cookie: cookie
+    return new Promise(async (resolve, reject) => {
+      this.openDatabase('Manifest.db', true)
+        .then(manifestdb => {
+          manifestdb.all(`SELECT fileID,domain,relativePath from FILES where relativePath like 'Library/Cookies/Cookies.binarycookies'`, async (err, rows) => {
+            if (err) return reject(err)
+
+            let cookiesResult = []
+
+            const iterateElements = (elements, index, callback) => {
+              if (index === elements.length) { return callback() }
+              // do parse call with element
+              var ele = elements[index]
+
+              cookieParser.parse(this.getFileName(ele.fileID))
+                .then(cookies => {
+                  // Map to include domain
+                  let formatted = cookies.map(el => { return { domain: ele.domain, cookie: el } })
+
+                  // Append result
+                  cookiesResult = [...cookiesResult, ...formatted]
+
+                  // Next file.
+                  iterateElements(elements, index + 1, callback)
                 })
-              });
             }
-            iterateElements(elements, index+1, callback);
+
+            iterateElements(rows, 0, () => {
+              resolve(cookiesResult)
+            })
           })
-        }
-        iterateElements(rows, 0, () => {
-          resolve(cookiesResult)
         })
-      })
+        .catch(reject)
     })
   }
 
   getAddressBook () {
     return new Promise((resolve, reject) => {
-      var addressbookdb = this.getDatabase(databases.AddressBook);
+      var addressbookdb = this.getDatabase(databases.AddressBook)
       try {
         const query = `
         select ABPerson.ROWID
@@ -573,7 +617,7 @@ class iPhoneBackup {
         `
         addressbookdb.all(query, async function (err, rows) {
           if (err) reject(err)
-  
+
           resolve(rows)
         })
       } catch (e) {
@@ -586,9 +630,12 @@ class iPhoneBackup {
 module.exports.availableBackups = function () {
   const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
   return new Promise((resolve, reject) => {
-    resolve(fs.readdirSync(base, { encoding: 'utf8' })
-      .map(file => iPhoneBackup.fromID(file)))
+    resolve(fs.readdirSync(base, {
+      encoding: 'utf8'
+    })
+      .map(file => IPhoneBackup.fromID(file)))
   })
 }
 
-module.exports.iPhoneBackup = iPhoneBackup
+module.exports.iPhoneBackup = IPhoneBackup
+module.exports.IPhoneBackup = IPhoneBackup

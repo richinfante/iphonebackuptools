@@ -1,26 +1,21 @@
-const stripAnsi = require('strip-ansi')
 const { URL } = require('url')
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
-const normalizeCols = require('../util/normalize.js')
 
 module.exports.name = 'webhistory'
 module.exports.description = 'List all web history'
 
-// Specify this reporter requires a backup. 
+// Specify this reporter requires a backup.
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = true
 
 // Specify this reporter supports the promises API for allowing chaining of reports.
 module.exports.usesPromises = true
 
-// Specify this only works for iOS 6+
+// Specify this only works for iOS 9+
 module.exports.supportedVersions = '>=9.0'
 
 module.exports.func = function (program, backup, resolve, reject) {
-
   backup.getWebHistory(program.dump)
     .then((history) => {
-      
       var result = program.formatter.format(history, {
         program: program,
         columns: {

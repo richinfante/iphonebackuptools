@@ -5,6 +5,8 @@ const path = require('path')
 const chalk = require('chalk')
 const version = require('./util/version_compare')
 const iPhoneBackup = require('./util/iphone_backup.js').iPhoneBackup
+const log = require('./util/log')
+
 var base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
 
 var reportTypes = {
@@ -24,34 +26,34 @@ var reportTypes = {
   'webhistory': require('./reports/webhistory'),
   'calls_statistics': require('./reports/calls_statistics'),
   'wifi': require('./reports/wifi'),
-  'all': require('./reports/all'),
   'address_book': require('./reports/address_book')
 }
 
 var formatters = {
   'json': require('./formatters/json'),
   'table': require('./formatters/table'),
-  'raw':  require('./formatters/raw-json'),
+  'raw': require('./formatters/raw-json'),
   'raw-json': require('./formatters/raw-json'),
   'csv': require('./formatters/csv'),
-  'raw-csv': require('./formatters/raw-csv'),
+  'raw-csv': require('./formatters/raw-csv')
 }
 
 program
-.version('3.0.0')
-.option('-l, --list', 'List Backups')
-.option(`-b, --backup <backup>`, 'Backup ID')
-.option(`-d, --dir <directory>`, `Backup Directory (default: ${base})`)
-.option('-r, --report <report_type>', 'Select a report type. see below for a full list.')
-.option('-i, --id <id>', 'Specify an ID for filtering certain reports')
-.option('-f, --formatter <type>', 'Specify output format. default: table')
-.option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files, manifest')
-.option('-o, --report-output <path>', 'Specify an output directory for files to be written to.')
-.option(`-v, --verbose`, 'Verbose debugging output')
-.option(`    --filter <filter>`, 'Filter output for individual reports. See the README for usage.')
-.option('    --join-reports', 'Join JSON reports together. (available for -f json or -f raw only!)')
-.option(`    --no-color`, 'Disable colorized output')
-.option(`    --dump`, 'alias for "--formatter raw"')
+  .version('3.0.0')
+  .option('-l, --list', 'List Backups')
+  .option(`-b, --backup <backup>`, 'Backup ID')
+  .option(`-d, --dir <directory>`, `Backup Directory (default: ${base})`)
+  .option('-r, --report <report_type>', 'Select a report type. see below for a full list.')
+  .option('-i, --id <id>', 'Specify an ID for filtering certain reports')
+  .option('-f, --formatter <type>', 'Specify output format. default: table')
+  .option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files, manifest')
+  .option('-o, --output <path>', 'Specify an output directory for files to be written to.')
+  .option(`-v, --verbose`, 'Verbose debugging output')
+  .option(`    --filter <filter>`, 'Filter output fo r individual reports. See the README for usage.')
+  .option('    --join-reports', 'Join JSON reports together. (available for -f json or -f raw only!)')
+  .option(`    --no-color`, 'Disable colorized output')
+  .option(`    --dump`, 'alias for "--formatter raw"')
+  .option(`    --quiet`, 'quiet all messages, except for errors and raw output')
 
 program.on('--help', function () {
   console.log('')
@@ -60,11 +62,7 @@ program.on('--help', function () {
   // Generate a list of report types.
   for (var i in reportTypes) {
     var r = reportTypes[i]
-    if (program.isTTY) {
-      console.log('  ', r.name, (r.supportedVersions ? '(iOS ' + r.supportedVersions + ')' : ' ') + '-', r.description)
-    } else {
-      console.log('  ', chalk.green(r.name), (r.supportedVersions ? chalk.gray('(iOS ' + r.supportedVersions + ') ') : '') + '-', r.description)
-    }
+    console.log('  ', chalk.green(r.name), (r.supportedVersions ? chalk.gray('(iOS ' + r.supportedVersions + ') ') : '') + '-', r.description)
   }
   console.log('')
   console.log("If you're interested to know how this works, check out my post:")
@@ -75,12 +73,15 @@ program.on('--help', function () {
   console.log('')
 })
 
+process.on('unhandledRejection', (e) => {
+  console.log('unhandled', e)
+  process.exit(1)
+})
+
 // Parse argv.
 program.parse(process.argv)
 
-// Global verbose output flag.
-// This is bad
-global.verbose = program.verbose
+log.setVerbose(program.quiet ? 0 : (program.verbose ? 2 : 1))
 
 // Save the formatter
 program.formatter = formatters[program.formatter] || formatters.table
@@ -96,28 +97,28 @@ if (!process.stdout.isTTY) { program.color = false }
 // Find the base
 base = program.dir || base
 
-if (program.verbose) console.log('Using source:', base)
+log.verbose('Using source:', base)
 
 // Run the main function
 main()
 
-async function main() {
+async function main () {
   if (program.list) {
     // Run the list report standalone
-    let result = await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       reportTypes.list.func(program, base, resolve, reject)
     })
   } else if (program.report) {
-    var reportContents = [] 
+    var reportContents = []
 
     // Turn the report argument into an array of report type names
     var selectedTypes = program.report
       .split(',')
       .map(el => el.trim())
-      .filter(el => el != '')
+      .filter(el => el !== '')
 
     // Add all types if type is 'all'
-    if (program.report == 'all') {
+    if (program.report === 'all') {
       selectedTypes = []
 
       for (var key in reportTypes) {
@@ -125,50 +126,57 @@ async function main() {
           continue
         }
 
-        selectedTypes.push(key)  
+        selectedTypes.push(key)
       }
     }
-    
-    for(var reportName of selectedTypes) {
+
+    for (var reportName of selectedTypes) {
       // If the report is valid
       if (reportTypes[reportName]) {
-        
         var report = reportTypes[reportName]
 
-        if(selectedTypes.length > 1 && !report.usesPromises) {
-          console.log('Warning: report that does not utilize promises in multi-request.')
-          console.log('Warning: this may not work.')
+        if (selectedTypes.length > 1 && !report.usesPromises) {
+          log.warning('the report', report.name, 'does not utilize promises.')
+          log.warning('this may not work')
         }
-        
+
+        log.begin('run', report.name)
+
         // Check if there's a backup specified and one is required.
         if (report.requiresBackup) {
           if (!program.backup) {
-            console.log('use -b or --backup <id> to specify backup.')
+            log.error('use -b or --backup <id> to specify backup.')
             process.exit(1)
           }
         }
-        
-        if (report.func) {
-          var report = await runSingleReport(report, program)
+        try {
+          if (report.func) {
+            let contents = await runSingleReport(report, program)
+            if (contents == null) { log.end(); continue }
 
-          reportContents.push({ 
-            name: reportName, 
-            contents: report
-          })
-        } else if (report.functions) {
-          var report = await runSwitchedReport(report, program)
+            reportContents.push({
+              name: reportName,
+              contents: contents
+            })
+          } else if (report.functions) {
+            let contents = await runSwitchedReport(report, program)
+            if (contents == null) { log.end(); continue }
 
-          reportContents.push({ 
-            name: reportName, 
-            contents: report
-          })
+            reportContents.push({
+              name: reportName,
+              contents: contents
+            })
+          }
+        } catch (e) {
+          log.error(`Couldn't run '${report.name}'.`)
+          log.error(e)
         }
+
+        log.end()
       } else {
-        console.log('')
-        console.log('  [!] Unknown Option type:', reportName)
-        console.log('  [!] It\'s possible this tool is out-of date.')
-        console.log('  https://github.com/richinfante/iphonebackuptools/issues')
-        console.log('')
+        log.error('Unknown report type:', reportName)
+        log.error(`It's possible this tool is out-of date.`)
+        log.error(`https://github.com/richinfante/iphonebackuptools/issues`)
         program.outputHelp()
       }
     }
@@ -179,57 +187,63 @@ async function main() {
   }
 }
 
-async function runSwitchedReport(report, program) {
-  try {
-    // New type of reports
-    var backup = iPhoneBackup.fromID(program.backup, base)
-          
-    var flag = false
-    var value
-    // Check for a compatible reporting tool.
-    for (var key in report.functions) {
-      if (version.versionCheck(backup.iOSVersion, key)) {
-        if(!report.usesPromises) {
-          if(program.verbose) console.log('using synchronous call.')
-            
-          value = report.functions[key](program, backup)
-        } else {
-          // Create a promise to resolve this function
-          async function createPromise() {
-            if(program.verbose) console.log('resolving using promises.')
-            
-            return new Promise((resolve, reject) => {
-              report.functions[key](program, backup, resolve, reject)
-            })
-          }
+async function runSwitchedReport (report, program) {
+  async function createPromise (key, program, backup) {
+    log.verbose('resolving using promises.')
 
-          // Use promises to resolve synchronously
-          value = await createPromise()
-        }
-        flag = true
-        break
-      }
-    }
-    
-    if (!flag) {
-      console.log('[!] The report generator "', program.report,'" does not support iOS', backup.iOSVersion)
-      console.log('')
-      console.log('    If you think it should, file an issue here:')
-      console.log('    https://github.com/richinfante/iphonebackuptools/issues')
-      console.log('')
-      process.exit(1)
-    }
-
-    return value
-  } catch (e) {
-    console.log('[!] Encountered an error', e)
+    return new Promise((resolve, reject) => {
+      report.functions[key](program, backup, resolve, reject)
+    })
   }
+
+  // New type of reports
+  var backup = iPhoneBackup.fromID(program.backup, base)
+
+  var flag = false
+  var value
+  // Check for a compatible reporting tool.
+  for (var key in report.functions) {
+    if (version.versionCheck(backup.iOSVersion, key)) {
+      if (!report.usesPromises) {
+        log.verbose('using synchronous call.')
+
+        value = report.functions[key](program, backup)
+      } else {
+        // Use promises to resolve synchronously
+        value = await createPromise(key, program, backup)
+      }
+      flag = true
+      break
+    }
+  }
+
+  if (!flag) {
+    log.error(`Couldn't run '${report.name}'.`)
+    log.error(`The report generator '${report.name}' does not support iOS`, backup.iOSVersion)
+    log.error(`If you think it should, file an issue here:`)
+    log.error(`https://github.com/richinfante/iphonebackuptools/issues`)
+    return null
+  }
+
+  return value
 }
 
-async function runSingleReport(report, program) {
-  async function runReport(backup, base) {
-    if(!report.usesPromises) {
-      if(program.verbose) console.log('using synchronous call.')
+async function runSingleReport (report, program) {
+  async function createPromise (program, backup, base) {
+    log.verbose('resolving using promises.')
+
+    return new Promise((resolve, reject) => {
+      if (report.requiresBackup) {
+        report.func(program, backup, resolve, reject)
+      } else {
+        report.func(program, base, resolve, reject)
+      }
+    })
+  }
+
+  async function runReport (backup, base) {
+    if (!report.usesPromises) {
+      log.verbose('using synchronous call.')
 
       // Old-style non-promise based report.
       if (report.requiresBackup) {
@@ -239,43 +253,25 @@ async function runSingleReport(report, program) {
       }
     } else {
       // Create a promise to resolve this function
-      async  function createPromise() {
-        if(program.verbose) console.log('resolving using promises.')
-        
-        return new Promise((resolve, reject) => {
-          if (report.requiresBackup) {
-            report.func(program, backup, resolve, reject)
-          } else {
-            report.func(program, base, resolve, reject)
-          }
-        })
-      }
-
       // Use promises to resolve synchronously
-      return await createPromise()
+      return createPromise(program, backup, base)
     }
   }
 
+  // New type of reports
+  var backup = iPhoneBackup.fromID(program.backup, base)
 
-  try {
-    // New type of reports
-    var backup = iPhoneBackup.fromID(program.backup, base)
-    
-    if (report.supportedVersions !== undefined) {
-      if (version.versionCheck(backup.iOSVersion, report.supportedVersions)) {
-        return await runReport(backup, base)
-      } else {
-        console.log('[!] The report generator "' + program.report + '" does not support iOS', backup.iOSVersion)
-        console.log('')
-        console.log('    If you think it should, file an issue here:')
-        console.log('    https://github.com/richinfante/iphonebackuptools/issues')
-        console.log('')
-        process.exit(1)
-      }
+  if (report.supportedVersions !== undefined) {
+    if (version.versionCheck(backup.iOSVersion, report.supportedVersions)) {
+      return runReport(backup, base)
     } else {
-      return await runReport(backup, base)
+      log.error(`Couldn't run '${report.name}'.`)
+      log.error(`The report generator '${report.name}' does not support iOS`, backup.iOSVersion)
+      log.error(`If you think it should, file an issue here:`)
+      log.error(`https://github.com/richinfante/iphonebackuptools/issues`)
+      return null
     }
-  } catch (e) {
-    console.log('[!] Encountered an error', e)
+  } else {
+    return runReport(backup, base)
   }
 }
