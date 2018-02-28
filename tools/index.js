@@ -168,7 +168,7 @@ async function main () {
             })
           }
         } catch (e) {
-          log.error(`couldn't run:`, reportName)
+          log.error(`Couldn't run '${report.name}'.`)
           log.error(e)
         }
 
@@ -218,6 +218,7 @@ async function runSwitchedReport (report, program) {
   }
 
   if (!flag) {
+    log.error(`Couldn't run '${report.name}'.`)
     log.error(`The report generator '${report.name}' does not support iOS`, backup.iOSVersion)
     log.error(`If you think it should, file an issue here:`)
     log.error(`https://github.com/richinfante/iphonebackuptools/issues`)
@@ -264,6 +265,7 @@ async function runSingleReport (report, program) {
     if (version.versionCheck(backup.iOSVersion, report.supportedVersions)) {
       return runReport(backup, base)
     } else {
+      log.error(`Couldn't run '${report.name}'.`)
       log.error(`The report generator '${report.name}' does not support iOS`, backup.iOSVersion)
       log.error(`If you think it should, file an issue here:`)
       log.error(`https://github.com/richinfante/iphonebackuptools/issues`)

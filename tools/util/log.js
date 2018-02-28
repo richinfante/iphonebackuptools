@@ -14,7 +14,7 @@ function isVerbose (i) {
 }
 
 function indent () {
-  var indent = ' '
+  var indent = ''
 
   for (var i = 0; i < lvl; i++) {
     indent += '  '
@@ -23,6 +23,12 @@ function indent () {
   return indent
 }
 
+/**
+ * Print an error to the screen.
+ * These will only be output if log level >= 0
+ * Args is a description of the error.
+ * @param {*} args - string description
+ */
 module.exports.error = function (...args) {
   if (!isVerbose(0)) { return }
 
@@ -31,9 +37,15 @@ module.exports.error = function (...args) {
     wasRaw = false
   }
 
-  console.log(indent(), chalk.red('error'), ...args)
+  console.log(indent() + chalk.red('ERROR!'), ...args)
 }
 
+/**
+ * Print to the screen that an action was taken
+ * These will only be output if log level >= 1
+ * @param {string} action - Action that was taken
+ * @param {*} args - string description
+ */
 module.exports.action = function (action, ...args) {
   if (!isVerbose(1)) { return }
   if (wasRaw) {
@@ -41,9 +53,15 @@ module.exports.action = function (action, ...args) {
     wasRaw = false
   }
 
-  console.log(indent(), chalk.green(action), ...args)
+  console.log(indent() + chalk.green(action), ...args)
 }
 
+/**
+ * Print to screen that a group of actions happened
+ * These will only be output if log level >= 1
+ * @param {string} action - action
+ * @param {*} args - string description
+ */
 module.exports.begin = function (action, ...args) {
   if (!isVerbose(1)) { return }
   if (wasRaw) {
@@ -51,10 +69,14 @@ module.exports.begin = function (action, ...args) {
     wasRaw = false
   }
 
-  console.log(indent(), chalk.green(action), ...args)
+  console.log(indent() + chalk.green(action), ...args)
   lvl += 1
 }
 
+/**
+ * Exit indent group
+ * These will only be output if log level >= 1
+ */
 module.exports.end = function () {
   if (!isVerbose(1)) { return }
 
@@ -66,7 +88,12 @@ module.exports.end = function () {
   lvl -= 1
 }
 
-module.exports.warning = function (action, ...args) {
+/**
+ * Print a warning
+ * * These will only be output if log level >= 0
+ * @param {*} args - String description of the warning
+ */
+module.exports.warning = function (...args) {
   if (!isVerbose(0)) { return }
 
   if (wasRaw) {
@@ -74,9 +101,14 @@ module.exports.warning = function (action, ...args) {
     wasRaw = false
   }
 
-  console.log(indent(), chalk.green('warning'), ...args)
+  console.log(indent() + chalk.yellow('WARNING!'), ...args)
 }
 
+/**
+ * Verbose logging drop-in for console.log
+ * These will only be output if log level >= 2
+ * @param {*} args - print output
+ */
 module.exports.verbose = function (...args) {
   if (!isVerbose(2)) { return }
   if (wasRaw) {
@@ -84,9 +116,15 @@ module.exports.verbose = function (...args) {
     wasRaw = false
   }
 
-  console.log(indent(), chalk.blue('verbose'), ...args)
+  console.log(indent() + chalk.blue('verbose'), ...args)
 }
 
+/**
+ * Raw logging drop-in for console.log
+ * These lines will NOT be formatted.
+ * These will only be output if log level >= 0
+ * @param {*} args - print output
+ */
 module.exports.raw = function (...args) {
   if (!isVerbose(0)) { return }
 
