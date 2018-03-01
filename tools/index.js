@@ -26,7 +26,8 @@ var reportTypes = {
   'webhistory': require('./reports/webhistory'),
   'calls_statistics': require('./reports/calls_statistics'),
   'wifi': require('./reports/wifi'),
-  'address_book': require('./reports/address_book')
+  'address_book': require('./reports/address_book'),
+  'safari_bookmarks': require('./reports/safari_bookmarks')
 }
 
 var formatters = {
