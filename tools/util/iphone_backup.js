@@ -619,8 +619,33 @@ class IPhoneBackup {
         `
         addressbookdb.all(query, async function (err, rows) {
           if (err) reject(err)
-
-          resolve(rows)
+          const iterateElements = (elements, index, callback) => {
+            if (index === elements.length) { return callback() }
+            // do parse call with element
+            var ele = elements[index]
+            const query = `
+            select (select value from ABMultiValue where property = 22 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = 'PROFILE')) as google_profile
+                , (select value from ABMultiValue where property = 22 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = 'profile')) as google_profile1
+                , (select value from ABMultiValue where property = 4 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = 'iCloud')) as icloud
+                
+                , (select value from ABMultiValueEntry where parent_id in (select ROWID from ABMultiValue where record_id = ABPerson.ROWID) and key = (select ROWID from ABMultiValueEntryKey where lower(value) = 'service')) as service
+                , (select value from ABMultiValueEntry where parent_id in (select ROWID from ABMultiValue where record_id = ABPerson.ROWID) and key = (select ROWID from ABMultiValueEntryKey where lower(value) = 'username')) as username
+                , (select value from ABMultiValueEntry where parent_id in (select ROWID from ABMultiValue where record_id = ABPerson.ROWID) and key = (select ROWID from ABMultiValueEntryKey where lower(value) = 'url')) as url
+              from ABPerson
+              where ABPerson.ROWID = ${ele.ROWID}
+            order by ABPerson.ROWID
+            `
+            addressbookdb.all(query, async function (err, rows1) {
+              if (err) reject(err)
+              rows1[0].google_profile = rows1[0].google_profile || rows1[0].google_profile1
+              delete rows1[0].google_profile1
+              ele.services = rows1[0]
+              iterateElements(elements, index + 1, callback)
+            })
+          }
+          iterateElements(rows, 0, () => {
+            resolve(rows)
+          })
         })
       } catch (e) {
         reject(e)
