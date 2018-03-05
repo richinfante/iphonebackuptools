@@ -674,6 +674,57 @@ class IPhoneBackup {
       }
     })
   }
+
+  getSafariBookmarksiOS7 () {
+    return new Promise((resolve, reject) => {
+      var bookmarksdb = this.getDatabase(databases.SafariBookmarks)
+      try {
+        const query = `
+          select bookmarks.id
+            , bookmarks.special_id
+            , bookmarks.parent as parent_id
+            , bookmarks.type
+            , bookmarks.title
+            , bookmarks.url
+            , bookmarks.num_children
+            , bookmarks.editable
+            , bookmarks.deletable
+            , bookmarks.hidden
+            , bookmarks.hidden_ancestor_count
+            , bookmarks.order_index
+            , bookmarks.external_uuid
+            , bookmarks.read
+            , bookmarks.last_modified
+            , bookmarks.server_id
+            , bookmarks.sync_key
+            , bookmarks.sync_data
+            , bookmarks.added
+            , bookmarks.deleted
+            , bookmarks.extra_attributes
+            , bookmarks.local_attributes
+            , bookmarks.fetched_icon
+            , bookmarks.icon
+            , bookmarks.dav_generation
+            , bookmarks.locally_added
+            , bookmarks.archive_status
+            , bookmarks.syncable
+            , bookmarks.web_filter_status
+            , parent_bookmarks.title as parent_title
+          from bookmarks
+          left join bookmarks as parent_bookmarks on parent_bookmarks.id = bookmarks.parent
+          where bookmarks.type = 0
+          order by bookmarks.id
+        `
+        bookmarksdb.all(query, async function (err, rows) {
+          if (err) reject(err)
+
+          resolve(rows)
+        })
+      } catch (e) {
+        reject(e)
+      }
+    })
+  }
 }
 
 module.exports.availableBackups = function () {
