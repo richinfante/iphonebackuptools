@@ -603,7 +603,8 @@ class IPhoneBackup {
             , ABPerson.Department as department
             , ABPerson.Birthday as birthday
             , ABPerson.JobTitle as jobtitle
-
+            , datetime(ABPerson.CreationDate + 978307200, 'unixepoch') as created_date 
+            , datetime(ABPerson.ModificationDate + 978307200, 'unixepoch') as updated_date 
             , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Work>!$_')) as phone_work
             , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Mobile>!$_')) as phone_mobile
             , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Home>!$_')) as phone_home
