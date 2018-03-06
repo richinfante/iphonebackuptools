@@ -25,6 +25,7 @@ const databases = {
   Notes: fileHash('Library/Notes/notes.sqlite'),
   Notes2: fileHash('NoteStore.sqlite', 'AppDomainGroup-group.com.apple.notes'),
   AddressBook: fileHash('Library/AddressBook/AddressBook.sqlitedb'),
+  AddressBookImages: fileHash('Library/AddressBook/AddressBookImages.sqlitedb'),
   'Cookies.binarycookies': '69b1865768101bacde5b77ccc44445cea9ce1261',
   Calls: '2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca',
   Calls2: fileHash('Library/CallHistoryDB/CallHistory.storedata'),
@@ -592,8 +593,10 @@ class IPhoneBackup {
 
   getAddressBook () {
     return new Promise((resolve, reject) => {
-      var addressbookdb = this.getDatabase(databases.AddressBook)
+      let addressbookdb = this.getDatabase(databases.AddressBook)
+      const self = this
       try {
+        // Query basic Address Book fields
         const query = `
         select ABPerson.ROWID
             , ABPerson.first
@@ -622,7 +625,8 @@ class IPhoneBackup {
           const iterateElements = (elements, index, callback) => {
             if (index === elements.length) { return callback() }
             // do parse call with element
-            var ele = elements[index]
+            let ele = elements[index]
+            //Query username and profile links for other services (facebook etc)
             const query = `
             select (select value from ABMultiValue where property = 22 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = 'PROFILE')) as google_profile
                 , (select value from ABMultiValue where property = 22 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = 'profile')) as google_profile1
@@ -640,7 +644,23 @@ class IPhoneBackup {
               rows1[0].google_profile = rows1[0].google_profile || rows1[0].google_profile1
               delete rows1[0].google_profile1
               ele.services = rows1[0]
-              iterateElements(elements, index + 1, callback)
+              
+              const addressbookimagesdb = self.getDatabase(databases.AddressBookImages)
+              //Query profile picture extraction from /Library/AddressBook/AddressBookImages.sqlitedb
+              const query = `
+              select data
+              from ABFullSizeImage
+                where ABFullSizeImage.record_id = ${ele.ROWID}
+              `
+              addressbookimagesdb.get(query, async function (err, row) {
+                if (err) reject(err)
+                ele.profile_picture = null
+                if (row) {
+                  ele.profile_picture = row.data.toString('base64')
+                }
+                iterateElements(elements, index + 1, callback)
+              })
+              
             })
           }
           iterateElements(rows, 0, () => {
