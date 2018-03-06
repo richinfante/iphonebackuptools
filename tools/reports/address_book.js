@@ -29,6 +29,7 @@ module.exports.func = function (program, backup, resolve, reject) {
           'Email': el => el.email ? el.email.substring(0, 28) + '' : '',
           'Created Date': el => el.created_date ? el.created_date.substring(0, 28) + '' : '',
           'Note': el => el.note ? el.note.substring(0, 28) + '' : '',
+          'Picture': el => el.profile_picture ? 1 : 0
         }
       })
 
