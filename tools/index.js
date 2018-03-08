@@ -28,6 +28,7 @@ var reportTypes = {
   'wifi': require('./reports/wifi'),
   'address_book': require('./reports/address_book'),
   'safari_bookmarks': require('./reports/safari_bookmarks'),
+  'pushstore': require('./reports/pushstore'),
   'calendar': require('./reports/calendar')
 }
 
