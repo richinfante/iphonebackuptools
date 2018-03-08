@@ -26,7 +26,10 @@ module.exports.func = function (program, backup, resolve, reject) {
           'Phone Work': el => el.phone_work ? el.phone_work.substring(0, 14) + '' : '',
           'Phone Mobile': el => el.phone_mobile ? el.phone_mobile.substring(0, 14) + '' : '',
           'Phone Home': el => el.phone_home ? el.phone_home.substring(0, 14) + '' : '',
-          'Email': el => el.email ? el.email.substring(0, 28) + '' : ''
+          'Email': el => el.email ? el.email.substring(0, 28) + '' : '',
+          'Created Date': el => el.created_date ? el.created_date.substring(0, 28) + '' : '',
+          'Note': el => el.note ? el.note.substring(0, 28) + '' : '',
+          'Picture': el => el.profile_picture ? 1 : 0
         }
       })
 
