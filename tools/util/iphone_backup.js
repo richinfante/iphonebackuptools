@@ -17,6 +17,9 @@ const fileHash = require('./backup_filehash')
 // Manifest.mbdb parser
 const manifestMBDBParse = require('./manifest_mbdb_parse')
 
+// Pushstore bplist parser
+const pushstoreParse = require('./pushstore_parse')
+
 const databases = {
   SMS: fileHash('Library/SMS/sms.db'),
   Contacts: fileHash('Library/AddressBook/AddressBook.sqlitedb'),
@@ -723,6 +726,54 @@ class IPhoneBackup {
       } catch (e) {
         reject(e)
       }
+    })
+  }
+
+  getPushstore () {
+    return new Promise((resolve, reject) => {
+      this.getFileManifest().then((manifest) => {
+        try {
+          let files = manifest.filter((file) => {
+            if (file.relativePath)
+              return ~file.relativePath.indexOf("Library/SpringBoard/PushStore/")
+            return false
+          })
+
+          const pushstores = []
+
+          files.forEach((file) => {
+            let plist = bplist.parseBuffer(fs.readFileSync(this.getFileName(file.fileID)))[0]
+            pushstores.push(...pushstoreParse.run(plist))
+          })
+          resolve(pushstores)
+        } catch (e) {
+          reject(e)
+        }
+      })
+    })
+  }
+  
+  getOldPushstore () {
+    return new Promise((resolve, reject) => {
+      this.getOldFileManifest().then((manifest) => {
+        try {
+          let files = manifest.filter((file) => {
+            if (file.filename) {
+              return ~file.filename.indexOf("Library/SpringBoard/PushStore/")
+            }
+            return false
+          })
+
+          let pushstores = []
+          files.forEach((file) => {
+            let plist = bplist.parseBuffer(fs.readFileSync(this.getFileName(file.fileID)))[0]
+            pushstores.push(...pushstoreParse.run(plist))
+          })
+          resolve(pushstores)
+        } catch (e) {
+          reject(e)
+        }
+      })
     })
   }
 }
