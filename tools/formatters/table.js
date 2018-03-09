@@ -165,8 +165,8 @@ module.exports.format = function (data, options) {
     ...data.map(data => keyValueArray(options.columns, keys, data))
   ]
 
-  if (options.program && options.program.output === undefined) {
-    var targetWidth = 80
+  if (options.program && options.program.output !== undefined) {
+    var targetWidth = 120
   } else {
     targetWidth = process.stdout.columns
   }
