@@ -1,41 +1,148 @@
 const stripAnsi = require('strip-ansi')
 const log = require('../util/log')
 
-function normalizeCols (rows, max) {
+function keyValueArray (columns, keys, obj) {
+  return keys.map(el => columns[el](obj))
+}
+
+function findMaxLengths (rows) {
+  var widths = []
+
+  for (let i = 0; i < rows.length; i++) {
+    for (let j = 0; j < rows[i].length; j++) {
+      let item = stripAnsi(rows[i][j]) + ''
+      if (!widths[j] || widths[j] < item.length) {
+        widths[j] = item.length
+      }
+    }
+  }
+
+  return widths
+}
+
+function createTable (rows, fitWidth) {
   function padEnd (string, maxLength, fillString) {
-    while ((stripAnsi(string) + '').length < maxLength) {
+    // Don't pad to infinity.
+    if (maxLength === Infinity) {
+      return string
+    }
+
+    // Coerce to string.
+    string = string + ''
+
+    // Pad space chars.
+    while (stripAnsi(string).length < maxLength) {
       string = string + fillString
+    }
+
+    // If the string is too long, substring it.
+    if (string.length > maxLength) {
+      return string.substr(0, maxLength)
     }
 
     return string
   }
 
-  var widths = []
-  max = max || rows[0].length
+  // Find target width.
+  if (fitWidth > 0) {
+    var targetWidth = Math.floor((fitWidth / rows[0].length) - 3)
+  } else {
+    targetWidth = Infinity
+  }
 
-  for (let i = 0; i < rows.length; i++) {
-    for (let j = 0; j < rows[i].length && j < max; j++) {
-      if (!widths[j] || widths[j] < (stripAnsi(rows[i][j]) + '').length) {
-        widths[j] = (stripAnsi(rows[i][j] + '') + '').length
+  let maxWidths = findMaxLengths(rows)
+  let widths = []
+
+  // Budget for how much more space we can add if needed.
+  var budget = 0
+
+  // Calcualte initial column sizes.
+  for (let i = 0; i < maxWidths.length; i++) {
+    if (maxWidths[i] < targetWidth) {
+      budget += (targetWidth - maxWidths[i])
+      widths[i] = maxWidths[i]
+    } else {
+      widths[i] = targetWidth
+    }
+  }
+
+  if (targetWidth < Infinity) {
+    // Add budget until all items can be shown, or we run out of extra space.
+    while (budget > 0) {
+      var okCount = 0
+
+      for (let i = 0; i < widths.length; i++) {
+        let diff = maxWidths[i] - widths[i]
+
+        // If the diff is >0, that means that there may be wrapping.
+        if (diff > 0 && budget > 0) {
+          // Add extra spaces.
+          widths[i] += 1
+          budget -= 1
+        } else {
+          okCount += 1
+        }
+      }
+
+      // If they all are Ok, end.
+      if (okCount === widths.length) {
+        break
       }
     }
   }
 
+  // Store the output rows
+  var outputRows = []
+  
+  // Cursors for each item in the current row.
+  var cursors = []
+
+  // Additonal row overflow flag
+  let flag = false
+
   for (let i = 0; i < rows.length; i++) {
-    for (let j = 0; j < rows[i].length && j < max; j++) {
-      if (rows[i][j] === '-') {
-        rows[i][j] = padEnd(rows[i][j], widths[j], '-')
+    var line = []
+
+    for (let j = 0; j < rows[i].length; j++) {
+      cursors[j] = cursors[j] || 0
+      
+      // Extract item
+      let rawItem = rows[i][j] + ''
+
+      // Slice for this row.
+      let inputItem = rawItem.substr(cursors[j], widths[j])
+
+      if (inputItem === '-') {
+        line.push(padEnd(inputItem, widths[j], '-'))
       } else {
-        rows[i][j] = padEnd(rows[i][j], widths[j], ' ')
+        // Pad the item and add to the line.
+        let item = padEnd(inputItem, widths[j], ' ')
+        line.push(item)
+
+        // If the item is too long for one row, flag it to be printed below.
+        if (cursors[j] + inputItem.length < rawItem.length && inputItem !== '') {
+          flag = true
+        }
+
+        // Advance cursor.
+        cursors[j] += widths[j]
       }
+    }
+
+    // Add line to output rows.
+    outputRows.push(line)
+
+    // If the flag is true, we need to repeat the last line.
+    if (flag) {
+      i -= 1
+      flag = false
+    } else {
+      // Reset cursors.
+      cursors = []
     }
   }
 
-  return rows
-}
-
-function keyValueArray (columns, keys, obj) {
-  return keys.map(el => columns[el](obj))
+  return outputRows
 }
 
 module.exports.format = function (data, options) {
@@ -58,8 +165,14 @@ module.exports.format = function (data, options) {
     ...data.map(data => keyValueArray(options.columns, keys, data))
   ]
 
+  if (options.program && options.program.output !== undefined) {
+    var targetWidth = 120
+  } else {
+    targetWidth = process.stdout.columns
+  }
+
   // Normalize column widths.
-  items = normalizeCols(items).map(el => {
+  items = createTable(items, targetWidth).map(el => {
     return el.join(' | ').replace(/\n/g, '')
   }).join('\n')
 
