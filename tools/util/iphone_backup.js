@@ -289,6 +289,29 @@ class IPhoneBackup {
     }
   }
 
+  getMessageAttachments (messageId) {
+    var backup = this
+    return new Promise((resolve, reject) => {
+      const messagedb = this.getDatabase(databases.SMS)
+      const query = `
+        SELECT
+          attachment.*
+        FROM message_attachment_join
+        INNER JOIN attachment
+          ON attachment.ROWID = message_attachment_join.attachment_id
+        WHERE message_attachment_join.message_id = ${parseInt(messageId)}
+      `
+      messagedb.all(query,
+      async function (err, attachments) {
+        if (err) return reject(err)
+
+        attachments = attachments || []
+
+        resolve(attachments)
+      })
+    })
+  }
+
   getConversationsiOS9 () {
     var backup = this
     return new Promise((resolve, reject) => {
