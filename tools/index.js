@@ -29,7 +29,8 @@ var reportTypes = {
   'address_book': require('./reports/address_book'),
   'safari_bookmarks': require('./reports/safari_bookmarks'),
   'pushstore': require('./reports/pushstore'),
-  'calendar': require('./reports/calendar')
+  'calendar': require('./reports/calendar'),
+  'facebook_profile': require('./reports/facebook_profile')
 }
 
 var formatters = {
