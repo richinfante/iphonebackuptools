@@ -24,16 +24,10 @@ module.exports.usesPromises = true
 module.exports.func = function (program, backup, resolve, reject) {
   facebookProfileReport(backup)
     .then((items) => {
-      var result = program.formatter.format(items['List of known networks'], {
+      var result = program.formatter.format(items, {
         program: program,
-        columns: { /*
-          'Last Joined': el => el.lastJoined,
-          'Last AutoJoined': el => el.lastAutoJoined,
-          'SSID': el => el.SSID_STR,
-          'BSSID': el => el.BSSID,
-          'Security': el => el.SecurityMode || '',
-          'Hidden': el => el.HIDDEN_NETWORK || '',
-          'Enabled': el => el.enabled */
+        columns: { 
+          'Facebook User ID': el => el.fbid
         }
       })
 
@@ -47,8 +41,12 @@ const facebookProfileReport = (backup) => {
     var filename = backup.getFileName(file)
     try {
       let facebookPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
-      console.log(filename)
-      resolve(facebookPlist)
+      let facebookUserIds = Object.keys(facebookPlist['kUserGlobalSettings'])
+      facebookUserIds = facebookUserIds.map((fbid) => ({
+        fbid: fbid
+      }))
+
+      resolve(facebookUserIds)
     } catch (e) {
       reject(e)
     }
