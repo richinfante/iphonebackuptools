@@ -8,7 +8,7 @@ module.exports.requiresBackup = true
 // Specify this reporter supports the promises API for allowing chaining of reports.
 module.exports.usesPromises = true
 
-// Specify this only works for iOS 9+
+// Specify this only works for iOS 10+
 module.exports.supportedVersions = '>=10.0'
 
 module.exports.func = function (program, backup, resolve, reject) {
