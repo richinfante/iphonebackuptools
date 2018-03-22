@@ -30,7 +30,8 @@ var reportTypes = {
   'safari_bookmarks': require('./reports/safari_bookmarks'),
   'pushstore': require('./reports/pushstore'),
   'calendar': require('./reports/calendar'),
-  'facebook_profile': require('./reports/facebook_profile')
+  'facebook_profile': require('./reports/facebook_profile'),
+  'facebook_messenger_friends': require('./reports/facebook_messenger_friends')
 }
 
 var formatters = {
