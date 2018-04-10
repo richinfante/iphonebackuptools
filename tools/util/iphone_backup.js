@@ -54,6 +54,8 @@ class IPhoneBackup {
   // Open a backup with a specified ID
   // base is optional and will be computed if not used.
   static fromID (id, base) {
+    id = id || ''
+    
     // Get the path of the folder.
     if (base) {
       base = path.join(base, id)
