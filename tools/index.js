@@ -33,7 +33,8 @@ var reportTypes = {
   'facebook_profile': require('./reports/facebook_profile'),
   'facebook_messenger_friends': require('./reports/facebook_messenger_friends'),
   'spotify': require('./reports/spotify'),
-  'safari_open_tabs': require('./reports/safari_open_tabs')
+  'safari_open_tabs': require('./reports/safari_open_tabs'),
+  'safari_recent_searches': require('./reports/safari_recent_searches')
 }
 
 var formatters = {
