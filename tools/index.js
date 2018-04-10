@@ -31,8 +31,9 @@ var reportTypes = {
   'pushstore': require('./reports/pushstore'),
   'calendar': require('./reports/calendar'),
   'facebook_profile': require('./reports/facebook_profile'),
-  'facebook_messenger_friends': require('./reports/facebook_messenger_friends')
-  'spotify': require('./reports/spotify')
+  'facebook_messenger_friends': require('./reports/facebook_messenger_friends'),
+  'spotify': require('./reports/spotify'),
+  'bluetooth_devices': require('./reports/bluetooth_devices')
 }
 
 var formatters = {
