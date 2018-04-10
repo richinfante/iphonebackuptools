@@ -32,7 +32,8 @@ var reportTypes = {
   'calendar': require('./reports/calendar'),
   'facebook_profile': require('./reports/facebook_profile'),
   'facebook_messenger_friends': require('./reports/facebook_messenger_friends'),
-  'spotify': require('./reports/spotify')
+  'spotify': require('./reports/spotify'),
+  'speed_dial': require('./reports/speed_dial')
 }
 
 var formatters = {
