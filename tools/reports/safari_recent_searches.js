@@ -21,6 +21,11 @@ module.exports.requiresBackup = true
 // Specify this reporter supports the promises API for allowing chaining of reports.
 module.exports.usesPromises = true
 
+// Specify this only works for iOS 10+
+// If it is iOS-version specific, you can specify version information here.
+// You may provide a comma separated string such as ">=6.0,<11.0" to indicate ranges.
+module.exports.supportedVersions = '>=10.0'
+
 module.exports.func = function (program, backup, resolve, reject) {
   safariRecentSearches(backup)
     .then((items) => {
