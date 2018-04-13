@@ -205,6 +205,11 @@ async function main () {
 
     let set = new Set(selectedReports)
 
+    if (set.size === 0) {
+      log.error(`Couldn't run reports specified by: '${program.report}'.`)
+      log.error(`No matching reports were found.`)
+    }
+
     for (let report of set.values()) {
       if (report.version && report.version >= 3) {
         try {

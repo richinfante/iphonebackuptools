@@ -43,8 +43,6 @@ function getCookies (backup, files) {
       // do parse call with element
       var ele = elements[index]
 
-      console.log(ele.fileID)
-
       cookieParser.parse(backup.getFileName(ele.fileID))
         .then(cookies => {
           // Map to include domain

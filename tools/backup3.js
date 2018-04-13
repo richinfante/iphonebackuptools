@@ -2,8 +2,9 @@ const fs = require('fs')
 const sqlite3 = require('sqlite3')
 const path = require('path')
 const log = require('./util/log')
+const filehash = require('./util/backup_filehash')
 
-// Backup3 class, just contains information about paths.
+// Version 3 backup API, just contains information about and utils for files.
 class Backup3 {
   constructor (base, id) {
     id = id || ''
@@ -25,7 +26,12 @@ class Backup3 {
     }
   }
 
+  getFileID (path, domain) {
+    return filehash(path, domain)
+  }
+
   getFileName (fileID, isAbsoulte) {
+    // Default to non-absolute paths.
     isAbsoulte = isAbsoulte || false
 
     // Possible file locations for an ID
@@ -53,7 +59,7 @@ class Backup3 {
       }
     }
 
-    throw new Error('File Not Found.')
+    throw new Error(`Could not find a file needed for this report. It may not be compatibile with this specific backup or iOS Version.`)
   }
 
   /// Open a database that may be in the backup.

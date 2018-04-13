@@ -1,4 +1,4 @@
-const log = require('../util/log')
+const log = require('../../util/log')
 const path = require('path')
 const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
@@ -6,7 +6,7 @@ const fs = require('fs')
 const plist = require('plist')
 
 // Derive filenames based on domain + file path
-const fileHash = require('../util/backup_filehash')
+const fileHash = require('../../util/backup_filehash')
 
 const database_paired = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.paired.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
 const database_other = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.other.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')

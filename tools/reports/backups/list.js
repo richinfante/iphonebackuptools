@@ -36,12 +36,12 @@ module.exports = {
   },
 
   output: {
-    'udid': el => el.id,
-    'encrypted': el => el.manifest ? (el.manifest.IsEncrypted ? 'encrypted' : 'not encrypted') : 'unknown',
-    'date': el => el.status ? new Date(el.status.Date).toLocaleString() : '',
-    'deviceName': el => el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
-    'serialNumber': el => el.manifest.Lockdown.SerialNumber,
-    'iOSVersion': el => el.manifest ? el.manifest.Lockdown.ProductVersion : '?',
-    'backupVersion': el => el.status ? el.status.Version : '?'
+    udid: el => el.id,
+    encrypted: el => el.manifest ? (el.manifest.IsEncrypted ? 'encrypted' : 'not encrypted') : 'unknown',
+    date: el => el.status ? new Date(el.status.Date).toLocaleString() : '',
+    deviceName: el => el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
+    serialNumber: el => el.manifest.Lockdown.SerialNumber,
+    iOSVersion: el => el.manifest ? el.manifest.Lockdown.ProductVersion : '?',
+    backupVersion: el => el.status ? el.status.Version : '?'
   }
 }
