@@ -25,17 +25,17 @@ function nameMatches (query, name) {
 
 function doMatch (object, query, isLeaf) {
   query = query || []
-  log.verbose('NEW LEVEL', query, 'ON', object)
+  // log.verbose('NEW LEVEL', query, 'ON', object)
   let result = []
   let level = query.shift() || '*'
 
   for (let [ key, value ] of Object.entries(object)) {
-    log.verbose('CHECK PAIR', key, '=', value)
+    // log.verbose('CHECK PAIR', key, '=', value)
     if (!nameMatches(level, key)) {
-      log.verbose('MATCH FAILED', level, 'against', key)
+      // log.verbose('MATCH FAILED', level, 'against', key)
       continue
     } else {
-      log.verbose('MATCH OK')
+      // log.verbose('MATCH OK')
     }
 
     if (isLeaf(value)) {
@@ -44,10 +44,10 @@ function doMatch (object, query, isLeaf) {
       result = [...result, ...doMatch(value, query.slice(0), isLeaf)]
     }
 
-    log.verbose('INT. RESULT', result)
+    // log.verbose('INT. RESULT', result)
   }
 
-  log.verbose('FIN. RESULT', result)
+  // log.verbose('FIN. RESULT', result)
 
   return result
 }

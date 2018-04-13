@@ -2,7 +2,13 @@ const stripAnsi = require('strip-ansi')
 const log = require('../util/log')
 
 function keyValueArray (columns, keys, obj) {
-  return keys.map(el => columns[el](obj))
+  return keys.map(el => {
+    if (typeof columns[el] === 'function') {
+      return columns[el](obj)
+    } else {
+      return obj[el]
+    }
+  })
 }
 
 function findMaxLengths (rows) {
@@ -93,7 +99,7 @@ function createTable (rows, fitWidth) {
 
   // Store the output rows
   var outputRows = []
-  
+
   // Cursors for each item in the current row.
   var cursors = []
 
@@ -105,7 +111,7 @@ function createTable (rows, fitWidth) {
 
     for (let j = 0; j < rows[i].length; j++) {
       cursors[j] = cursors[j] || 0
-      
+
       // Extract item
       let rawItem = rows[i][j] + ''
 
@@ -151,6 +157,22 @@ module.exports.format = function (data, options) {
 
   // Separators for each column
   var separators = []
+
+  // If data is not an array,
+  // Turn it into one.
+  if (!(data instanceof Array)) {
+    data = [data]
+  }
+
+  // Ensure we have a column list.
+  // If there are no items, grab the keys from the data object.
+  if ((!options.columns || Object.keys(options.columns).length === 0) && data.length > 0) {
+    options.columns = {}
+
+    for (let item of Object.keys(data[0])) {
+      options.columns[item] = true
+    }
+  }
 
   // Add to collection of keys
   for (var key in options.columns) {

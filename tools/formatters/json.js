@@ -3,7 +3,13 @@ const path = require('path')
 const log = require('../util/log')
 
 module.exports.format = function (data, options) {
-  var processedData = data.map(el => {
+
+  function convertRow (el) {
+    // No Columns defined, just return raw object.
+    if (!options.columns || Object.keys(options.columns).length === 0) {
+      return el
+    }
+
     var row = {}
 
     // Iterate over the columns and add each item to the new row.
@@ -12,7 +18,14 @@ module.exports.format = function (data, options) {
     }
 
     return row
-  })
+  }
+
+  var processedData
+  if (data instanceof Array) {
+    processedData = data.map(convertRow)
+  } else {
+    processedData = convertRow(data)
+  }
 
   // Strigify the output, using 2 space indent.
   var output = JSON.stringify(processedData, null, 2)

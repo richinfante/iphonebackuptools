@@ -1,32 +1,34 @@
-module.exports.name = 'apps'
-module.exports.description = 'List all installed applications and container IDs.'
+module.exports = {
+  version: 3,
+  name: 'apps',
+  description: `List all installed applications and container IDs.`,
+  requiresBackup: true,
 
-// Specify this reporter requires a backup.
-// The second parameter to func() is now a backup instead of the path to one.
-module.exports.requiresBackup = true
+  // Run on a v3 lib / backup object.
+  run (lib, { backup }) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // This report directly depends on manifest report.
+        // If it fails, so do we.
+        let manifest = await lib.run('backup.manifest', { backup })
 
-// Specify this reporter supports the promises API for allowing chaining of reports.
-module.exports.usesPromises = true
+        // Fetch each app in the manifest.
+        var apps = []
+        for (var key in manifest.Applications) {
+          var app = manifest.Applications[key]
 
-module.exports.func = function (program, backup, resolve, reject) {
-  // Fail if manifest does not exist
-  if (!backup.manifest) return reject(new Error('Manifest does not exist in this version'))
+          apps.push({ bundleID: app.CFBundleIdentifier, path: app.Path })
+        }
 
-  // Enumerate the apps in the backup
-  var apps = []
-  for (var key in backup.manifest.Applications) {
-    var app = backup.manifest.Applications[key]
+        resolve(apps)
+      } catch (e) {
+        reject(e)
+      }
+    })
+  },
 
-    apps.push({ bundleID: app.CFBundleIdentifier, path: app.Path })
+  localization: {
+    'Bundle ID': el => el.bundleID,
+    'Bundle Path': el => el.path
   }
-
-  var result = program.formatter.format(apps, {
-    program: program,
-    columns: {
-      'Bundle ID': el => el.bundleID,
-      'Bundle Path': el => el.path
-    }
-  })
-
-  resolve(result)
 }

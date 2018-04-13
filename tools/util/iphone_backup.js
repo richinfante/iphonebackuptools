@@ -685,7 +685,7 @@ class IPhoneBackup {
                 if (err) reject(err)
                 ele.profile_picture = null
                 if (row) {
-                  ele.profile_picture = row.data.toString('base64')
+                  ele.profile_picture = (row.data || '').toString('base64')
                 }
                 iterateElements(elements, index + 1, callback)
               })

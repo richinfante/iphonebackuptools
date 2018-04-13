@@ -1,5 +1,54 @@
-const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
 const fs = require('fs-extra')
+
+module.exports = {
+  version: 3,
+  name: 'list',
+  description: 'List of all backups',
+
+  run (lib, params) {
+    return new Promise(async (resolve, reject) => {
+      let files = fs.readdirSync(lib.base, { encoding: 'utf8' })
+        .filter(el => (el !== '.DS_Store'))
+
+      var results = []
+
+      // Iterate over the file list and try to get statuses for each backup.
+      for (let id of files) {
+        var result = { id }
+
+        try {
+          result.status = await lib.run('backup.status', { backup: id })
+        } catch (e) {}
+
+        try {
+          result.info = await lib.run('backup.info', { backup: id })
+        } catch (e) {}
+
+        try {
+          result.manifest = await lib.run('backup.manifest', { backup: id })
+        } catch (e) {}
+
+        results.push(result)
+      }
+
+      resolve(results)
+    })
+  },
+
+  localizations: {
+    'UDID': el => el.id,
+    'Encryption': el => el.manifest ? (el.manifest.IsEncrypted ? 'encrypted' : 'not encrypted') : 'unknown',
+    'Date': el => el.status ? new Date(el.status.Date).toLocaleString() : '',
+    'Device Name': el => el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
+    'Serial #': el => el.manifest.Lockdown.SerialNumber,
+    'iOS Version': el => el.manifest ? el.manifest.Lockdown.ProductVersion : '?',
+    'Backup Version': el => el.status ? el.status.Version : '?'
+  }
+}
+
+/*
+const iPhoneBackup = require('../util/iphone_backup.js').iPhoneBackup
+
 const chalk = require('chalk')
 
 module.exports.name = 'list'
@@ -20,16 +69,9 @@ module.exports.func = function (program, base, resolve, reject) {
 
   var output = program.formatter.format(items, {
     program: program,
-    columns: {
-      'UDID': el => el.id,
-      'Encryption': el => el.manifest ? (el.manifest.IsEncrypted ? 'encrypted' : 'not encrypted') : 'unknown',
-      'Date': el => el.status ? new Date(el.status.Date).toLocaleString() : '',
-      'Device Name': el => el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
-      'Serial #': el => el.manifest.Lockdown.SerialNumber,
-      'iOS Version': el => el.manifest ? el.manifest.Lockdown.ProductVersion : '?',
-      'Backup Version': el => el.status ? el.status.Version : '?'
-    }
+    columns:
   })
 
   resolve(output)
 }
+*/

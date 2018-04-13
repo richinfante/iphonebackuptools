@@ -4,6 +4,10 @@ const path = require('path')
 const log = require('../util/log')
 
 module.exports.format = function (data, options) {
+  if ((!options.columns || Object.keys(options.colums).length === 0) && data.length > 0) {
+    options.columns = Object.keys(data[0])
+  }
+
   var processedData = data.map(el => {
     var row = {}
 

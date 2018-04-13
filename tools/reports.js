@@ -69,7 +69,10 @@ module.exports.types = {
 
   // Per-backup utilities
   backup: new Group({
-    manifest: require('./reports/manifest')
+    status: require('./reports/backup/status'),
+    manifest: require('./reports/backup/manifest'),
+    info: require('./reports/backup/info'),
+    files: require('./reports/backup/files')
   }),
 
   // Global utilities.

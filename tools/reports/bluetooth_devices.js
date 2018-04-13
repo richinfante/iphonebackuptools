@@ -9,7 +9,7 @@ const plist = require('plist')
 const fileHash = require('../util/backup_filehash')
 
 const database_paired = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.paired.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
-const database_other  = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.other.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
+const database_other = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.other.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
 
 module.exports.name = 'bluetooth_devices'
 module.exports.description = 'List known bluetooth devices'
@@ -44,29 +44,29 @@ module.exports.func = function (program, backup, resolve, reject) {
 const bluetoothReport = (backup) => {
   return new Promise((resolve, reject) => {
     var paireddb = backup.getDatabase(database_paired)
-      try {
-        const query = `
+    try {
+      const query = `
         select * from PairedDevices
         `
-        paireddb.all(query, async function (err, rows) {
-          if (err) reject(err)
-          rows.forEach(row => row.Paired = 'Yes')
-          var otherdb = backup.getDatabase(database_other)
-          try {
-            const query = `
+      paireddb.all(query, async function (err, rows) {
+        if (err) reject(err)
+        rows.forEach(row => row.Paired = 'Yes')
+        var otherdb = backup.getDatabase(database_other)
+        try {
+          const query = `
             select * from OtherDevices
             `
-            otherdb.all(query, async function (err, rows_other) {
-              if (err) reject(err)
-              rows_other.forEach(row_other => rows.push(row_other))
-              resolve(rows)
-            })
-          } catch (e) {
-            reject(e)
-          }
-        })
-      } catch (e) {
-        reject(e)
-      }
+          otherdb.all(query, async function (err, rows_other) {
+            if (err) reject(err)
+            rows_other.forEach(row_other => rows.push(row_other))
+            resolve(rows)
+          })
+        } catch (e) {
+          reject(e)
+        }
+      })
+    } catch (e) {
+      reject(e)
+    }
   })
 }

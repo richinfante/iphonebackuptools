@@ -1,38 +1,67 @@
-module.exports.name = 'cookies'
-module.exports.description = 'List all iOS cookies'
+// Cookie Parser
+const cookieParser = require('../util/cookies.js')
 
-// Specify this reporter requires a backup.
-// The second parameter to func() is now a backup instead of the path to one.
-module.exports.requiresBackup = true
+module.exports = {
+  version: 3,
+  name: 'safari.cookies',
+  description: `List all iOS cookies`,
+  requiresBackup: true,
 
-// Specify this reporter supports the promises API for allowing chaining of reports.
-module.exports.usesPromises = true
+  // Run on a v3 lib / backup object
+  run (lib, { backup }) {
+    return new Promise(async (resolve, reject) => {
+      let files = await lib.run('backup.files', { backup })
 
-// Specify this only works for iOS 10+
-module.exports.supportedVersions = '>=10.0'
-
-module.exports.func = function (program, backup, resolve, reject) {
-  backup.getCookies()
-    .then((items) => {
-    // Use the configured formatter to print the rows.
-      const result = program.formatter.format(items, {
-      // Color formatting?
-        program: program,
-
-        // Columns to be displayed in human-readable printouts.
-        // Some formatters, like raw or CSV, ignore these.
-        columns: {
-          'domain': el => el.domain,
-          'url': el => el.cookie.url,
-          'path': el => el.cookie.name,
-          'value': el => el.cookie.value,
-          'creation': el => el.cookie.creation,
-          'expiration': el => el.cookie.expiration,
-          'flags': el => el.cookie.flags
-        }
+      files = files.filter(el => {
+        return el.filename.indexOf('Library/Cookies/Cookies.binarycookies') > -1
       })
 
-      resolve(result)
+      console.log(files)
+
+      resolve(getCookies(backup, files))
     })
-    .catch(reject)
+  },
+
+  // Localized columns
+  localizations: {
+    'domain': el => el.domain,
+    'url': el => el.cookie.url,
+    'path': el => el.cookie.name,
+    'value': el => el.cookie.value,
+    'creation': el => el.cookie.creation,
+    'expiration': el => el.cookie.expiration,
+    'flags': el => el.cookie.flags
+  }
+}
+
+// Find all the cookies in a set of files in a backup
+function getCookies (backup, files) {
+  return new Promise(async (resolve, reject) => {
+    // Cookies result
+    let cookiesResult = []
+
+    const iterateElements = (elements, index, callback) => {
+      if (index === elements.length) { return callback() }
+      // do parse call with element
+      var ele = elements[index]
+
+      console.log(ele.fileID)
+
+      cookieParser.parse(backup.getFileName(ele.fileID))
+        .then(cookies => {
+          // Map to include domain
+          let formatted = cookies.map(el => { return { domain: ele.domain, cookie: el } })
+
+          // Append result
+          cookiesResult = [...cookiesResult, ...formatted]
+
+          // Next file.
+          iterateElements(elements, index + 1, callback)
+        })
+    }
+
+    iterateElements(files, 0, () => {
+      resolve(cookiesResult)
+    })
+  })
 }
