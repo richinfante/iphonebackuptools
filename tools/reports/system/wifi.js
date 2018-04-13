@@ -38,13 +38,14 @@ module.exports = {
     })
   },
 
-  localizations: {
-    'Last Joined': el => el.lastJoined,
-    'Last AutoJoined': el => el.lastAutoJoined,
-    'SSID': el => el.SSID_STR,
-    'BSSID': el => el.BSSID,
-    'Security': el => el.SecurityMode || '',
-    'Hidden': el => el.HIDDEN_NETWORK || '',
-    'Enabled': el => el.enabled ? true : false
+  // Wifi Report Fields.
+  output: {
+    lastJoined: el => el.lastJoined,
+    lastAutoJoined: el => el.lastAutoJoined || '',
+    ssid: el => el.SSID_STR,
+    bssid: el => el.BSSID,
+    security: el => el.SecurityMode || '',
+    hidden: el => !!el.HIDDEN_NETWORK,
+    enabled: el => !!el.enabled
   }
 }

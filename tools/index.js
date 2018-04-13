@@ -220,7 +220,7 @@ async function main () {
           // Format the v3 report's result.
           program.formatter.format(contents, {
             program,
-            columns: report.localizations
+            columns: report.output
           })
 
           // Push onto the list to be compiled.

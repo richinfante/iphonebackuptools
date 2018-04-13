@@ -27,8 +27,9 @@ module.exports = {
     })
   },
 
-  localization: {
-    'Bundle ID': el => el.bundleID,
-    'Bundle Path': el => el.path
+  // Fields for apps report
+  output: {
+    bundleID: el => el.bundleID,
+    path: el => el.path
   }
 }

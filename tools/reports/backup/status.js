@@ -23,5 +23,15 @@ module.exports = {
         reject(e)
       }
     })
+  },
+
+  // Status fields.
+  output: {
+    uuid: el => el.UUID,
+    isFullBackup: el => el.IsFullBackup,
+    version: el => el.Version, // backup version
+    backupState: el => el.BackupState,
+    date: el => el.Date,
+    snapshotState: el => el.SnapshotState
   }
 }

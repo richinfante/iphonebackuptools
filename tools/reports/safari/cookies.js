@@ -1,5 +1,5 @@
 // Cookie Parser
-const cookieParser = require('../util/cookies.js')
+const cookieParser = require('../../util/cookies.js')
 
 module.exports = {
   version: 3,
@@ -16,21 +16,19 @@ module.exports = {
         return el.filename.indexOf('Library/Cookies/Cookies.binarycookies') > -1
       })
 
-      console.log(files)
-
       resolve(getCookies(backup, files))
     })
   },
 
-  // Localized columns
-  localizations: {
-    'domain': el => el.domain,
-    'url': el => el.cookie.url,
-    'path': el => el.cookie.name,
-    'value': el => el.cookie.value,
-    'creation': el => el.cookie.creation,
-    'expiration': el => el.cookie.expiration,
-    'flags': el => el.cookie.flags
+  // Available fields.
+  output: {
+    domain: el => el.domain,
+    url: el => el.cookie.url,
+    path: el => el.cookie.name,
+    value: el => el.cookie.value,
+    creation: el => el.cookie.creation,
+    expiration: el => el.cookie.expiration,
+    flags: el => el.cookie.flags
   }
 }
 

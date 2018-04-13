@@ -26,5 +26,27 @@ module.exports = {
         reject(e)
       }
     })
+  },
+
+  // Manifest fields.
+  output: {
+    SystemDomainsVersion: el => el.SystemDomainsVersion,
+    Applications: el => el.Applications,
+    Lockdown: el => {
+      el = el.Lockdown
+      return {
+        ProductVersion: el.ProductVersion,
+        BuildVersion: el.BuildVersion,
+        DeviceName: el.DeviceName,
+        SerialNumber: el.SerialNumber,
+        ProductType: el.ProductType,
+        UniqueDeviceID: el.UniqueDeviceID,
+        ...el
+      }
+    },
+    Version: el => el.Version,
+    IsEncrypted: el => el.IsEncrypted,
+    WasPasscodeSet: el => el.WasPasscodeSet,
+    Date: el => el.Date
   }
 }

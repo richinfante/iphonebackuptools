@@ -23,13 +23,12 @@ module.exports = {
     })
   },
 
-  // Keys to include inside human readable reports.
-  // This also gives you an idea of what data is available.
-  localizations: {
-    'ID': el => el.fileID,
-    'Domain': el => el.domain,
-    'Path': el => el.filename,
-    'Size': el => el.filelen
+  // Available fields.
+  output: {
+    id: el => el.fileID,
+    domain: el => el.domain,
+    path: el => el.filename,
+    size: el => el.filelen || 0
   }
 }
 

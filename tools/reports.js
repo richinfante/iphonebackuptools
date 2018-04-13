@@ -61,7 +61,7 @@ module.exports.types = {
     bookmarks: require('./reports/safari_bookmarks'),
     open_tabs: require('./reports/safari_open_tabs'),
     recent_searches: require('./reports/safari_recent_searches'),
-    cookies: require('./reports/cookies')
+    cookies: require('./reports/safari/cookies')
   }),
 
   // Spotify
