@@ -31,10 +31,10 @@ module.exports.types = {
 
   // System level reports, such as wifi
   system: new Group({
-    wifi: require('./reports/wifi'),
+    wifi: require('./reports/system/wifi'),
     bluetooth_devices: require('./reports/bluetooth_devices'),
     pushstore: require('./reports/pushstore'),
-    apps: require('./reports/apps')
+    apps: require('./reports/system/apps')
   }),
 
   // Phone Data

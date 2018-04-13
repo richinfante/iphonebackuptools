@@ -195,6 +195,7 @@ async function main () {
 
     let selectedReports = []
 
+    // Match an array of reports.
     for (let query of selectedTypes) {
       selectedReports = [
         ...selectedReports,
@@ -202,16 +203,27 @@ async function main () {
       ]
     }
 
-    for (let report of selectedReports) {
+    let set = new Set(selectedReports)
+
+    for (let report of set.values()) {
       if (report.version && report.version >= 3) {
         try {
           log.begin('run', report.name)
-          let contents = await runReport(report, { backup: program.backup })
 
-          program.formatter.format(contents, {
-            program, columns: report.localizations
+          // Run a v3 report.
+          let contents = await runReport(report, {
+            backup: program.backup,
+            extract: program.extract,
+            filter: program.filter
           })
 
+          // Format the v3 report's result.
+          program.formatter.format(contents, {
+            program,
+            columns: report.localizations
+          })
+
+          // Push onto the list to be compiled.
           reportContents.push({
             name: report.name,
             contents: contents
@@ -224,7 +236,9 @@ async function main () {
           log.error(e)
         }
       } else {
-        log.warning('the report', report.name, 'is older, it may not work.')
+        // Older reports still work for file and screen output
+        // They just may not be as compatible
+        // They cannot be called from the module's api.
 
         if (selectedReports.length > 1 && !report.usesPromises) {
           log.warning('the report', report.name, 'does not utilize promises.')
