@@ -55,7 +55,7 @@ module.exports.types = {
   system: new Group({
     wifi: require('./reports/system/wifi'),
     bluetooth_devices: require('./reports/system/bluetooth_devices'),
-    pushstore: require('./reports/pushstore'),
+    pushstore: require('./reports/system/pushstore'),
     apps: require('./reports/system/apps')
   }),
 

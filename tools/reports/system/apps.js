@@ -10,7 +10,7 @@ module.exports = {
       try {
         // This report directly depends on manifest report.
         // If it fails, so do we.
-        let manifest = await lib.run('backup.manifest', { backup })
+        let manifest = await lib.run('backup.manifest', { backup, raw: true })
 
         // Fetch each app in the manifest.
         var apps = []

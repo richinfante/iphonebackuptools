@@ -17,15 +17,15 @@ module.exports = {
         var result = { id }
 
         try {
-          result.status = await lib.run('backup.status', { backup: id })
+          result.status = await lib.run('backup.status', { backup: id, raw: true })
         } catch (e) {}
 
         try {
-          result.info = await lib.run('backup.info', { backup: id })
+          result.info = await lib.run('backup.info', { backup: id, raw: true })
         } catch (e) {}
 
         try {
-          result.manifest = await lib.run('backup.manifest', { backup: id })
+          result.manifest = await lib.run('backup.manifest', { backup: id, raw: true })
         } catch (e) {}
 
         results.push(result)

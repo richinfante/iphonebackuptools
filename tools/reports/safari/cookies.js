@@ -10,7 +10,7 @@ module.exports = {
   // Run on a v3 lib / backup object
   run (lib, { backup }) {
     return new Promise(async (resolve, reject) => {
-      let files = await lib.run('backup.files', { backup })
+      let files = await lib.run('backup.files', { backup, raw: true })
 
       files = files.filter(el => {
         return el.filename.indexOf('Library/Cookies/Cookies.binarycookies') > -1

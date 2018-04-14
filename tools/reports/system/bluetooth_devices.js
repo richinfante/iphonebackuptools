@@ -1,72 +1,85 @@
-const log = require('../../util/log')
-const path = require('path')
-const sqlite3 = require('sqlite3')
-const bplist = require('bplist-parser')
-const fs = require('fs')
-const plist = require('plist')
-
-// Derive filenames based on domain + file path
 const fileHash = require('../../util/backup_filehash')
+const log = require('../../util/log')
 
-const database_paired = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.paired.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
-const database_other = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.other.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
+const PAIRED_DB = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.paired.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
+const OTHER_DB = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.other.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
 
-module.exports.name = 'bluetooth_devices'
-module.exports.description = 'List known bluetooth devices'
+module.exports = {
+  version: 3,
+  name: 'system.bluetooth_devices',
+  description: `List known bluetooth devices`,
+  requiresBackup: true,
 
-// Specify this reporter requires a backup.
-// The second parameter to func() is now a backup instead of the path to one.
-module.exports.requiresBackup = true
+  // Run on a v3 lib / backup object
+  run (lib, { backup }) {
+    return getBluetoothDevices(backup)
+  },
 
-// Specify this reporter supports the promises API for allowing chaining of reports.
-module.exports.usesPromises = true
-
-module.exports.func = function (program, backup, resolve, reject) {
-  bluetoothReport(backup)
-    .then((items) => {
-      var result = program.formatter.format(items, {
-        program: program,
-        columns: {
-          'Name': el => el.Name ? el.Name : 'N/A',
-          'Mac Address': el => {
-            let address = el.ResolvedAddress ? el.ResolvedAddress : el.Address ? el.Address : 'N/A'
-            address = address.indexOf(' ') !== -1 ? address.split(' ')[1] : address
-            return address
-          },
-          'Paired': el => el.Paired ? el.Paired : 'No'
-        }
-      })
-      resolve(result)
-    })
-    .catch(reject)
+  // Available fields.
+  output: {
+    uuid: el => el.Uuid || null,
+    name: el => el.Name ? el.Name : 'N/A',
+    macAddress: el => {
+      let address = el.ResolvedAddress ? el.ResolvedAddress : el.Address ? el.Address : 'N/A'
+      address = address.indexOf(' ') !== -1 ? address.split(' ')[1] : address
+      return address
+    },
+    lastConnected: el => el.LastConnectionTime || 0,
+    lastSeen: el => el.LastSeenTime || 0,
+    paired: el => el.Paired ? el.Paired : 'No'
+  }
 }
 
-const bluetoothReport = (backup) => {
-  return new Promise((resolve, reject) => {
-    var paireddb = backup.getDatabase(database_paired)
+// Get the bluetooth devices in a backup.
+function getBluetoothDevices (backup) {
+  return new Promise(async (resolve, reject) => {
+    // Get paired devices
     try {
-      const query = `
-        select * from PairedDevices
-        `
-      paireddb.all(query, async function (err, rows) {
-        if (err) reject(err)
-        rows.forEach(row => row.Paired = 'Yes')
-        var otherdb = backup.getDatabase(database_other)
-        try {
-          const query = `
-            select * from OtherDevices
-            `
-          otherdb.all(query, async function (err, rows_other) {
-            if (err) reject(err)
-            rows_other.forEach(row_other => rows.push(row_other))
-            resolve(rows)
-          })
-        } catch (e) {
-          reject(e)
-        }
-      })
+      var paired = await getPairedDevices(backup)
     } catch (e) {
-      reject(e)
+      log.verbose(`couldn't get paired devices`, e)
     }
+
+    // Get other devices
+    try {
+      var other = await getOtherDevices(backup)
+    } catch (e) {
+      log.verbose(`couldn't get paired devices`, e)
+    }
+
+    // console.log(paired, other)
+    resolve([...paired, ...other])
+  })
+}
+
+// Get devies we've paired with
+function getPairedDevices (backup) {
+  return new Promise((resolve, reject) => {
+    backup.openDatabase(PAIRED_DB)
+      .then(paired => {
+        const query = `SELECT *, 'Yes' as Paired FROM PairedDevices`
+        paired.all(query, function (err, rows) {
+          if (err) reject(err)
+
+          resolve(rows)
+        })
+      })
+      .catch(reject)
+  })
+}
+
+// Get other devices we've seen.
+function getOtherDevices (backup) {
+  return new Promise((resolve, reject) => {
+    backup.openDatabase(OTHER_DB)
+      .then(paired => {
+        const query = `SELECT * FROM OtherDevices`
+        paired.all(query, function (err, rows) {
+          if (err) reject(err)
+
+          resolve(rows)
+        })
+      })
+      .catch(reject)
   })
 }
