@@ -46,9 +46,10 @@ module.exports.types = {
 
   // Reports related to messaging.
   messages: new Group({
-    conversations: require('./reports/conversations'),
-    conversations_full: require('./reports/conversations_full'),
-    messages: require('./reports/messages')
+    all: require('./reports/messages/all'),
+    conversations: require('./reports/messages/conversations'),
+    messages: require('./reports/messages/messages'),
+    conversations_full: require('./reports/messages/conversations_full')
   }),
 
   // System level reports, such as wifi

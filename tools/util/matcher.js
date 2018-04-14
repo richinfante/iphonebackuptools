@@ -1,9 +1,8 @@
 const log = require('./log')
 
-// Use case:
-// GET safari.*
-// GET options.*
-
+// Match an object with a query.
+// Ex: Querying a.* on { a: { b: 1, c: 2 }}} -> [1, 2]
+// We stop recusively attempting if isLeaf(node) returns true.
 module.exports = function match (object, query, isLeaf) {
   isLeaf = isLeaf || function () { return true }
 
@@ -25,29 +24,27 @@ function nameMatches (query, name) {
 
 function doMatch (object, query, isLeaf) {
   query = query || []
-  // log.verbose('NEW LEVEL', query, 'ON', object)
+
   let result = []
   let level = query.shift() || '*'
 
   for (let [ key, value ] of Object.entries(object)) {
-    // log.verbose('CHECK PAIR', key, '=', value)
+    // If the name doesn't match, continue.
     if (!nameMatches(level, key)) {
-      // log.verbose('MATCH FAILED', level, 'against', key)
       continue
-    } else {
-      // log.verbose('MATCH OK')
     }
 
+    
     if (isLeaf(value)) {
+      // If it's a leaf, add a result.
       result.push(value)
     } else {
+      // Otherwise, add child results.
+      // We must slice(0) the query, so that it is duplicated.
       result = [...result, ...doMatch(value, query.slice(0), isLeaf)]
     }
 
-    // log.verbose('INT. RESULT', result)
   }
-
-  // log.verbose('FIN. RESULT', result)
 
   return result
 }

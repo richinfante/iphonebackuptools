@@ -2,7 +2,6 @@
 
 const program = require('commander')
 const path = require('path')
-const fs = require('fs')
 const chalk = require('chalk')
 const log = require('./util/log')
 const report = require('./reports')
@@ -57,7 +56,7 @@ program.on('--help', function () {
         console.log(`${' '.repeat(i * 2)}- ${chalk.green(name)}`.padStart(i * 2))
         printGroup(report, i + 1)
       } else {
-        console.log(`${' '.repeat(i * 2)}- ${chalk.green(name)}: ${report.description}`)
+        console.log(`${' '.repeat(i * 2)}- ${chalk.green(name)}${report.deprecated ? chalk.gray(' [deprecated]') : ''}: ${report.description} `)
       }
     }
   }
@@ -161,7 +160,38 @@ function runReport (report, params) {
 
     // Create a library.
     let lib = {
-      run: findAndRun,
+      run: function findAndRun (query, params) {
+        return new Promise(async (resolve, reject) => {
+          let report = await findReport(query)
+          let result = await runReport(report, params)
+
+          if (!params.raw && report.output) {
+            if (result instanceof Array) {
+              // if it's an array, translate each item.
+              result = result.map(item => {
+                let editedResult = {}
+                for (let [key, value] of Object.entries(report.output)) {
+                  editedResult[key] = value(item)
+                }
+
+                return editedResult
+              })
+
+              resolve(result)
+            } else {
+              // Otherwise, translate the object returned.
+              let editedResult = {}
+              for (let [key, value] of Object.entries(report.output)) {
+                editedResult[key] = value(result)
+              }
+
+              resolve(result)
+            }
+          } else {
+            resolve(result)
+          }
+        })
+      },
       base: program.base
     }
 
@@ -219,7 +249,8 @@ async function main () {
           let contents = await runReport(report, {
             backup: program.backup,
             extract: program.extract,
-            filter: program.filter
+            filter: program.filter,
+            id: program.id
           })
 
           // Format the v3 report's result.

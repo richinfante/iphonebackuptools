@@ -4,6 +4,7 @@ module.exports.description = 'List all SMS and iMessage conversations and their 
 // Specify this reporter requires a backup.
 // The second parameter to func() is now a backup instead of the path to one.
 module.exports.requiresBackup = true
+module.exports.deprecated = true
 
 // Specify this reporter supports the promises API for allowing chaining of reports.
 module.exports.usesPromises = true
