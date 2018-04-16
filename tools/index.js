@@ -80,29 +80,26 @@ process.on('unhandledRejection', (e) => {
 // If we're the main module, run some things.
 if (require.main === module) {
   program.parse(process.argv)
-}
 
-log.setVerbose(program.quiet ? 0 : (program.verbose ? 2 : 1))
+  log.setVerbose(program.quiet ? 0 : (program.verbose ? 2 : 1))
 
-// Save the formatter
-program.formatter = formatters[program.formatter] || formatters.table
+  // Save the formatter
+  program.formatter = formatters[program.formatter] || formatters.table
 
-// Legacy support for `--dump` flag.
-if (program.dump) {
-  program.formatter = formatters.raw
-}
+  // Legacy support for `--dump` flag.
+  if (program.dump) {
+    program.formatter = formatters.raw
+  }
 
-// Disable color for non-ttys.
-if (!process.stdout.isTTY) { program.color = false }
+  // Disable color for non-ttys.
+  if (!process.stdout.isTTY) { program.color = false }
 
-// Find the base
-base = program.dir || base
-program.base = base
+  // Find the base
+  base = program.dir || base
+  program.base = base
 
-log.verbose('Using source:', program.base)
+  log.verbose('Using source:', program.base)
 
-// Run the main function
-if (require.main === module) {
   main().then(() => {})
 }
 
