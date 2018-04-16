@@ -30,6 +30,10 @@ module.exports.func = function (program, backup, resolve, reject) {
           'Modified Date': el => (new Date((el.modified_time) * 1000).toDateString()) + ' ' + (new Date((el.modified_time) * 1000).toTimeString()) ,
           'Latitude': el => el.latitude / 1000000,
           'Longitude': el => el.longitude / 1000000,
+          'Street': el => el.street,
+          'City': el => el.city,
+          'State': el => el.state,
+          'Country': el => el.country
         }
       })
       resolve(result)
@@ -47,7 +51,7 @@ const wazeReport = (backup) => {
     var wazedb = backup.getDatabase(database)
       try {
         const query = `
-        select FAVORITES.name, FAVORITES.created_time, FAVORITES.modified_time, FAVORITES.rank, PLACES.latitude, PLACES.longitude from FAVORITES
+        select FAVORITES.name, FAVORITES.created_time, FAVORITES.modified_time, FAVORITES.rank, PLACES.latitude, PLACES.longitude, PLACES.street, PLACES.city, PLACES.state, PLACES.country from FAVORITES
         left join PLACES on FAVORITES.place_id = PLACES.id
         order by rank
         `
