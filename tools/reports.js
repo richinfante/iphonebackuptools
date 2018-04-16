@@ -31,10 +31,7 @@ module.exports.types = {
   }),
 
   // Notes report
-  notes: new Group({
-    v2: require('./reports/notes'),
-    v1: require('./reports/oldnotes')
-  }),
+  notes: require('./reports/notes/notes'),
 
   // Camera report
   camera: new Group({

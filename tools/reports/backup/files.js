@@ -1,4 +1,4 @@
-const fs = require('fs')
+const fs = require('fs-extra')
 const path = require('path')
 const log = require('../../util/log')
 const manifestMBDBParse = require('../../util/manifest_mbdb_parse')
@@ -84,7 +84,8 @@ function getManifest (backup) {
 function isIncludedByFilter (filter, item) {
   return filter === 'all' ||
     filter === undefined ||
-    (filter && item.domain.indexOf(filter) > -1)
+    (filter && item.domain.indexOf(filter) > -1) ||
+    (filter && item.filename.indexOf(filter) > -1)
 }
 
 /// Extract files
@@ -98,20 +99,20 @@ function extractFiles (backup, destination, filter, items) {
     // Simple "Contains" Search
     if (!isIncludedByFilter(filter, item)) {
       // Skip to the next iteration of the loop.
-      log.action('skipped', item.relativePath)
+      log.action('skipped', item.filename)
       continue
     }
 
     try {
-      var sourceFile = backup.getFileName(item.fileID)
+      let sourceFile = backup.getFileName(item.fileID)
       var stat = fs.lstatSync(sourceFile)
 
       // Only process files that exist.
       if (stat.isFile() && fs.existsSync(sourceFile)) {
-        log.action('export', item.relativePath)
+        log.action('export', item.filename)
 
         // Calculate the output dir.
-        var outDir = path.join(destination, item.domain, item.relativePath)
+        var outDir = path.join(destination, item.domain, item.filename)
 
         // Create the directory and copy
         fs.ensureDirSync(path.dirname(outDir))
@@ -122,10 +123,10 @@ function extractFiles (backup, destination, filter, items) {
       } else if (stat.isDirectory()) {
       // Do nothing..
       } else {
-        log.error('not found', item.relativePath)
+        log.error('not found', sourceFile)
       }
     } catch (e) {
-      log.error(item.relativePath, e.toString())
+      log.error(item.fileID, item.filename, e.toString())
     }
   }
 }
