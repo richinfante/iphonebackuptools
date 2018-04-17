@@ -73,7 +73,6 @@ module.exports = {
       code: 33
     }]
 
-
     // We can also output a single raw object:
     {
       Name: 'test',

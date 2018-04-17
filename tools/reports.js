@@ -25,7 +25,7 @@ module.exports.types = {
   phone: new Group({
     calls: require('./reports/phone/calls'),
     calls_statistics: require('./reports/phone/calls_statistics'),
-    address_book: require('./reports/address_book'),
+    address_book: require('./reports/phone/address_book'),
     speed_dial: require('./reports/phone/speed_dial'),
     voicemail: require('./reports/phone/voicemail')
   }),

@@ -37,7 +37,7 @@ module.exports = {
       // console.log(el.ZLOCATION)
       if (el.ZLOCATION === '<<RecentsNumberLocationNotFound>>') {
         return null
-      } 
+      }
 
       return el.ZLOCATION + ''
     },
