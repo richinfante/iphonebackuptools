@@ -36,6 +36,7 @@ var reportTypes = {
   'instagram_profile': require('./reports/instagram_profile'),
   'instagram_recent_searches': require('./reports/instagram_recent_searches'),
   'instagram_following_users_coded': require('./reports/instagram_following_users_coded'),
+  'instagram_fb_friends': require('./reports/instagram_fb_friends'),
 }
 
 var formatters = {
