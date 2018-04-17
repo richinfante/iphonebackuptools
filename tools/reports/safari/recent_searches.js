@@ -5,7 +5,7 @@ const fileHash = require('../../util/backup_filehash')
 const SAFARI_PLIST = fileHash('Library/Preferences/com.apple.mobilesafari.plist', 'AppDomain-com.apple.mobilesafari')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'safari.recent_searches',
   description: `Show Safari recent searches`,
   requiresBackup: true,

@@ -3,7 +3,7 @@ const fileHash = require('../../util/backup_filehash')
 const GEO_DB = fileHash('Library/Caches/locationd/consolidated.db', 'RootDomain')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'system.geofences',
   description: `List local geofences used for triggers`,
   requiresBackup: true,

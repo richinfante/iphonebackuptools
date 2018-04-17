@@ -1,6 +1,6 @@
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'messages.all',
   description: `List all SMS and iMessage conversations, nesting items. This may be SLOW, it is recommended you use a JSON formatter along with this.`,
   requiresBackup: true,

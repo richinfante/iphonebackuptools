@@ -4,7 +4,7 @@ const fileHash = require('../../util/backup_filehash')
 const CAL_DB = fileHash('Library/Calendar/Calendar.sqlitedb')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'calendar.events',
   description: `List all calendar entries`,
   requiresBackup: true,

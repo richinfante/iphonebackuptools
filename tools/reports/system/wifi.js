@@ -10,7 +10,7 @@ const fileHash = require('../../util/backup_filehash')
 const WIFI_PLIST = fileHash('SystemConfiguration/com.apple.wifi.plist', 'SystemPreferencesDomain')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'system.wifi',
   description: `List associated wifi networks and their usage information`,
   requiresBackup: true,

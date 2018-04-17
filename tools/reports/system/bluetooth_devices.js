@@ -5,7 +5,7 @@ const PAIRED_DB = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices
 const OTHER_DB = fileHash('Library/Database/com.apple.MobileBluetooth.ledevices.other.db', 'SysSharedContainerDomain-systemgroup.com.apple.bluetooth')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'system.bluetooth_devices',
   description: `List known bluetooth devices`,
   requiresBackup: true,

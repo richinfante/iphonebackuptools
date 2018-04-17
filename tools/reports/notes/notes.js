@@ -5,7 +5,7 @@ const NOTES_DB = fileHash('Library/Notes/notes.sqlite')
 const NOTES2_DB = fileHash('NoteStore.sqlite', 'AppDomainGroup-group.com.apple.notes')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'notes',
   description: `List all iOS notes`,
   requiresBackup: true,

@@ -5,7 +5,7 @@ const CALLS_DB = '2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca'
 const CALLS2_DB = fileHash('Library/CallHistoryDB/CallHistory.storedata')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'phone.calls_statistics',
   description: `Get statistics about all calls`,
   requiresBackup: true,

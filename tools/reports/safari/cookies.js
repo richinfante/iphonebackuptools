@@ -2,7 +2,7 @@
 const cookieParser = require('../../util/cookies.js')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'safari.cookies',
   description: `List all iOS cookies`,
   requiresBackup: true,

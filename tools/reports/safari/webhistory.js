@@ -3,7 +3,7 @@ const fileHash = require('../../util/backup_filehash')
 const HISTORY_DB = fileHash('Library/Safari/History.db', 'AppDomain-com.apple.mobilesafari')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'safari.webhistory',
   description: `List all web history`,
   requiresBackup: true,

@@ -3,7 +3,7 @@ const bplist = require('bplist-parser')
 const pushstoreParse = require('../../util/pushstore_parse')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'system.pushstore',
   description: `List pushstore contents`,
   requiresBackup: true,

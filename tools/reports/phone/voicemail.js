@@ -8,7 +8,7 @@ const log = require('../../util/log')
 const VOICEMAIL_DB = fileHash('Library/Voicemail/voicemail.db')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'phone.voicemail',
   description: `List all or extract voicemails on device`,
   requiresBackup: true,

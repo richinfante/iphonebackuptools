@@ -4,7 +4,7 @@ const log = require('../../util/log')
 const SMS_DB = fileHash('Library/SMS/sms.db')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'messages.messages',
   description: `List all SMS and iMessage messages in a conversation`,
   requiresBackup: true,

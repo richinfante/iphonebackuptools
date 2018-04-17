@@ -4,7 +4,7 @@ const log = require('../../util/log')
 const manifestMBDBParse = require('../../util/manifest_mbdb_parse')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'backup.info',
   description: `Gets a backup's info`,
   requiresBackup: true,

@@ -5,7 +5,7 @@ const log = require('../../util/log')
 const bplist = require('bplist-parser')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'backup.status',
   description: `Gets a backup's status`,
   requiresBackup: true,

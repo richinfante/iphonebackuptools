@@ -4,7 +4,7 @@ const log = require('../../util/log')
 const BOOKMARKS_DB = fileHash('Library/Safari/Bookmarks.db')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'safari.bookmarks',
   description: `List all Safari bookmarks`,
   requiresBackup: true,

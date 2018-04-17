@@ -3,7 +3,7 @@ const fileHash = require('../../util/backup_filehash')
 const TABS_DB = fileHash('Library/Safari/BrowserState.db', 'AppDomain-com.apple.mobilesafari')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'safari.open_tabs',
   description: `List open Safari tabs when backup was made`,
   requiresBackup: true,

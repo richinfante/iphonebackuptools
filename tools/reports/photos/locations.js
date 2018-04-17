@@ -3,7 +3,7 @@ const fileHash = require('../../util/backup_filehash')
 const PHOTOS_DB = fileHash('Media/PhotoData/Photos.sqlite', 'CameraRollDomain')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'photos.locations',
   description: `List all photo geotag's GPS locations`,
   requiresBackup: true,

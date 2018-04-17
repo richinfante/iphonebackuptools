@@ -1,5 +1,5 @@
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'apps',
   description: `List all installed applications and container IDs.`,
   requiresBackup: true,

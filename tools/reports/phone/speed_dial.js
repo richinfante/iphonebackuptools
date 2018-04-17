@@ -8,7 +8,7 @@ const fileHash = require('../../util/backup_filehash')
 const file = fileHash('Library/Preferences/com.apple.mobilephone.speeddial.plist')
 
 module.exports = {
-  version: 3,
+  version: 4,
   name: 'phone.speed_dial',
   description: `Show Speed dial contact information`,
   requiresBackup: true,

@@ -3,7 +3,7 @@ module.exports = {
   /**
    * The reporting API version. This should be set to 3.
    */
-  version: 3,
+  version: 4,
 
   /**
    * Report name. This should match the nesting found in the reports.js file.
