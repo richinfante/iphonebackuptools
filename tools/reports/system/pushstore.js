@@ -22,11 +22,11 @@ module.exports = {
     return new Promise(async (resolve, reject) => {
       try {
         // Run files report as a sub-report.
-        let files = await lib.run('backup.files', { backup, raw: true })
+        let files = await lib.run('backup.files', { backup })
 
         files = files.filter((file) => {
-          if (file.filename) {
-            return ~file.filename.indexOf('Library/SpringBoard/PushStore/')
+          if (file.path) {
+            return ~file.path.indexOf('Library/SpringBoard/PushStore/')
           }
           return false
         })
@@ -36,7 +36,7 @@ module.exports = {
 
         // For each file, run a parse on the plist.
         files.forEach((file) => {
-          let plist = bplist.parseBuffer(fs.readFileSync(backup.getFileName(file.fileID)))[0]
+          let plist = bplist.parseBuffer(fs.readFileSync(backup.getFileName(file.id)))[0]
           pushstores.push(...pushstoreParse.run(plist))
         })
 

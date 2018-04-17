@@ -29,7 +29,7 @@ module.exports = {
 
   // Fields for apps report
   output: {
-    bundleID: el => el.bundleID,
-    path: el => el.path
+    bundleID: el => el.bundleID || null,
+    path: el => el.path || null
   }
 }

@@ -16,9 +16,9 @@ module.exports = {
   // Wifi Report Fields.
   output: {
     date: el => el.XFORMATTEDDATESTRING,
-    latitude: el => el.latitude,
-    longitude: el => el.longitude,
-    distance: el => el.distance
+    latitude: el => el.Latitude,
+    longitude: el => el.Longitude,
+    distance: el => el.Distance
   }
 }
 
