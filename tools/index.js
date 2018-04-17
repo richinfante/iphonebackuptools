@@ -42,7 +42,8 @@ var reportTypes = {
   'waze_favorites': require('./reports/waze_favorites'),
   'waze_places': require('./reports/waze_places'),
   'waze_recents': require('./reports/waze_recents'),
-  'skype_accounts': require('./reports/skype_accounts')
+  'skype_accounts': require('./reports/skype_accounts'),
+  'skype_calls': require('./reports/skype_calls')
 }
 
 var formatters = {
