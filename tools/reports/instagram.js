@@ -51,6 +51,7 @@ const facebookProfileReport = (backup) => {
       
       results.push(new KeyValue('last-logged-in-username', instagramPlist))
       results.push(new KeyValue('prefill_fb_email', instagramPlist))
+      results.push(new KeyValue('prefill_fb_phone', instagramPlist))
 
       resolve(results)
     } catch (e) {
