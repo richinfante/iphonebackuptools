@@ -77,6 +77,12 @@ module.exports.types = {
     })
   }),
 
+  // Gmail
+  gmail: new Group({
+    accounts: require('./reports/thirdparty/gmail/accounts'),
+    shared_contacts: require('./reports/thirdparty/gmail/shared_contacts'),
+  }),
+
   // Spotify
   spotify: require('./reports/thirdparty/spotify'),
 
