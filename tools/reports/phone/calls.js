@@ -21,9 +21,26 @@ module.exports = {
     date: el => el.XFORMATTEDDATESTRING,
     answered: el => !!el.ZANSWERED,
     originated: el => !!el.ZORIGINATED,
-    callType: el => el.ZCALLTYPE + '',
+    callType: el => {
+      if (el.ZCALLTYPE === 1) {
+        return 'Cellular'
+      } else if (el.ZCALLTYPE === 16) {
+        return 'FacetimeAudio'
+      } else if (el.ZCALLTYPE === 8) {
+        return 'FacetimeVideo'
+      }
+
+      return 'Unknown'
+    },
     duration: el => el.ZDURATION + '',
-    location: el => el.ZLOCATION + '',
+    location: el => {
+      // console.log(el.ZLOCATION)
+      if (el.ZLOCATION === '<<RecentsNumberLocationNotFound>>') {
+        return null
+      } 
+
+      return el.ZLOCATION + ''
+    },
     country: el => el.ZISO_COUNTRY_CODE + '',
     service: el => el.ZSERVICE_PROVIDER || null,
     address: el => (el.ZADDRESS || '').toString()
@@ -50,7 +67,7 @@ function getCallsList (backup) {
     }
 
     // Resolve call logs.
-    resolve([...ios7log, ...newerIOS])
+    resolve([...(ios7log || []), ...(newerIOS || [])])
   })
 }
 
