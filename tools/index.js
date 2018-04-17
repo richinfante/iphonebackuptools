@@ -35,6 +35,7 @@ var reportTypes = {
   'spotify': require('./reports/spotify'),
   'instagram_profile': require('./reports/instagram_profile'),
   'instagram_recent_searches': require('./reports/instagram_recent_searches'),
+  'instagram_following_users_coded': require('./reports/instagram_following_users_coded'),
 }
 
 var formatters = {
