@@ -18,9 +18,12 @@ This readme is intended to be an overview of features. Please read the [wiki](ht
 ## iOS Support
 iOS Support depends on the individual reporting types and which files are specifically present inside of the backup. When a report type is not supported, an error message is outputted to the terminal. Some reports, will output an error message if files that are required are not present in the backup.
 
+## Reports List
+the full report list is available [on the wiki](https://github.com/richinfante/iphonebackuptools/wiki/V4-Reports-List)
+
 ## Installing (as a module)
 ```bash
-npm i -g ibackuptool
+npm i ibackuptool --save
 ```
 
 You can then import the module to run reports and get javascript objects as results:
