@@ -77,6 +77,14 @@ module.exports.types = {
     })
   }),
 
+  // Instagram data
+  instagram: new Group({
+    profile: require('./reports/thirdparty/instagram/profile'),
+    recent_searches: require('./reports/thirdparty/instagram/recent_searches'),
+    following_users_coded: require('./reports/thirdparty/instagram/following_users_coded'),
+    fb_friends: require('./reports/thirdparty/instagram/fb_friends'),
+  }),
+
   // Gmail
   gmail: new Group({
     accounts: require('./reports/thirdparty/gmail/accounts'),
