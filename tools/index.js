@@ -37,6 +37,8 @@ var reportTypes = {
   'bluetooth_devices': require('./reports/bluetooth_devices'),
   'safari_open_tabs': require('./reports/safari_open_tabs'),
   'safari_recent_searches': require('./reports/safari_recent_searches'),
+  'gmail_accounts': require('./reports/gmail_accounts'),
+  'gmail_shared_contacts': require('./reports/gmail_shared_contacts'),
   'waze_favorites': require('./reports/waze_favorites'),
   'waze_places': require('./reports/waze_places'),
   'waze_recents': require('./reports/waze_recents')
