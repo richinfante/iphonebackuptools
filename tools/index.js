@@ -33,7 +33,8 @@ var reportTypes = {
   'facebook_profile': require('./reports/facebook_profile'),
   'facebook_messenger_friends': require('./reports/facebook_messenger_friends'),
   'spotify': require('./reports/spotify'),
-  'instagram_profile': require('./reports/instagram_profile')
+  'instagram_profile': require('./reports/instagram_profile'),
+  'instagram_recent_searches': require('./reports/instagram_recent_searches'),
 }
 
 var formatters = {
