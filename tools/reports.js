@@ -39,7 +39,9 @@ module.exports.types = {
   }),
 
   // Calendar
-  calendar: require('./reports/calendar'),
+  calendar: new Group({
+    events: require('./reports/calendar/events'),
+  }),
 
   // Reports related to messaging.
   messages: new Group({
