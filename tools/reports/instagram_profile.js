@@ -11,8 +11,8 @@ const fileHash = require('../util/backup_filehash')
 
 const file = fileHash('Library/Preferences/com.burbn.instagram.plist', 'AppDomain-com.burbn.instagram')
 
-module.exports.name = 'instagram'
-module.exports.description = 'Show Instagram app user data'
+module.exports.name = 'instagram_profile'
+module.exports.description = 'Show Instagram profile/user data'
 
 // Specify this reporter requires a backup.
 // The second parameter to func() is now a backup instead of the path to one.
