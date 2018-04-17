@@ -49,6 +49,15 @@ module.exports.types = {
     conversations_full: require('./reports/messages/conversations_full')
   }),
 
+  // Safari Data
+  safari: new Group({
+    history: require('./reports/safari/webhistory'),
+    bookmarks: require('./reports/safari/bookmarks'),
+    open_tabs: require('./reports/safari/open_tabs'),
+    recent_searches: require('./reports/safari/recent_searches'),
+    cookies: require('./reports/safari/cookies')
+  }),
+
   // System level reports, such as wifi
   system: new Group({
     wifi: require('./reports/system/wifi'),
@@ -66,17 +75,14 @@ module.exports.types = {
     })
   }),
 
-  // Safari Data
-  safari: new Group({
-    history: require('./reports/safari/webhistory'),
-    bookmarks: require('./reports/safari/bookmarks'),
-    open_tabs: require('./reports/safari/open_tabs'),
-    recent_searches: require('./reports/safari/recent_searches'),
-    cookies: require('./reports/safari/cookies')
-  }),
-
   // Spotify
-  spotify: require('./reports/thirdparty/spotify')
+  spotify: require('./reports/thirdparty/spotify'),
+
+  waze: new Group({
+    favorites: require('./reports/thirdparty/waze/favorites'),
+    places: require('./reports/thirdparty/waze/places'),
+    recents: require('./reports/thirdparty/waze/recents')
+  })
 }
 
 module.exports.Group = Group
