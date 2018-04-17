@@ -9,6 +9,7 @@ const matcher = require('./util/matcher')
 const Group = report.Group
 const Backup3 = require('./backup3')
 
+const packageJSON = require('../package.json')
 const { runSingleReport, runSwitchedReport } = require('./util/report_runner')
 
 var base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
@@ -25,7 +26,7 @@ var formatters = {
 }
 
 program
-  .version('3.0.0')
+  .version(packageJSON.version)
   .option('-l, --list', 'List Backups')
   .option(`-b, --backup <backup>`, 'Backup ID')
   .option(`-d, --dir <directory>`, `Backup Directory (default: ${base})`)
@@ -43,7 +44,7 @@ program
 
 program.on('--help', function () {
   console.log('')
-  console.log(`Version: ${require('../package.json').version}`)
+  console.log(`Version: ${packageJSON.version}`)
   console.log('')
   console.log('Supported Report Types:')
 

@@ -98,6 +98,11 @@ module.exports.types = {
     favorites: require('./reports/thirdparty/waze/favorites'),
     places: require('./reports/thirdparty/waze/places'),
     recents: require('./reports/thirdparty/waze/recents')
+  }),
+
+  skype: new Group({
+    accounts: require('./reports/thirdparty/skype/accounts'),
+    calls: require('./reports/thirdparty/skype/calls')
   })
 }
 
