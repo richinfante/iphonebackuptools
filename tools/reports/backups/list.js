@@ -5,7 +5,7 @@ module.exports = {
   name: 'list',
   description: 'List of all backups',
 
-  run (lib, params) {
+  run (lib, { raw }) {
     return new Promise(async (resolve, reject) => {
       let files = fs.readdirSync(lib.base, { encoding: 'utf8' })
         .filter(el => (el !== '.DS_Store'))
@@ -17,15 +17,15 @@ module.exports = {
         var result = { id }
 
         try {
-          result.status = await lib.run('backup.status', { backup: id, raw: true })
+          result.status = await lib.run('backup.status', { backup: id, raw })
         } catch (e) {}
 
         try {
-          result.info = await lib.run('backup.info', { backup: id, raw: true })
+          result.info = await lib.run('backup.info', { backup: id, raw })
         } catch (e) {}
 
         try {
-          result.manifest = await lib.run('backup.manifest', { backup: id, raw: true })
+          result.manifest = await lib.run('backup.manifest', { backup: id, raw })
         } catch (e) {}
 
         results.push(result)
@@ -37,7 +37,7 @@ module.exports = {
 
   output: {
     udid: el => el.id,
-    encrypted: el => el.manifest ? (el.manifest.IsEncrypted ? 'encrypted' : 'not encrypted') : 'unknown',
+    encrypted: el => el.manifest ? (!!el.manifest.IsEncrypted) : false,
     date: el => el.status ? new Date(el.status.Date).toLocaleString() : '',
     deviceName: el => el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
     serialNumber: el => el.manifest.Lockdown.SerialNumber,

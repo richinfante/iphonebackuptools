@@ -1,4 +1,4 @@
-const log = require('../util/log')
+const log = require('../../../util/log')
 const path = require('path')
 const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
@@ -6,7 +6,7 @@ const fs = require('fs')
 const plist = require('plist')
 
 // Derive filenames based on domain + file path
-const fileHash = require('../util/backup_filehash')
+const fileHash = require('../../../util/backup_filehash')
 
 const domain = 'AppDomainGroup-group.com.facebook.Messenger'
 

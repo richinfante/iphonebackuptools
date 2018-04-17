@@ -128,14 +128,51 @@ function findReport (query) {
   })
 }
 
+/**
+ * Run a named report and resolve to it's output.
+ * The output MAY be formatted, if the params.raw option is set to true.
+ * @param {string} query report name
+ * @param {Object=} params parameters.
+ */
 function findAndRun (query, params) {
+  params = params || {}
   return new Promise(async (resolve, reject) => {
     let report = await findReport(query)
+    let result = await runReport(report, params)
 
-    resolve(runReport(report, params))
+    if (!params.raw && report.output) {
+      if (result instanceof Array) {
+        // if it's an array, translate each item.
+        result = result.map(item => {
+          let editedResult = {}
+          for (let [key, value] of Object.entries(report.output)) {
+            editedResult[key] = value(item)
+          }
+
+          return editedResult
+        })
+
+        resolve(result)
+      } else {
+        // Otherwise, translate the object returned.
+        let editedResult = {}
+        for (let [key, value] of Object.entries(report.output)) {
+          editedResult[key] = value(result)
+        }
+
+        resolve(result)
+      }
+    } else {
+      resolve(result)
+    }
   })
 }
 
+/**
+ * Run a report
+ * @param {object} report report module
+ * @param {object=} params parameters
+ */
 function runReport (report, params) {
   params = params || {}
 
@@ -144,7 +181,7 @@ function runReport (report, params) {
 
     // Cannot run < v3 backups in this manner.
     if (!report.version || report.version < 3) {
-      return reject(new Error(`Cannot call ${report.name}, it is not updated to the latest version`))
+      return reject(new Error(`Cannot call ${report.name} as a module, it is not updated to the v3 api`))
     }
 
     if (report.requiresBackup) {
@@ -157,39 +194,8 @@ function runReport (report, params) {
 
     // Create a library.
     let lib = {
-      run: function findAndRun (query, params) {
-        return new Promise(async (resolve, reject) => {
-          let report = await findReport(query)
-          let result = await runReport(report, params)
-
-          if (!params.raw && report.output) {
-            if (result instanceof Array) {
-              // if it's an array, translate each item.
-              result = result.map(item => {
-                let editedResult = {}
-                for (let [key, value] of Object.entries(report.output)) {
-                  editedResult[key] = value(item)
-                }
-
-                return editedResult
-              })
-
-              resolve(result)
-            } else {
-              // Otherwise, translate the object returned.
-              let editedResult = {}
-              for (let [key, value] of Object.entries(report.output)) {
-                editedResult[key] = value(result)
-              }
-
-              resolve(result)
-            }
-          } else {
-            resolve(result)
-          }
-        })
-      },
-      base: program.base
+      run: findAndRun,
+      base: base
     }
 
     // Input params to func

@@ -35,7 +35,7 @@ module.exports.types = {
 
   // Camera report
   camera: new Group({
-    locations: require('./reports/photolocations')
+    locations: require('./reports/photos/locations')
   }),
 
   // Calendar
@@ -59,9 +59,9 @@ module.exports.types = {
 
   // Facebook Data
   facebook: new Group({
-    profile: require('./reports/facebook_profile'),
+    profile: require('./reports/thirdparty/facebook/profile'),
     messenger: new Group({
-      friends: require('./reports/facebook_messenger_friends')
+      friends: require('./reports/thirdparty/facebook/messenger')
     })
   }),
 
@@ -75,7 +75,7 @@ module.exports.types = {
   }),
 
   // Spotify
-  spotify: require('./reports/spotify')
+  spotify: require('./reports/thirdparty/spotify')
 }
 
 module.exports.Group = Group

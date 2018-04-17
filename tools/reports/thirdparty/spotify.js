@@ -1,4 +1,4 @@
-const log = require('../util/log')
+const log = require('../../util/log')
 const path = require('path')
 const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
@@ -6,7 +6,7 @@ const fs = require('fs')
 const plist = require('plist')
 
 // Derive filenames based on domain + file path
-const fileHash = require('../util/backup_filehash')
+const fileHash = require('../../util/backup_filehash')
 
 const database = fileHash('Library/Preferences/com.spotify.client.plist', 'AppDomain-com.spotify.client')
 
@@ -43,14 +43,7 @@ const spotifyReport = (backup) => {
     try {
       let spotifyData = bplist.parseBuffer(fs.readFileSync(filename))[0]
       let spotifyResult = []
-      /*
-      wifiList['List of known networks'] = wifiList['List of known networks']
-        .map(el => {
-          if (el.BSSID) {
-            el.BSSID = macParse.pad_zeros(el.BSSID) + ''
-          }
-          return el
-        })*/
+
       //console.log('spotifyData', spotifyData)
       //Get spotify username
       if (Object.keys(spotifyData).some((key) => ~key.indexOf(".com.spotify"))) {
