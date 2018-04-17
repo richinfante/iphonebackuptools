@@ -45,7 +45,9 @@ var reportTypes = {
   'gmail_shared_contacts': require('./reports/gmail_shared_contacts'),
   'waze_favorites': require('./reports/waze_favorites'),
   'waze_places': require('./reports/waze_places'),
-  'waze_recents': require('./reports/waze_recents')
+  'waze_recents': require('./reports/waze_recents'),
+  'skype_accounts': require('./reports/skype_accounts'),
+  'skype_calls': require('./reports/skype_calls')
 }
 
 var formatters = {
