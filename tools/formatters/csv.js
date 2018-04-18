@@ -4,7 +4,22 @@ const path = require('path')
 const log = require('../util/log')
 
 module.exports.format = function (data, options) {
-  if ((!options.columns || Object.keys(options.colums).length === 0) && data.length > 0) {
+  // Default columns to an empty object
+  options.colums = options.columns || {}
+
+  // Check if the array is empty. If so, return an empty string.
+  if (data instanceof Array && data.length === 0) {
+    return ''
+  }
+
+  // If we didn't get a data object, make it an array for ease of use.
+  if (!(data instanceof Array) && typeof data === 'object') {
+    data = [data]
+  }
+
+  // Do some preprocessing to find the columns.
+  if ((!options.columns || Object.keys(options.colums).length === 0) && data.length > 0) { 
+    // Extract the fields from the first object.
     options.columns = Object.keys(data[0])
   }
 
@@ -21,12 +36,8 @@ module.exports.format = function (data, options) {
 
   const csv = json2csv({ data: processedData })
 
-  if (options.program) {
-    // If reporting output is defined, ignore console log here.
-    if (options.program.output === undefined) {
-      log.raw(csv)
-    }
-  } else {
+  // Print the output if required.
+  if (!options.program || options.program.output === undefined) {
     log.raw(csv)
   }
 

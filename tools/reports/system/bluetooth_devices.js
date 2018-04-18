@@ -48,7 +48,7 @@ function getBluetoothDevices (backup) {
     }
 
     // console.log(paired, other)
-    resolve([...paired, ...other])
+    resolve([...(paired || []), ...(other || [])])
   })
 }
 

@@ -16,13 +16,17 @@ module.exports = {
   // Run on a v3 lib / backup object.
   run (lib, { backup, extract }) {
     return new Promise(async (resolve, reject) => {
-      let voicemails = await getVoicemailsList(backup)
+      try {
+        let voicemails = await getVoicemailsList(backup)
 
-      if (extract) {
-        extractVoicemails(voicemails, backup, extract)
+        if (extract) {
+          extractVoicemails(voicemails, backup, extract)
+        }
+
+        resolve(voicemails)
+      } catch (e) {
+        reject(e)
       }
-
-      resolve(voicemails)
     })
   },
 

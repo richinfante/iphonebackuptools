@@ -34,7 +34,7 @@ module.exports.types = {
   notes: require('./reports/notes/notes'),
 
   // Camera report
-  camera: new Group({
+  photos: new Group({
     locations: require('./reports/photos/locations')
   }),
 

@@ -113,7 +113,12 @@ function createTable (rows, fitWidth) {
       cursors[j] = cursors[j] || 0
 
       // Extract item
-      let rawItem = rows[i][j] + ''
+      let rawItem = ''
+      if (typeof rawItem === 'object') {
+        rawItem = '[Object]'
+      } else {
+        rawItem = rows[i][j] + ''
+      }
 
       // Slice for this row.
       let inputItem = rawItem.substr(cursors[j], widths[j])

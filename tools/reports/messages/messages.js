@@ -26,13 +26,13 @@ module.exports = {
     date: el => el.XFORMATTEDDATESTRING,
     sender: el => el.x_sender,
     text: el => (el.text || '').trim(),
-    date_read: el => el.date_read + '',
-    date_delivered: el => el.date_delivered + '',
-    is_delivered: el => !!el.is_delivered,
-    is_finished: el => !!el.is_finished,
-    is_from_me: el => !!el.is_from_me,
-    is_read: el => !!el.is_read,
-    is_sent: el => !!el.is_sent,
+    dateRead: el => el.date_read + '',
+    dateDelivered: el => el.date_delivered + '',
+    isDelivered: el => !!el.is_delivered,
+    isFinished: el => !!el.is_finished,
+    isFromMe: el => !!el.is_from_me,
+    isRead: el => !!el.is_read,
+    isSent: el => !!el.is_sent,
     attachments: el => (el.attachments || []).map((at) => at.filename)
   }
 }

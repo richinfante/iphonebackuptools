@@ -242,6 +242,7 @@ async function main () {
     if (set.size === 0) {
       log.error(`Couldn't run reports specified by: '${program.report}'.`)
       log.error(`No matching reports were found.`)
+      process.exit(1)
     }
 
     for (let report of set.values()) {

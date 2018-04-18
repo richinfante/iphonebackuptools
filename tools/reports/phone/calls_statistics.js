@@ -46,7 +46,7 @@ function getCallsStatistics (backup) {
     }
 
     // Resolve call logs.
-    resolve({...ios7stats, ...newerIOS})
+    resolve({...(ios7stats || {}), ...(newerIOS || {})})
   })
 }
 
@@ -74,6 +74,7 @@ function getCallsStatisticsiOS7 (backup) {
           if (err) reject(err)
 
           var result = {}
+          rows = rows || []
 
           for (var item of rows) {
             // Try to convert numbers to strings.
