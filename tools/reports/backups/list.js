@@ -16,17 +16,9 @@ module.exports = {
       for (let id of files) {
         var result = { id }
 
-        try {
-          result.status = await lib.run('backup.status', { backup: id, raw })
-        } catch (e) {}
-
-        try {
-          result.info = await lib.run('backup.info', { backup: id, raw })
-        } catch (e) {}
-
-        try {
-          result.manifest = await lib.run('backup.manifest', { backup: id, raw })
-        } catch (e) {}
+        result.status = await lib.run('backup.status', { backup: id, raw }).catch(() => {}) || {}
+        result.info = await lib.run('backup.info', { backup: id, raw }).catch(() => {}) || {}
+        result.manifest = await lib.run('backup.manifest', { backup: id, raw }).catch(() => {}) || {}
 
         results.push(result)
       }

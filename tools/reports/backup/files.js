@@ -5,21 +5,23 @@ const manifestMBDBParse = require('../../util/manifest_mbdb_parse')
 
 module.exports = {
   version: 4,
-  name: 'backup.info',
-  description: `Gets a backup's info`,
+  name: 'backup.files',
+  description: `Gets a backup's file list`,
   requiresBackup: true,
 
   // Run on a v3 lib / backup object.
   run (lib, { backup, extract, filter }) {
     return new Promise(async (resolve, reject) => {
-      let files = await getManifest(backup)
+      getManifest(backup)
+        .then(files => {
+          // Possibly extract objects.
+          if (extract) {
+            extractFiles(backup, extract, filter, files)
+          }
 
-      // Possibly extract objects.
-      if (extract) {
-        extractFiles(backup, extract, filter, files)
-      }
-
-      resolve(files)
+          resolve(files)
+        })
+        .catch(reject)
     })
   },
 

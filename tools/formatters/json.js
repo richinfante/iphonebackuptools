@@ -3,7 +3,6 @@ const path = require('path')
 const log = require('../util/log')
 
 module.exports.format = function (data, options) {
-
   function convertRow (el) {
     // No Columns defined, just return raw object.
     if (!options.columns || Object.keys(options.columns).length === 0) {
@@ -72,7 +71,12 @@ module.exports.finalReport = async function (reports, program) {
     for (let report of reports) {
       let outPath = path.join(program.output, report.name + '.json')
       log.action('saving', outPath)
-      fs.writeFileSync(outPath, JSON.stringify(report.contents, null, 2), 'utf8')
+
+      if (program.output === '-') {
+        console.log(JSON.stringify(report.contents))
+      } else {
+        fs.writeFileSync(outPath, JSON.stringify(report.contents), 'utf8')
+      }
     }
   }
 }

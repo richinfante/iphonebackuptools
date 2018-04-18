@@ -18,23 +18,29 @@ module.exports.format = function (data, options) {
   }
 
   // Do some preprocessing to find the columns.
-  if ((!options.columns || Object.keys(options.colums).length === 0) && data.length > 0) { 
+  if ((!options.columns || Object.keys(options.colums).length === 0) && data.length > 0) {
     // Extract the fields from the first object.
     options.columns = Object.keys(data[0])
   }
 
-  var processedData = data.map(el => {
+  function processRow (el) {
     var row = {}
 
     // Iterate over the columns and add each item to the new row.
     for (var key in options.columns) {
-      row[key] = options.columns[key](el)
+      if (typeof options.colums[key] === 'function') {
+        row[key] = options.columns[key](el)
+      } else {
+        row[key] = el[key]
+      }
     }
 
     return row
-  })
+  }
 
-  const csv = json2csv({ data: processedData })
+  var processedData = data.map(processRow)
+
+  const csv = json2csv({ data: processedData, fieldNames: Object.keys(data[0]) })
 
   // Print the output if required.
   if (!options.program || options.program.output === undefined) {
@@ -56,6 +62,11 @@ module.exports.finalReport = async function (reports, program) {
   for (var report of reports) {
     var outPath = path.join(program.output, report.name + '.csv')
     log.action('saving', outPath)
-    fs.writeFileSync(outPath, report.contents, 'utf8')
+
+    if (program.output === '-') {
+      console.log(report.contents)
+    } else {
+      fs.writeFileSync(outPath, report.contents, 'utf8')
+    }
   }
 }

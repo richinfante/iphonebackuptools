@@ -1,5 +1,7 @@
 const log = require('../util/log')
 
+module.exports.isRaw = true
+
 module.exports.format = function (data, options) {
   var output = JSON.stringify(data)
 
@@ -50,7 +52,12 @@ module.exports.finalReport = async function (reports, program) {
     for (let report of reports) {
       let outPath = path.join(program.output, report.name + '.json')
       log.action('saving', outPath)
-      fs.writeFileSync(outPath, JSON.stringify(report.contents), 'utf8')
+
+      if (program.output === '-') {
+        console.log(JSON.stringify(report.contents))
+      } else {
+        fs.writeFileSync(outPath, JSON.stringify(report.contents), 'utf8')
+      }
     }
   }
 }

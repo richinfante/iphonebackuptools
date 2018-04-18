@@ -1,6 +1,6 @@
 module.exports = {
   version: 4,
-  name: 'apps',
+  name: 'system.apps',
   description: `List all installed applications and container IDs.`,
   requiresBackup: true,
 

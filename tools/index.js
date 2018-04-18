@@ -104,6 +104,10 @@ if (require.main === module) {
   main().then(() => {})
 }
 
+/**
+ * Try to find a single report.
+ * @param {string} query name to find.
+ */
 function findReport (query) {
   return new Promise((resolve, reject) => {
     // Check there is no wildcard in the query.
@@ -130,21 +134,19 @@ function findReport (query) {
 }
 
 /**
- * Run a named report and resolve to it's output.
- * The output MAY be formatted, if the params.raw option is set to true.
- * @param {string} query report name
- * @param {Object=} params parameters.
+ * Translate the raw output of a report to the correct result, based on the "raw" parameter.
+ * @param {Object} report The report module
+ * @param {Object} result Raw data output from the aforementioned report
+ * @param {Object} params parameters object.
  */
-function findAndRun (query, params) {
-  params = params || {}
-  return new Promise(async (resolve, reject) => {
-    let report = await findReport(query)
-    let result = await runReport(report, params)
-
-    if (!params.raw && report.output) {
+function compileReport (report, result, { raw }) {
+  return new Promise((resolve, reject) => {
+    if (!raw && report.output) {
       if (result instanceof Array) {
+        log.verbose('compiling report (array)...')
         // if it's an array, translate each item.
         result = result.map(item => {
+          // For each item, run the functions on the entry.
           let editedResult = {}
           for (let [key, value] of Object.entries(report.output)) {
             editedResult[key] = value(item)
@@ -155,16 +157,38 @@ function findAndRun (query, params) {
 
         resolve(result)
       } else {
+        log.verbose('compiling report (single)...')
         // Otherwise, translate the object returned.
         let editedResult = {}
         for (let [key, value] of Object.entries(report.output)) {
           editedResult[key] = value(result)
         }
 
-        resolve(result)
+        resolve(editedResult)
       }
     } else {
       resolve(result)
+    }
+  })
+}
+
+/**
+ * Run a named report and resolve to it's output.
+ * The output MAY be formatted, if the params.raw option is set to true.
+ * @param {string} query report name
+ * @param {Object=} params parameters.
+ */
+function findAndRun (query, params) {
+  params = params || {}
+  return new Promise(async (resolve, reject) => {
+    try {
+      let report = await findReport(query)
+      let result = await runReport(report, params)
+      let compiled = await compileReport(report, result, params)
+
+      resolve(compiled)
+    } catch (e) {
+      reject(e)
     }
   })
 }
@@ -185,6 +209,7 @@ function runReport (report, params) {
       return reject(new Error(`Cannot call ${report.name} as a module, it is not updated to the v3 api`))
     }
 
+    // If it requires a backup and none is provided, reject.
     if (report.requiresBackup) {
       if (!params.backup) {
         return reject(new Error('use -b or --backup <id> to specify backup.'))
@@ -250,24 +275,29 @@ async function main () {
         try {
           log.begin('run', report.name)
 
-          // Run a v3 report.
-          let contents = await runReport(report, {
+          let params = {
             backup: program.backup,
             extract: program.extract,
             filter: program.filter,
-            id: program.id
-          })
+            id: program.id,
+            raw: !!program.formatter.isRaw
+          }
+
+          // Run a v3 report.
+          let contents = await runReport(report, params)
+
+          // Possibly symbolicate
+          contents = await compileReport(report, contents, params)
 
           // Format the v3 report's result.
-          program.formatter.format(contents, {
-            program,
-            columns: report.output
+          let formattedContent = program.formatter.format(contents, {
+            program
           })
 
           // Push onto the list to be compiled.
           reportContents.push({
             name: report.name,
-            contents: contents
+            contents: formattedContent
           })
 
           log.end()

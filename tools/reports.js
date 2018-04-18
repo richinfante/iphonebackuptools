@@ -40,7 +40,7 @@ module.exports.types = {
 
   // Calendar
   calendar: new Group({
-    events: require('./reports/calendar/events'),
+    events: require('./reports/calendar/events')
   }),
 
   // Reports related to messaging.
@@ -82,13 +82,13 @@ module.exports.types = {
     profile: require('./reports/thirdparty/instagram/profile'),
     recent_searches: require('./reports/thirdparty/instagram/recent_searches'),
     following_users_coded: require('./reports/thirdparty/instagram/following_users_coded'),
-    fb_friends: require('./reports/thirdparty/instagram/fb_friends'),
+    fb_friends: require('./reports/thirdparty/instagram/fb_friends')
   }),
 
   // Gmail
   gmail: new Group({
     accounts: require('./reports/thirdparty/gmail/accounts'),
-    shared_contacts: require('./reports/thirdparty/gmail/shared_contacts'),
+    shared_contacts: require('./reports/thirdparty/gmail/shared_contacts')
   }),
 
   // Spotify

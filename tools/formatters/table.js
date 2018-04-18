@@ -233,6 +233,11 @@ module.exports.finalReport = async function (reports, program) {
   for (var report of reports) {
     var outPath = path.join(program.output, report.name + '.txt')
     log.action('saving', outPath)
-    fs.writeFileSync(outPath, report.contents, 'utf8')
+
+    if (program.output === '-') {
+      console.log(report.contents)
+    } else {
+      fs.writeFileSync(outPath, report.contents, 'utf8')
+    }
   }
 }
