@@ -5,7 +5,7 @@ module.exports = {
   name: 'list',
   description: 'List of all backups',
 
-  run (lib, { raw }) {
+  run (lib) {
     return new Promise(async (resolve, reject) => {
       let files = fs.readdirSync(lib.base, { encoding: 'utf8' })
         .filter(el => (el !== '.DS_Store'))
@@ -16,9 +16,9 @@ module.exports = {
       for (let id of files) {
         var result = { id }
 
-        result.status = await lib.run('backup.status', { backup: id, raw }).catch(() => {}) || {}
-        result.info = await lib.run('backup.info', { backup: id, raw }).catch(() => {}) || {}
-        result.manifest = await lib.run('backup.manifest', { backup: id, raw }).catch(() => {}) || {}
+        result.status = await lib.run('backup.status', { backup: id }).catch(() => {}) || {}
+        result.info = await lib.run('backup.info', { backup: id }).catch(() => {}) || {}
+        result.manifest = await lib.run('backup.manifest', { backup: id }).catch(() => {}) || {}
 
         results.push(result)
       }
@@ -30,10 +30,10 @@ module.exports = {
   output: {
     udid: el => el.id,
     encrypted: el => el.manifest ? (!!el.manifest.IsEncrypted) : false,
-    date: el => el.status ? new Date(el.status.Date).toLocaleString() : '',
+    date: el => el.status ? new Date(el.status.date).toLocaleString() : '',
     deviceName: el => el.manifest ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
     serialNumber: el => el.manifest.Lockdown.SerialNumber,
     iOSVersion: el => el.manifest ? el.manifest.Lockdown.ProductVersion : '?',
-    backupVersion: el => el.status ? el.status.Version : '?'
+    backupVersion: el => el.status ? el.status.version : '?'
   }
 }
