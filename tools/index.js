@@ -7,7 +7,7 @@ const log = require('./util/log')
 const report = require('./reports')
 const matcher = require('./util/matcher')
 const Group = report.Group
-const Backup3 = require('./backup3')
+const Backup = require('./backup')
 
 const packageJSON = require('../package.json')
 const { runSingleReport, runSwitchedReport } = require('./util/report_runner')
@@ -215,7 +215,7 @@ function runReport (report, params) {
         return reject(new Error('use -b or --backup <id> to specify backup.'))
       }
 
-      backup = new Backup3(base, params.backup)
+      backup = new Backup(base, params.backup)
     }
 
     // Create a library.
@@ -235,8 +235,6 @@ function runReport (report, params) {
       .catch(reject)
   })
 }
-
-module.exports.run = findAndRun
 
 async function main () {
   if (program.list) {
@@ -357,3 +355,6 @@ async function main () {
     program.outputHelp()
   }
 }
+
+module.exports.run = findAndRun
+module.exports.Backup = Backup

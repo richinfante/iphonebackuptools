@@ -5,10 +5,10 @@ const log = require('./util/log')
 const filehash = require('./util/backup_filehash')
 
 /**
- * Backup3 is the version 3 of the backup library.
+ * Backup3 is the version 4 of the backup library.
  * It focuses on file lookups, and better error handling.
  */
-class Backup3 {
+class Backup {
   /**
    * Create a new backup instance.
    * @param {*} base path to backups folder.. Defaults to '~/Library/Application Support/MobileSync/Backup/'
@@ -40,7 +40,7 @@ class Backup3 {
  * @param {string=} domain (optional) the file's domain. Default: HomeDomain
  */
   getFileID (path, domain) {
-    return Backup3.getFileID(path, domain)
+    return Backup.getFileID(path, domain)
   }
 
   /**
@@ -128,4 +128,4 @@ class Backup3 {
   }
 }
 
-module.exports = Backup3
+module.exports = Backup
