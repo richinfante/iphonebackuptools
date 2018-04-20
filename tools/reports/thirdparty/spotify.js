@@ -1,9 +1,5 @@
-const log = require('../../util/log')
-const path = require('path')
-const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
 const fs = require('fs')
-const plist = require('plist')
 
 // Derive filenames based on domain + file path
 const fileHash = require('../../util/backup_filehash')
@@ -44,16 +40,16 @@ const spotifyReport = (backup) => {
       let spotifyData = bplist.parseBuffer(fs.readFileSync(filename))[0]
       let spotifyResult = []
 
-      //console.log('spotifyData', spotifyData)
-      //Get spotify username
-      if (Object.keys(spotifyData).some((key) => ~key.indexOf(".com.spotify"))) {
-        const keys = Object.keys(spotifyData).filter((key) => ~key.indexOf(".com.spotify"))
-        const username = keys[0].split(".com.spotify")[0]
-        //Get spotify search history
+      // console.log('spotifyData', spotifyData)
+      // Get spotify username
+      if (Object.keys(spotifyData).some((key) => ~key.indexOf('.com.spotify'))) {
+        const keys = Object.keys(spotifyData).filter((key) => ~key.indexOf('.com.spotify'))
+        const username = keys[0].split('.com.spotify')[0]
+        // Get spotify search history
         const searchHistory = spotifyData[username + '.com.spotify.feature.search.com.spotify.search.fancyRecents']
         searchHistory.forEach(element => {
           element.username = username
-        });
+        })
         spotifyResult = searchHistory
       }
       resolve(spotifyResult)
