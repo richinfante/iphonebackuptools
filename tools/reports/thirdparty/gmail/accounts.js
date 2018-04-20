@@ -5,7 +5,6 @@ const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
 
-
 // Derive filenames based on domain + file path
 const fileHash = require('../../../util/backup_filehash')
 
@@ -26,10 +25,10 @@ module.exports.func = function (program, backup, resolve, reject) {
     .then((items) => {
       var result = program.formatter.format(items, {
         program: program,
-        columns: { 
+        columns: {
           'Id': el => el.id,
           'Email': el => el.email,
-          'Avatar': el => el.avatar
+          'Avatar': el => el.avatar || null
         }
       })
 
@@ -43,8 +42,8 @@ const gmailAccountsReport = (backup) => {
     var filename = backup.getFileName(file)
     try {
       let gmailPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
-      let gmailAccountIds = Object.keys(gmailPlist).filter(key => key.indexOf('kIdToEmailMapKey') !== -1);
-      let gmailAvatars = Object.keys(gmailPlist).filter(key => key.indexOf('kCurrentAvatarUrlKey') !== -1);
+      let gmailAccountIds = Object.keys(gmailPlist).filter(key => key.indexOf('kIdToEmailMapKey') !== -1)
+      let gmailAvatars = Object.keys(gmailPlist).filter(key => key.indexOf('kCurrentAvatarUrlKey') !== -1)
       gmailAvatars = gmailAvatars.map(avatarKey => {
         let id = avatarKey.split('kCurrentAvatarUrlKey')[1].split('-')
         id = id[id.length - 1]
@@ -56,12 +55,13 @@ const gmailAccountsReport = (backup) => {
 
       gmailAccountIds = gmailAccountIds.map(key => {
         const split = key.split('-')
+        let avatar = gmailAvatars.find(avatar => avatar.accountId === split[split.length - 1])
         return {
           id: split[split.length - 1],
           email: gmailPlist[key],
-          avatar: gmailPlist[gmailAvatars.find(avatar => avatar.accountId === split[split.length - 1]).avatarKey]
+          avatar: gmailPlist[(avatar || {}).avatarKey]
         }
-      });
+      })
 
       resolve(gmailAccountIds)
     } catch (e) {

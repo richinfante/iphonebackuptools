@@ -5,7 +5,6 @@ const bplist = require('bplist-parser')
 const fs = require('fs')
 const plist = require('plist')
 
-
 // Derive filenames based on domain + file path
 const fileHash = require('../../../util/backup_filehash')
 
@@ -26,7 +25,7 @@ module.exports.func = function (program, backup, resolve, reject) {
     .then((items) => {
       var result = program.formatter.format(items, {
         program: program,
-        columns: { 
+        columns: {
           'Account': el => el.account,
           'Name': el => el.name,
           'Email': el => el.email,
@@ -44,8 +43,8 @@ const gmailAccountsReport = (backup) => {
     var filename = backup.getFileName(file)
     try {
       let gmailPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
-      let gmailAccountIds = Object.keys(gmailPlist).filter(key => key.indexOf('kIdToEmailMapKey') !== -1);
-      let gmailContactsByAccount = Object.keys(gmailPlist).filter(key => key.indexOf('kInboxSharedStorageContacts') !== -1);
+      let gmailAccountIds = Object.keys(gmailPlist).filter(key => key.indexOf('kIdToEmailMapKey') !== -1)
+      let gmailContactsByAccount = Object.keys(gmailPlist).filter(key => key.indexOf('kInboxSharedStorageContacts') !== -1)
       gmailContactsByAccount = gmailContactsByAccount.map(contactsKey => {
         let id = contactsKey.split('kInboxSharedStorageContacts')[1].split('_')
         id = id[id.length - 1]
@@ -57,15 +56,18 @@ const gmailAccountsReport = (backup) => {
 
       gmailAccountIds = gmailAccountIds.map(key => {
         const split = key.split('kIdToEmailMapKey-')
+        let contacts = gmailContactsByAccount.find(contacts => contacts.accountId === split[split.length - 1])
         return {
           id: split[split.length - 1],
           email: gmailPlist[key],
-          contacts: gmailPlist[gmailContactsByAccount.find(contacts => contacts.accountId === split[split.length - 1]).contactsKey]
+          contacts: gmailPlist[(contacts || {}).contactsKey]
         }
-      });
+      })
 
       let contacts = []
       gmailAccountIds.forEach(gmailAccount => {
+        gmailAccount.contacts = gmailAccount.contacts || []
+
         gmailAccount.contacts.forEach(contact => {
           contacts.push({
             account: gmailAccount.email,
