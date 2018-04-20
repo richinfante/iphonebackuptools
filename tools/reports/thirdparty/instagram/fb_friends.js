@@ -1,10 +1,5 @@
-const log = require('../../../util/log')
-const path = require('path')
-const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
 const fs = require('fs')
-const plist = require('plist')
-
 
 // Derive filenames based on domain + file path
 const fileHash = require('../../../util/backup_filehash')
@@ -26,7 +21,7 @@ module.exports.func = function (program, backup, resolve, reject) {
     .then((items) => {
       var result = program.formatter.format(items, {
         program: program,
-        columns: { 
+        columns: {
           'Fb_id': el => el.fb_id,
           'Name': el => el.full_name,
           'Profile Pic': el => el.profile_pic_url,
@@ -45,7 +40,7 @@ const instagramRecentSearchesReport = (backup) => {
     var filename = backup.getFileName(file)
     try {
       let instagramPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
-      let regex = /[0-9]*-fb-friends$/g;
+      let regex = /[0-9]*-fb-friends$/g
       let fbFriendsKey = Object.keys(instagramPlist).filter(key => regex.test(key))
       console.log(fbFriendsKey)
       fbFriendsKey.forEach(key => {

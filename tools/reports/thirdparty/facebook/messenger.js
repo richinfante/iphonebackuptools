@@ -1,9 +1,4 @@
 const log = require('../../../util/log')
-const path = require('path')
-const sqlite3 = require('sqlite3')
-const bplist = require('bplist-parser')
-const fs = require('fs')
-const plist = require('plist')
 
 // Derive filenames based on domain + file path
 const fileHash = require('../../../util/backup_filehash')
@@ -34,8 +29,7 @@ module.exports.functions = {
       .then((items) => {
         let filename = 'fbomnistore.db'
         let fileitem = items.find((file) => {
-          if (file && file.relativePath)
-            return ~file.relativePath.indexOf(filename)
+          if (file && file.relativePath) { return ~file.relativePath.indexOf(filename) }
           return false
         })
         if (fileitem) {
@@ -47,7 +41,7 @@ module.exports.functions = {
       .then((items) => {
         var result = program.formatter.format(items, {
           program: program,
-          columns: { 
+          columns: {
             'Facebook Friend Usernames': el => el.field_value
           }
         })
@@ -55,25 +49,25 @@ module.exports.functions = {
         resolve(result)
       })
       .catch((e) => {
-        console.log('[!] Encountered an Error:', e)
+        log.error('[!] Encountered an Error:', e)
       })
   },
 
   '>=5.0,<10.0': function (program, backup, resolve, reject) {
     // This function would be called for all iOS 5 up to iOS 9.x.
     // TODO
-    /*backup.getOldFileManifest()
+    /* backup.getOldFileManifest()
       .then((items) => {
         var result = program.formatter.format(items, {
           program: program,
-          columns: { 
+          columns: {
             'Facebook Friend Username': el => el.field_value
           }
         })
 
         resolve(result)
       })
-      .catch(reject)*/
+      .catch(reject) */
   }
 }
 
@@ -88,18 +82,19 @@ const facebookMessengerFriendsReport = (backup, file) => {
       AND name LIKE 'collection_index#messenger_contacts_ios%' 
       LIMIT 1
       `,
-      (err, table_name) => {
-        table_name = table_name.name
-        console.log("Table", table_name)
+      (err, tableName) => {
+        if (err) return reject(err)
+        tableName = tableName.name
+        log.verbose('Table', tableName)
         database.all(`
         SELECT field_value 
-        FROM '${table_name}' 
+        FROM '${tableName}' 
         WHERE field_name='username'
         `, (err, rows) => {
+          if (err) return reject(err)
           resolve(rows)
         })
       })
-
     } catch (e) {
       reject(e)
     }

@@ -1,10 +1,3 @@
-const log = require('../../../util/log')
-const path = require('path')
-const sqlite3 = require('sqlite3')
-const bplist = require('bplist-parser')
-const fs = require('fs')
-const plist = require('plist')
-
 // Derive filenames based on domain + file path
 const fileHash = require('../../../util/backup_filehash')
 
@@ -25,8 +18,9 @@ module.exports.func = function (program, backup, resolve, reject) {
     .then((items) => {
       let filename = 'main.db'
       let fileitem = items.find((file) => {
-        if (file && file.relativePath)
-          return ~file.relativePath.indexOf(filename) && file.domain == domain
+        if (file && file.relativePath) {
+          return ~file.relativePath.indexOf(filename) && file.domain === domain
+        }
         return false
       })
       if (fileitem) {
@@ -38,7 +32,7 @@ module.exports.func = function (program, backup, resolve, reject) {
     .then((items) => {
       var result = program.formatter.format(items, {
         program: program,
-        columns: { 
+        columns: {
           'Begin Timestamp': el => (new Date((el.begin_timestamp) * 1000).toDateString()) + ' ' + (new Date((el.begin_timestamp) * 1000).toTimeString()),
           'Host Identity': el => el.host_identity,
           'Duration': el => el.duration ? el.duration : 'N/A',
@@ -63,9 +57,9 @@ const skypeAccountsReport = (backup, file) => {
       FROM Calls 
       `,
       (err, rows) => {
+        if (err) return reject(err)
         resolve(rows)
       })
-
     } catch (e) {
       reject(e)
     }

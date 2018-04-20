@@ -1,10 +1,5 @@
-const log = require('../../../util/log')
-const path = require('path')
-const sqlite3 = require('sqlite3')
 const bplist = require('bplist-parser')
 const fs = require('fs')
-const plist = require('plist')
-
 
 // Derive filenames based on domain + file path
 const fileHash = require('../../../util/backup_filehash')
@@ -26,7 +21,7 @@ module.exports.func = function (program, backup, resolve, reject) {
     .then((items) => {
       var result = program.formatter.format(items, {
         program: program,
-        columns: { 
+        columns: {
           'Identifier': el => el
         }
       })
