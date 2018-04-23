@@ -14,7 +14,7 @@ const { runSingleReport, runSwitchedReport } = require('./util/report_runner')
 
 var base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
 
-var reportTypes = report.types
+var defaultReports = report.types
 
 var formatters = {
   'json': require('./formatters/json'),
@@ -36,6 +36,7 @@ program
   .option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files, manifest')
   .option('-o, --output <path>', 'Specify an output directory for files to be written to.')
   .option(`-v, --verbose`, 'Verbose debugging output')
+  .option(`    --plugins <plugins>`, 'List of pluging modules to use')
   .option(`    --filter <filter>`, 'Filter output fo r individual reports. See the README for usage.')
   .option('    --join-reports', 'Join JSON reports together. (available for -f json or -f raw only!)')
   .option(`    --no-color`, 'Disable colorized output')
@@ -53,7 +54,10 @@ program.on('--help', function () {
     i = i || 0
 
     for (let [name, report] of Object.entries(group)) {
-      if (report instanceof Group) {
+      // Ignore groups
+      if (name === '__group') { continue }
+
+      if (report instanceof Group || report.__group === true) {
         console.log(`${' '.repeat(i * 2)}- ${chalk.green(name)}`.padStart(i * 2))
         printGroup(report, i + 1)
       } else {
@@ -62,7 +66,8 @@ program.on('--help', function () {
     }
   }
 
-  printGroup(reportTypes)
+  let moduleList = getCompleteModuleList()
+  printGroup(moduleList)
 
   console.log('')
   console.log("If you're interested to know how this works, check out my post:")
@@ -83,6 +88,13 @@ if (require.main === module) {
   program.parse(process.argv)
 
   log.setVerbose(program.quiet ? 0 : (program.verbose ? 2 : 1))
+  program.plugins = program.plugins || process.env.IBACKUPTOOL_PLUGINS || ''
+  program.plugins = program.plugins.split(',')
+    .map(name => name.trim())
+    .filter(name => name !== '')
+    .map(path => require(path))
+
+  log.verbose('Plugins:', program.plugins)
 
   // Save the formatter
   program.formatter = formatters[program.formatter] || formatters.table
@@ -105,6 +117,26 @@ if (require.main === module) {
 }
 
 /**
+ * Get all modules in a top-down manner.
+ */
+function getCompleteModuleList () {
+  let allModules = {}
+
+  // Add all of the require()'d modules into the plugins list.
+  program.plugins.forEach(function (plugin) {
+    allModules = { ...allModules, ...plugin }
+  })
+
+  // Add all of the modules to a single object.
+  // JS's behavior dictates that the items are added sequentially
+  // So, the default reports overwrite any third party plugin.
+  return {
+    ...allModules,
+    ...defaultReports
+  }
+}
+
+/**
  * Try to find a single report.
  * @param {string} query name to find.
  */
@@ -116,7 +148,7 @@ function findReport (query) {
     }
 
     // Run matches.
-    let matches = matcher(reportTypes, query, (el) => !(el instanceof Group))
+    let matches = matcher(defaultReports, query, (el) => !(el instanceof Group))
 
     // If no report found, fail.
     if (matches.length === 0) {
@@ -241,6 +273,11 @@ async function main () {
     program.report = 'backups.list'
   }
 
+  // Get all the loaded modules
+  let allModules = getCompleteModuleList()
+
+  log.verbose('Top-level modules', Object.keys(allModules))
+
   if (program.report) {
     var reportContents = []
 
@@ -256,11 +293,13 @@ async function main () {
     for (let query of selectedTypes) {
       selectedReports = [
         ...selectedReports,
-        ...matcher(reportTypes, query, (el) => !(el instanceof Group))
+        ...matcher(allModules, query, (el) => !(el instanceof Group || el.__group === true))
       ]
     }
 
     let set = new Set(selectedReports)
+
+    log.verbose('selected set', set)
 
     if (set.size === 0) {
       log.error(`Couldn't run reports specified by: '${program.report}'.`)
@@ -356,5 +395,8 @@ async function main () {
   }
 }
 
-module.exports.run = findAndRun
-module.exports.Backup = Backup
+module.exports = {
+  findAndRun,
+  Backup,
+  Group
+}

@@ -13,6 +13,11 @@ module.exports = function match (object, query, isLeaf) {
 }
 
 function nameMatches (query, name) {
+  /// __group is a reserved name.
+  if (name === '__group') {
+    return false
+  }
+
   if (query === '*') {
     return true
   } else if (query === name) {
