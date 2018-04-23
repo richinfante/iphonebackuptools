@@ -9,7 +9,7 @@ const Backup = require('./backup')
 var backupDirectory = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
 
 // Object containing default report modules
-var defaultReports = report.types
+var moduleCache = {}
 
 // Array of plugin modules
 var plugins = []
@@ -20,6 +20,7 @@ var plugins = []
  */
 function registerModule (array) {
   plugins.push(...array)
+  moduleCache = getCompleteModuleList()
 }
 
 /**
@@ -27,6 +28,7 @@ function registerModule (array) {
  */
 function clearModules () {
   plugins = []
+  moduleCache = getCompleteModuleList()
 }
 
 /**
@@ -43,10 +45,14 @@ function getCompleteModuleList () {
   // Add all of the modules to a single object.
   // JS's behavior dictates that the items are added sequentially
   // So, the default reports overwrite any third party plugin.
-  return {
+  let result = {
     ...allModules,
-    ...defaultReports
+    ...report.types
   }
+
+  moduleCache = result
+
+  return result
 }
 
 /**
@@ -61,7 +67,7 @@ function findReport (query) {
     }
 
     // Run matches.
-    let matches = matcher(defaultReports, query, (el) => !(el instanceof Group))
+    let matches = matcher(moduleCache, query, (el) => !(el instanceof Group))
 
     // If no report found, fail.
     if (matches.length === 0) {
@@ -190,7 +196,7 @@ module.exports = {
   registerModule,
   clearModules,
   get modules () {
-    return getCompleteModuleList()
+    return moduleCache
   },
 
   // Source directory
@@ -205,5 +211,10 @@ module.exports = {
   run,
   findReport,
   runReport,
-  compileReport
+  compileReport,
+
+  // misc
+  setLogLevel (lvl) {
+    log.setVerbose(lvl)
+  }
 }
