@@ -8,7 +8,7 @@ const Backup = require('./backup')
 // Backup source directory
 var backupDirectory = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
 
-// Object containing default report modules
+// Object containing all report modules
 var moduleCache = {}
 
 // Array of plugin modules
@@ -163,7 +163,7 @@ function runReport (report, params) {
     // If it requires a backup and none is provided, reject.
     if (report.requiresBackup) {
       if (!params.backup) {
-        return reject(new Error('use -b or --backup <id> to specify backup.'))
+        return reject(new Error('Please specify the `backup` parameter to run this report.'))
       }
 
       backup = new Backup(backupDirectory, params.backup)
