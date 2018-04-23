@@ -2,7 +2,7 @@ const fs = require('fs-extra')
 
 module.exports = {
   version: 4,
-  name: 'list',
+  name: 'backups.list',
   description: 'List of all backups',
 
   run (lib) {

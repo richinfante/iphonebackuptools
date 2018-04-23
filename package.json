@@ -5,10 +5,10 @@
   "main": "tools/index.js",
   "scripts": {
     "test": "tap tests",
-    "start": "node tools/index.js"
+    "start": "node tools/cli.js"
   },
   "bin": {
-    "ibackuptool": "tools/index.js"
+    "ibackuptool": "tools/cli.js"
   },
   "preferGlobal": true,
   "repository": "https://github.com/richinfante/iphonebackuptools",
