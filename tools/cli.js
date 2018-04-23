@@ -117,12 +117,16 @@ if (require.main === module) {
     core.base = program.dir
   }
 
-  log.verbose('Using source:', program.base)
+  log.verbose('Base Directory:', core.base)
 
   main().then(() => {})
 }
 
+/**
+ * Main CLI function
+ */
 async function main () {
+  // Legacy support for --list (-l) flag
   if (program.list) {
     program.report = 'backups.list'
   }

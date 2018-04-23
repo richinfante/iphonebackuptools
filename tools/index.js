@@ -119,11 +119,11 @@ function compileReport (report, result, { raw }) {
 
 /**
  * Run a named report and resolve to it's output.
- * The output MAY be formatted, if the params.raw option is set to true.
+ * The output is formatted based on the `report.output` key, if the params.raw option is NOT set to true.
  * @param {string} query report name
  * @param {Object=} params parameters.
  */
-function findAndRun (query, params) {
+function run (query, params) {
   params = params || {}
   return new Promise(async (resolve, reject) => {
     try {
@@ -165,7 +165,7 @@ function runReport (report, params) {
 
     // Create a library.
     let lib = {
-      run: findAndRun,
+      run: run,
       base: backupDirectory
     }
 
@@ -202,7 +202,7 @@ module.exports = {
   },
 
   // Runners
-  findAndRun,
+  run,
   findReport,
   runReport,
   compileReport
