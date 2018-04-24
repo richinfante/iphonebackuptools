@@ -9,7 +9,7 @@ const Backup = require('./backup')
 var backupDirectory = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
 
 // Object containing all report modules
-var moduleCache = {}
+var moduleCache = report.types
 
 // Array of plugin modules
 var plugins = []
@@ -19,6 +19,10 @@ var plugins = []
  * @param {Array<Object>} array contains array of plugin objects.
  */
 function registerModule (array) {
+  if (!(array instanceof Array)) {
+    array = [ array ]
+  }
+
   plugins.push(...array)
   moduleCache = getCompleteModuleList()
 }
