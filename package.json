@@ -22,7 +22,7 @@
     "fs-extra": "^4.0.3",
     "json2csv": "^3.11.5",
     "plist": "^2.1.0",
-    "sqlite3": "^3.1.8",
+    "sqlite3": "^4.0.0",
     "strip-ansi": "^4.0.0"
   },
   "devDependencies": {
