@@ -2,7 +2,7 @@ const bplist = require('bplist-parser')
 const fs = require('fs')
 
 // Derive filenames based on domain + file path
-const fileHash = require('../../util/backup_filehash')
+const fileHash = require('../../../util/backup_filehash')
 
 const database = fileHash('Library/Preferences/com.spotify.client.plist', 'AppDomain-com.spotify.client')
 

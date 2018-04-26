@@ -92,19 +92,24 @@ module.exports.types = {
   }),
 
   // Spotify
-  spotify: require('./reports/thirdparty/spotify'),
+  spotify: new Group({
+    searches: require('./reports/thirdparty/spotify/searches')
+  }),
 
+  // Waze
   waze: new Group({
     favorites: require('./reports/thirdparty/waze/favorites'),
     places: require('./reports/thirdparty/waze/places'),
     recents: require('./reports/thirdparty/waze/recents')
   }),
 
+  // Skype
   skype: new Group({
     accounts: require('./reports/thirdparty/skype/accounts'),
     calls: require('./reports/thirdparty/skype/calls')
   }),
 
+  // Viber
   viber: new Group({
     contacts: require('./reports/thirdparty/viber/contacts'),
     calls: require('./reports/thirdparty/viber/calls'),
