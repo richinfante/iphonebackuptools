@@ -47,7 +47,10 @@ var reportTypes = {
   'waze_places': require('./reports/waze_places'),
   'waze_recents': require('./reports/waze_recents'),
   'skype_accounts': require('./reports/skype_accounts'),
-  'skype_calls': require('./reports/skype_calls')
+  'skype_calls': require('./reports/skype_calls'),
+  'viber_contacts': require('./reports/viber_contacts'),
+  'viber_calls': require('./reports/viber_calls'),
+  'viber_messages': require('./reports/viber_messages')
 }
 
 var formatters = {
