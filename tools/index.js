@@ -173,19 +173,13 @@ function runReport (report, params) {
       backup = new Backup(backupDirectory, params.backup)
     }
 
-    // Create a library.
-    let lib = {
-      run: run,
-      base: backupDirectory
-    }
-
     // Input params to func
     let inputParams = {
       ...params,
       backup
     }
 
-    report.run(lib, inputParams)
+    report.run(module.exports, inputParams)
       .then(resolve)
       .catch(reject)
   })

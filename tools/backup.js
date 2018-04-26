@@ -15,12 +15,14 @@ class Backup {
    * @param {*} id directory name of the backup.
    */
   constructor (base, id) {
+    log.verbose(`create backup with base=${base}, id=${id}`)
     id = id || ''
     base = base || ''
 
     // Very wierd, but unwrap from existing backup instance.
-    if (id.constructor.name === 'Backup3') {
+    if (id.constructor === Backup) {
       id = id.id
+      log.verbose(`unwrapping backup to id=${id}`)
     }
 
     this.id = id
