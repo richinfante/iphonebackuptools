@@ -103,6 +103,12 @@ module.exports.types = {
   skype: new Group({
     accounts: require('./reports/thirdparty/skype/accounts'),
     calls: require('./reports/thirdparty/skype/calls')
+  }),
+
+  viber: new Group({
+    contacts: require('./reports/thirdparty/viber/contacts'),
+    calls: require('./reports/thirdparty/viber/calls'),
+    messages: require('./reports/thirdparty/viber/messages')
   })
 }
 

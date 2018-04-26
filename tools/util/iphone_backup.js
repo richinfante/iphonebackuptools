@@ -44,6 +44,8 @@ var cache = {}
 
 class IPhoneBackup {
   constructor (id, status, info, manifest, base) {
+    log.warning('v3 reporting API is deprecated, this report may need to be updated to ensure stability with all iOS versions')
+    log.warning('https://github.com/richinfante/iphonebackuptools/wiki/V4-API-Migration-Notes')
     this.id = id
     this.status = status
     this.info = info
