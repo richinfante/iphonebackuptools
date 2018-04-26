@@ -6,7 +6,7 @@ const fileHash = require('../../../util/backup_filehash')
 
 const database = fileHash('Library/Preferences/com.spotify.client.plist', 'AppDomain-com.spotify.client')
 
-module.exports.name = 'spotify'
+module.exports.name = 'spotify.searches'
 module.exports.description = 'List associated Spotify account and its usage information'
 
 // Specify this reporter requires a backup.
