@@ -21,14 +21,15 @@ module.exports.format = function (data, options) {
   if ((!options.columns || Object.keys(options.colums).length === 0) && data.length > 0) {
     // Extract the fields from the first object.
     options.columns = Object.keys(data[0])
+    log.verbose('assigning csv columns to', options.columns)
   }
 
   function processRow (el) {
     var row = {}
 
     // Iterate over the columns and add each item to the new row.
-    for (var key in options.columns) {
-      if (typeof options.colums[key] === 'function') {
+    for (var key of options.columns) {
+      if (typeof options.columns[key] === 'function') {
         row[key] = options.columns[key](el)
       } else {
         row[key] = el[key]

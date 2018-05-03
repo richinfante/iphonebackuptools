@@ -42,31 +42,13 @@ program
   .option(`    --no-color`, 'Disable colorized output')
   .option(`    --dump`, 'alias for "--formatter raw"')
   .option(`    --quiet`, 'quiet all messages, except for errors and raw output')
+  .option(`    --available`, 'output a list of available reports')
 
 program.on('--help', function () {
   console.log('')
   console.log(`Version: ${packageJSON.version}`)
   console.log('')
-  console.log('Supported Report Types:')
-
-  // Print a report group and recursively print children
-  function printGroup (group, i) {
-    i = i || 0
-
-    for (let [name, report] of Object.entries(group)) {
-      // Ignore groups
-      if (name === '__group') { continue }
-
-      if (report instanceof Group || report.__group === true) {
-        console.log(`${' '.repeat(i * 2)}- ${chalk.green(name)}`.padStart(i * 2))
-        printGroup(report, i + 1)
-      } else {
-        console.log(`${' '.repeat(i * 2)}- ${chalk.green(name)}${report.deprecated ? chalk.gray(' [deprecated]') : ''}: ${report.description} `)
-      }
-    }
-  }
-
-  printGroup(core.modules)
+  console.log('Run ibackuptool --available for a listing of report types.')
 
   console.log('')
   console.log("If you're interested to know how this works, check out my post:")
@@ -77,6 +59,28 @@ program.on('--help', function () {
   console.log('')
 })
 
+function printReportList () {
+  // Print a report group and recursively print children
+  function printGroup (group, i, pn) {
+    i = i || 0
+    pn = pn || ''
+
+    for (let [name, report] of Object.entries(group)) {
+      // Ignore groups
+      if (name === '__group') { continue }
+
+      if (report instanceof Group || report.__group === true) {
+        // console.log(`${' '.repeat(i * 2)}- ${pn}${name}`.padStart(i * 2))
+        printGroup(report, i + 1, `${pn}${name}.`)
+      } else {
+        console.log(`- ${chalk.green(pn + name)}${report.deprecated ? chalk.gray(' [deprecated]') : ''}: ${report.description} `)
+      }
+    }
+  }
+
+  printGroup(core.modules)
+}
+
 process.on('unhandledRejection', (e) => {
   console.log('[index.js] unhandled rejection', e)
   process.exit(1)
@@ -84,7 +88,17 @@ process.on('unhandledRejection', (e) => {
 
 // If we're the main module, run some things.
 if (require.main === module) {
+  init()
+}
+
+// Initialize the tool.
+function init () {
   program.parse(process.argv)
+
+  if (program.available) {
+    printReportList()
+    process.exit(0)
+  }
 
   // Set the log level
   log.setVerbose(program.quiet ? 0 : (program.verbose ? 2 : 1))
