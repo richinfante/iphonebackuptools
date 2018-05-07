@@ -36,7 +36,7 @@ bt.run('backups.list')
   .then(backups => {
     // Gives you a list of backups.
     console.log(backups)
-  }
+  })
 ```
 
 
@@ -45,16 +45,6 @@ bt.run('backups.list')
 ```bash
 # Install directly from NPM
 npm i -g ibackuptool
-
-# If you prefer, you can do this manually:
-# Clone this repo, then run:
-# Install Globally on your system.
-npm i -g 
-
-# Or, If you really want:
-# Clone this repo, then run: 
-npm install
-run `node tools/index.js` # use this instead of ibackuptool
 ```
 
 ### CLI Quickstart
