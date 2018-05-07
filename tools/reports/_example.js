@@ -1,68 +1,104 @@
-// First, give it a name!
-module.exports.name = 'example module'
 
-// Provide a description.
-module.exports.description = 'An example module to show how it works'
+module.exports = {
+  /**
+   * The reporting API version. This should be set to 3.
+   */
+  version: 4,
 
-// Specify this reporter requires a backup.
-// The second parameter to func() is now a backup instead of the path to one.
-// Most reporting types should use this.
-module.exports.requiresBackup = true
+  /**
+   * Report name. This should match the nesting found in the reports.js file.
+   */
+  name: 'ibackuptool.example',
 
-// Should this report be skipped in automated reports?
-// This is used when the 'all' report type is specified, and all possible reports are generated.
-// with this set to true, the report WILL NOT run when report type = 'all'
-// Most reporting types shouldn't need this.
-module.exports.requiresInteractivity = true
+  /**
+   * Human readable description of the file
+   */
+  description: `Example Report module.`,
 
-// Specify this reporter supports the promises API for allowing chaining of reports.
-// All modules should use this.
-module.exports.usesPromises = true
+  /**
+   * Optional flag requiring a backup parameter to be present in order to run this report.
+   */
+  requiresBackup: true,
 
-// Specify this only works for iOS 10+
-// If it is iOS-version specific, you can specify version information here.
-// You may provide a comma separated string such as ">=6.0,<11.0" to indicate ranges.
-module.exports.supportedVersions = '>=10.0'
-
-// Most reports will use this pattern.
-// Reporting function (for usesPromises = true)
-module.exports.func = function (program, backup, resolve, reject) {
-  // This function will be called with the `commander` program, and the iPhoneBackup instance as arguments
-  // It MUST resolve() the final result, or reject() if there's an error
-
-  // First, fetch some data. This variable should be an array of objects representing each row in a report.
-  // This would be replaced with a function from the backup object.
-  let data = backup.getData()
-
-  // Next, pass it to the user-selected formatter.
-  var result = program.formatter.format(data, {
-    // Provide the program options
-    program: program,
-
-    // A dictionary of items to be displayed as formatted data.
-    // The key is the column name, the value is a function that returns the value given an object representing a row.
-    columns: {
-      'Column-Name': row => row.ROWID
-    }
-  })
-
-  // Resolve the promise with the result.
-  // This ensures proper file output and multi-reporting.
-  resolve(result)
-}
-
-// --- OR ---
-
-// You can also provide an array of functions instead of using `module.exports.func`.
-// These functions *should* be independent ranges to ensure reliable execution.
-module.exports.functions = {
-  '>=10.0': function (program, backup, resolve, reject) {
-    // This function would be called for iOS 10+.
-    // format and resolve() in the same manner as the example above.
-
+  /**
+   * Run on a v3 lib / backup object.
+   * The run() function must return a promise, which always resolves to valid data.
+   * If the files aren't in the backup or aren't formatted in a known way, we reject
+   * and print the error message for the user.
+   * @param {object} lib standard lib, contains lib.run() function.
+   * @param {object} options options object.
+   */
+  run (lib, { backup }) {
+    return new Promise((resolve, reject) => {
+      // resolve to valid data.
+      // Typically, this would be "raw" data containing as much info as possible.
+      // Se below for data formatting.
+      resolve([{
+        name: 'example1',
+        data: {
+          code: 33,
+          values: [1, 2, 3, 4, 5]
+        }
+      }])
+    })
   },
-  '>=9.0,<10.0': function (program, backup) {
-    // This function would be called for all iOS 9.
-    // format and resolve() in the same manner as the example above.
+
+  /**
+   * The "output" property declares the public interface for most operations.
+   * This provides a level of abstraction from the datatypes that are stored in the
+   * backups since they may vary between versions, or need normalization.
+   *
+   * This collection of functions allows that to occur.
+   */
+  output: {
+    name: el => el.name,
+    code: el => el.data.code
   }
+
+  /*
+    For the above example, if run() resolved to:
+    [{
+      name: 'example1',
+      data: {
+        code: 33,
+        values: [1, 2, 3, 4, 5]
+      }
+    }]
+
+    The actual module output when using a normal json, csv, table formatter would be the following,
+    due to the output declaration:
+
+    [{
+      name: 'example1',
+      code: 33
+    }]
+
+    // We can also output a single raw object:
+    {
+      Name: 'test',
+      Version: '1.0',
+      BackupData: [104, 101, 108, 108, 111, 044, 119, 111, 114, 108, 100]
+    }
+
+    // And map it using the following output declaration:
+    output: {
+      name: el => el.Name,
+      version: el => el.Version
+    }
+
+    To the following:
+    {
+      name: 'test',
+      version: '1.0'
+    }
+
+    IF we specify a "raw" formatter, or run using the { raw: true } parameter to lib.run(),
+    We'd get back the original raw object.
+
+    {
+      Name: 'test',
+      Version: '1.0',
+      BackupData: [104, 101, 108, 108, 111, 044, 119, 111, 114, 108, 100]
+    }
+  */
 }

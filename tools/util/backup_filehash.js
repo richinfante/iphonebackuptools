@@ -1,6 +1,12 @@
 const crypto = require('crypto')
 
-/// Derive the name of the file inside of the backup from it's domain and file name.
+/**
+ * Derive a file's ID from it's filename and domain.
+ * @deprecated use backup3.js -> getFileID(file, domain) instead.
+ *
+ * @param {string} file the path to the file in the domain
+ * @param {string=} domain (optional) the file's domain. Default: HomeDomain
+ */
 module.exports = function fileHash (file, domain) {
   domain = domain || 'HomeDomain'
   let shasum = crypto.createHash('sha1')

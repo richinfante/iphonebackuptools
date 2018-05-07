@@ -44,6 +44,8 @@ var cache = {}
 
 class IPhoneBackup {
   constructor (id, status, info, manifest, base) {
+    log.warning('v3 reporting API is deprecated, this report may need to be updated to ensure stability with all iOS versions')
+    log.warning('https://github.com/richinfante/iphonebackuptools/wiki/V4-API-Migration-Notes')
     this.id = id
     this.status = status
     this.info = info
@@ -54,6 +56,8 @@ class IPhoneBackup {
   // Open a backup with a specified ID
   // base is optional and will be computed if not used.
   static fromID (id, base) {
+    id = id || ''
+    
     // Get the path of the folder.
     if (base) {
       base = path.join(base, id)
@@ -683,7 +687,7 @@ class IPhoneBackup {
                 if (err) reject(err)
                 ele.profile_picture = null
                 if (row) {
-                  ele.profile_picture = row.data.toString('base64')
+                  ele.profile_picture = (row.data || '').toString('base64')
                 }
                 iterateElements(elements, index + 1, callback)
               })
