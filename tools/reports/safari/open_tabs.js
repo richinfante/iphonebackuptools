@@ -1,4 +1,5 @@
 const fileHash = require('../../util/backup_filehash')
+const apple_timestamp = require('../../util/apple_timestamp')
 
 const TABS_DB = fileHash('Library/Safari/BrowserState.db', 'AppDomain-com.apple.mobilesafari')
 
@@ -17,7 +18,7 @@ module.exports = {
   output: {
     title: el => el.title,
     url: el => el.url,
-    lastViewedTime: el => (new Date((el.last_viewed_time + 978307200) * 1000).toDateString()) + ' ' + (new Date((el.last_viewed_time + 978307200) * 1000).toTimeString())
+    lastViewedTime: el => el.last_viewed
   }
 }
 
@@ -26,7 +27,7 @@ const openTabsReport = (backup) => {
     backup.openDatabase(TABS_DB)
       .then(db => {
         db.all(`
-          select * from tabs
+          select *, ${apple_timestamp.parse('last_viewed_time')} as last_viewed from tabs
           order by last_viewed_time DESC
           `, function (err, rows) {
           if (err) reject(err)

@@ -1,5 +1,6 @@
 // Derive filenames based on domain + file path
 const fileHash = require('../../util/backup_filehash')
+const apple_timestamp = require('../../util/apple_timestamp')
 
 const CAL_DB = fileHash('Library/Calendar/Calendar.sqlitedb')
 
@@ -17,6 +18,7 @@ module.exports = {
   // Fields for apps report
   output: {
     timestamp: el => (new Date((el.start_date + 978307200) * 1000).toDateString()) + ' ' + (new Date((el.start_date + 978307200) * 1000).toTimeString()),
+    timestamp_string: el => el.start_date_string,  
     title: el => el.summary,
     content: el => el.description,
     calendarId: el => el.calendar_id,
@@ -31,6 +33,8 @@ function calendarReport (backup) {
         const query = `
         SELECT
           CalendarItem.*,
+          ${apple_timestamp.parse('CalendarItem.start_date')} AS start_date_string,
+
           Calendar.title as calendar_title
         FROM CalendarItem
         LEFT JOIN Calendar ON

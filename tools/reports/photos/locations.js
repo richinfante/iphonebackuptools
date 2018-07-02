@@ -1,4 +1,5 @@
 const fileHash = require('../../util/backup_filehash')
+const apple_timestamp = require('../../util/apple_timestamp')
 
 const PHOTOS_DB = fileHash('Media/PhotoData/Photos.sqlite', 'CameraRollDomain')
 
@@ -31,7 +32,7 @@ function getPhotoLocationHistory (backup) {
           ZLATITUDE, 
           ZLONGITUDE,
           ZFILENAME,
-          datetime(ZDATECREATED + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING 
+          ${apple_timestamp.parse('ZDATECREATED')} AS XFORMATTEDDATESTRING 
           FROM ZGENERICASSET ORDER BY ZDATECREATED ASC`, function (err, rows) {
           if (err) reject(err)
 

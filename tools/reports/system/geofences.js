@@ -1,4 +1,5 @@
 const fileHash = require('../../util/backup_filehash')
+const apple_timestamp = require('../../util/apple_timestamp')
 
 const GEO_DB = fileHash('Library/Caches/locationd/consolidated.db', 'RootDomain')
 
@@ -26,7 +27,7 @@ function getGeoFences (backup) {
   return new Promise((resolve, reject) => {
     backup.openDatabase(GEO_DB)
       .then(db => {
-        db.all(`SELECT datetime(Timestamp + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING, Latitude, Longitude, Distance FROM Fences ORDER BY Timestamp ASC`, async function (err, rows) {
+        db.all(`SELECT ${apple_timestamp.parse('Timestamp')} AS XFORMATTEDDATESTRING, Latitude, Longitude, Distance FROM Fences ORDER BY Timestamp ASC`, async function (err, rows) {
           if (err) reject(err)
 
           resolve(rows)
