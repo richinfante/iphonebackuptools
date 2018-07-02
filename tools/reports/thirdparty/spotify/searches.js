@@ -6,31 +6,25 @@ const fileHash = require('../../../util/backup_filehash')
 
 const database = fileHash('Library/Preferences/com.spotify.client.plist', 'AppDomain-com.spotify.client')
 
-module.exports.name = 'spotify.searches'
-module.exports.description = 'List associated Spotify account and its usage information'
 
-// Specify this reporter requires a backup.
-// The second parameter to func() is now a backup instead of the path to one.
-module.exports.requiresBackup = true
+module.exports = {
+  version: 4,
+  name: 'spotify.searches',
+  description: `List associated Spotify account and its usage information`,
+  requiresBackup: true,
 
-// Specify this reporter supports the promises API for allowing chaining of reports.
-module.exports.usesPromises = true
+  // Run on a v3 lib / backup object.
+    run (lib, { backup }) {
+        return spotifyReport(backup)
+    },
 
-module.exports.func = function (program, backup, resolve, reject) {
-  spotifyReport(backup)
-    .then((items) => {
-      var result = program.formatter.format(items, {
-        program: program,
-        columns: {
+  // Fields for apps report
+  output: {
           'Username': el => el.username,
           'Type': el => el.placeholderIconIdentifier ? el.placeholderIconIdentifier.toLowerCase() : 'song',
           'Title': el => el.title,
           'Subtitle': el => el.subtitle
-        }
-      })
-      resolve(result)
-    })
-    .catch(reject)
+  }
 }
 
 const spotifyReport = (backup) => {
@@ -40,7 +34,7 @@ const spotifyReport = (backup) => {
       let spotifyData = bplist.parseBuffer(fs.readFileSync(filename))[0]
       let spotifyResult = []
 
-      // console.log('spotifyData', spotifyData)
+      console.log('spotifyData', spotifyData)
       // Get spotify username
       if (Object.keys(spotifyData).some((key) => ~key.indexOf('.com.spotify'))) {
         const keys = Object.keys(spotifyData).filter((key) => ~key.indexOf('.com.spotify'))
