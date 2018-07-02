@@ -3,6 +3,7 @@ const sqlite3 = require('sqlite3')
 const path = require('path')
 const log = require('./util/log')
 const filehash = require('./util/backup_filehash')
+const manifestMBDBParse = require('./util/manifest_mbdb_parse')
 
 /**
  * Backup3 is the version 4 of the backup library.
@@ -99,6 +100,57 @@ class Backup {
     // Throw an error.
     throw new Error(`Could not find a file needed for this report. It may not be compatibile with this specific backup or iOS Version.`)
   }
+
+
+    /// Get the manifest for an sqlite database if available
+    getSqliteFileManifest () {
+        return new Promise(async (resolve, reject) => {
+            this.openDatabase('Manifest.db', true)
+                .then(db => {
+                    db.all('SELECT fileID, domain, relativePath as filename from FILES', async function (err, rows) {
+                        if (err) reject(err)
+                        
+                        resolve(rows)
+                    })
+                })
+                .catch(reject)
+        })
+    }
+
+    /// Get the manifest from the mbdb file
+    getMBDBFileManifest () {
+        return new Promise((resolve, reject) => {
+            let mbdbPath = this.getFileName('Manifest.mbdb', true)
+            manifestMBDBParse.process(mbdbPath, resolve, reject)
+        })
+    }
+    
+    /// Try to load both of the manifest files
+    getManifest () {
+        return new Promise(async (resolve, reject) => {
+            // Try the new sqlite file database.
+            try {
+                log.verbose('Trying sqlite manifest...')
+                let item = await this.getSqliteFileManifest(this)
+                return resolve(item)
+            } catch (e) {
+                log.verbose('Trying sqlite manifest... [failed]', e)
+            }
+            
+            // Try the mbdb file database
+            try {
+                log.verbose('Trying mbdb manifest...')
+                let item = await this.getMBDBFileManifest(this)
+                return resolve(item)
+            } catch (e) {
+                log.verbose('Trying mbdb manifest...[failed]', e)
+            }
+            
+            reject(new Error('Could not find a manifest.'))
+        })
+    }
+
+    
 
   /**
    * Open a database referenced by a fileID
