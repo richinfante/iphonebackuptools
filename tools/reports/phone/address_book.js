@@ -1,3 +1,8 @@
+const fs = require('fs-extra')
+const path = require('path')
+const log = require('../../util/log')
+const apple_timestamp = require('../../util/apple_timestamp')
+
 module.exports = {
   version: 4,
   name: 'phone.address_book',
@@ -5,8 +10,16 @@ module.exports = {
   requiresBackup: true,
 
   // Run on a v3 lib / backup object.
-  run (lib, { backup }) {
-    return getAddressBook(backup)
+    run (lib, { backup, extract }) {
+    return new Promise(async (resolve, reject) => {
+      try {
+          let items = await getAddressBook(backup, extract)
+
+        resolve(items)
+      } catch (e) {
+        reject(e)
+      }
+    })
   },
 
   // Manifest fields.
@@ -21,11 +34,15 @@ module.exports = {
     email: el => el.email || null,
     createdDate: el => el.created_date || null,
     note: el => el.note || null,
-    picture: el => !!el.profile_picture
+    picture: el => !!el.profile_picture,
+    picture_file: el =>  el.profile_picture_file || null,
+    // picture_base64: el => el.profile_picture,
+    services: el => el.services
+      
   }
 }
 
-function getAddressBook (backup) {
+function getAddressBook (backup, extract) {
   return new Promise((resolve, reject) => {
     backup.openDatabase(backup.getFileID('Library/AddressBook/AddressBook.sqlitedb'))
       .then(db => {
@@ -39,8 +56,8 @@ function getAddressBook (backup) {
           , ABPerson.Department as department
           , ABPerson.Birthday as birthday
           , ABPerson.JobTitle as jobtitle
-          , datetime(ABPerson.CreationDate + 978307200, 'unixepoch') as created_date 
-          , datetime(ABPerson.ModificationDate + 978307200, 'unixepoch') as updated_date 
+          , ${apple_timestamp.parse('ABPerson.CreationDate')} as created_date 
+          , ${apple_timestamp.parse('ABPerson.ModificationDate')} as updated_date 
           , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Work>!$_')) as phone_work
           , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Mobile>!$_')) as phone_mobile
           , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Home>!$_')) as phone_home
@@ -91,8 +108,20 @@ function getAddressBook (backup) {
                     ele.profile_picture = null
                     if (row) {
                       ele.profile_picture = (row.data || '').toString('base64')
+                        if (extract && row.data) {
+                            fs.ensureDir(path.dirname(extract)).then( (err) => {
+                                var outFile = path.join(extract, `profile_picture_${ele.ROWID}.jpg`)
+                
+                                // Log the export
+                                log.verbose('extract', outFile)
+                
+                                fs.writeFile(outFile, row.data, (err) => {
+                                    if (err) console.log(err);
+                                })
+                                ele.profile_picture_file = outFile                            
+                            })
+                        }
                     }
-
                     iterateElements(elements, index + 1, callback)
                   })
                 })
@@ -106,4 +135,24 @@ function getAddressBook (backup) {
       })
       .catch(reject)
   })
+}
+
+function extractProfilePictures (items, extractDest) {
+    // Ensure output dir exists
+    fs.ensureDir(path.dirname(extractDest)).then( (err) => {
+        if (err) console.log(err)
+        for (let item of items) {
+            if (item.profile_picture) {
+                var outFile = path.join(extractDest, `profile_picture_${item.ROWID}.jpg`)
+                
+                // Log the export
+                log.verbose('extract', outFile)
+                
+                fs.writeFile(outFile, Buffer.from(item.profile_picture, 'base64'), (err) => {
+                    if (err) console.log(err);
+                })
+                item.profile_picture_file = outFile
+            }
+        }
+    })    
 }

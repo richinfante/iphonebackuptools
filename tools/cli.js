@@ -33,7 +33,7 @@ program
   .option('-r, --report <report_type>', 'Select a report type. see below for a full list.')
   .option('-i, --id <id>', 'Specify an ID for filtering certain reports')
   .option('-f, --formatter <type>', 'Specify output format. default: table')
-  .option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files, manifest')
+  .option(`-e, --extract <dir>`, 'Extract data for commands. supported by: voicemail-files, manifest, addressbook')
   .option('-o, --output <path>', 'Specify an output directory for files to be written to.')
   .option(`-v, --verbose`, 'Verbose debugging output')
   .option(`    --plugins <plugins>`, 'List of pluging modules to use')
