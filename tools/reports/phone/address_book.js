@@ -31,14 +31,17 @@ module.exports = {
     phoneWork: el => el.phone_work || null,
     phoneMobile: el => el.phone_mobile || null,
     phoneHome: el => el.phone_home || null,
+    iphone: el => el.iphone || null,
     email: el => el.email || null,
     createdDate: el => el.created_date || null,
     note: el => el.note || null,
     picture: el => !!el.profile_picture,
     picture_file: el =>  el.profile_picture_file || null,
     // picture_base64: el => el.profile_picture,
-    services: el => el.services
-      
+    services: el => el.services,
+    address: el => el.address,
+    city: el => el.city
+
   }
 }
 
@@ -61,6 +64,7 @@ function getAddressBook (backup, extract) {
           , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Work>!$_')) as phone_work
           , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Mobile>!$_')) as phone_mobile
           , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = '_$!<Home>!$_')) as phone_home
+          , (select value from ABMultiValue where property = 3 and record_id = ABPerson.ROWID and label = (select ROWID from ABMultiValueLabel where value = 'iPhone')) as iphone
 
           , (select value from ABMultiValue where property = 4 and record_id = ABPerson.ROWID) as email
           
