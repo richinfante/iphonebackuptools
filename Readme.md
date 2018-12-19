@@ -96,6 +96,15 @@ the `-o <path>` (`--output <path>`option specifies a folder to export reports to
 # Export wifi, calls, voicemail as CSV files to disk in a folder named "exported/"
 ibackuptool -b $UDID --report system.wifi,phone.calls,phone.voicemail -f csv -o exported
 ```
+
+## Extracting files
+the `--extract <path>` parameter paired with the backup.files report will extract all files in a backup, with filenames matching an optional filter (specified by `--filter <filter>`).
+
+```bash
+# Export all photos onto "~/Desktop/Photos"
+ibackuptool -b $UDID -r backup.files --extract ~/Desktop/Photos --filter DCIM
+```
+
 ## Running Tests
 first, install [tap](https://www.npmjs.com/package/tap)
 
