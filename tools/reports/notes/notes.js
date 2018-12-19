@@ -1,5 +1,6 @@
 const fileHash = require('../../util/backup_filehash')
 const log = require('../../util/log')
+const apple_timestamp = require('../../util/apple_timestamp')
 
 const NOTES_DB = fileHash('Library/Notes/notes.sqlite')
 const NOTES2_DB = fileHash('NoteStore.sqlite', 'AppDomainGroup-group.com.apple.notes')
@@ -71,7 +72,7 @@ function getNewNotesiOS9 (backup) {
   return new Promise((resolve, reject) => {
     backup.openDatabase(NOTES2_DB)
       .then(db => {
-        db.all(`SELECT ZICCLOUDSYNCINGOBJECT.*, ZICNOTEDATA.ZDATA as X_CONTENT_DATA, datetime(ZCREATIONDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM ZICCLOUDSYNCINGOBJECT LEFT JOIN ZICNOTEDATA ON ZICCLOUDSYNCINGOBJECT.ZNOTE = ZICNOTEDATA.ZNOTE`, async function (err, rows) {
+        db.all(`SELECT ZICCLOUDSYNCINGOBJECT.*, ZICNOTEDATA.ZDATA as X_CONTENT_DATA, ${apple_timestamp.parse('ZCREATIONDATE')} AS XFORMATTEDDATESTRING FROM ZICCLOUDSYNCINGOBJECT LEFT JOIN ZICNOTEDATA ON ZICCLOUDSYNCINGOBJECT.ZNOTE = ZICNOTEDATA.ZNOTE`, async function (err, rows) {
           if (err) reject(err)
 
           resolve(rows)
@@ -85,7 +86,7 @@ function getOldNotes (backup) {
   return new Promise((resolve, reject) => {
     backup.openDatabase(NOTES_DB)
       .then(db => {
-        db.all(`SELECT *, datetime(ZCREATIONDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING from ZNOTE LEFT JOIN ZNOTEBODY ON ZBODY = ZNOTEBODY.Z_PK`, function (err, rows) {
+        db.all(`SELECT *, ${apple_timestamp.parse('ZCREATIONDATE')} AS XFORMATTEDDATESTRING from ZNOTE LEFT JOIN ZNOTEBODY ON ZBODY = ZNOTEBODY.Z_PK`, function (err, rows) {
           if (err) reject(err)
           resolve(rows)
         })
@@ -98,7 +99,7 @@ function getNewNotesiOS10iOS11 (backup) {
   return new Promise((resolve, reject) => {
     backup.openDatabase(NOTES2_DB)
       .then(db => {
-        db.all(`SELECT ZICCLOUDSYNCINGOBJECT.*, ZICNOTEDATA.ZDATA as X_CONTENT_DATA, datetime(ZCREATIONDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING, datetime(ZCREATIONDATE1 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING1 FROM ZICCLOUDSYNCINGOBJECT LEFT JOIN ZICNOTEDATA ON ZICCLOUDSYNCINGOBJECT.ZNOTE = ZICNOTEDATA.ZNOTE`, function (err, rows) {
+        db.all(`SELECT ZICCLOUDSYNCINGOBJECT.*, ZICNOTEDATA.ZDATA as X_CONTENT_DATA, ${apple_timestamp.parse('(ZCREATIONDATE')} AS XFORMATTEDDATESTRING, ${apple_timestamp.parse('ZCREATIONDATE1')} AS XFORMATTEDDATESTRING1 FROM ZICCLOUDSYNCINGOBJECT LEFT JOIN ZICNOTEDATA ON ZICCLOUDSYNCINGOBJECT.ZNOTE = ZICNOTEDATA.ZNOTE`, function (err, rows) {
           if (err) reject(err)
 
           resolve(rows)

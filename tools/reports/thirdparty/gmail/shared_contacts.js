@@ -6,33 +6,28 @@ const fileHash = require('../../../util/backup_filehash')
 
 const file = fileHash('Library/Preferences/group.com.google.Gmail.plist', 'AppDomainGroup-group.com.google.Gmail')
 
-module.exports.name = 'gmail_shared_contacts'
-module.exports.description = 'Show Gmail account(s) shared contacts information'
 
-// Specify this reporter requires a backup.
-// The second parameter to func() is now a backup instead of the path to one.
-module.exports.requiresBackup = true
+module.exports = {
+  version: 4,
+  name: 'gmail_shared_contacts',
+  description: `Show Gmail account(s) shared contacts information`,
+  requiresBackup: true,
 
-// Specify this reporter supports the promises API for allowing chaining of reports.
-module.exports.usesPromises = true
+  // Run on a v3 lib / backup object.
+    run (lib, { backup }) {
+        return gmailAccountsReport(backup)
+    },
 
-module.exports.func = function (program, backup, resolve, reject) {
-  gmailAccountsReport(backup)
-    .then((items) => {
-      var result = program.formatter.format(items, {
-        program: program,
-        columns: {
+  // Fields for apps report
+  output: {
           'Account': el => el.account,
           'Name': el => el.name,
           'Email': el => el.email,
           'Avatar': el => el.avatar
-        }
-      })
-
-      resolve(result)
-    })
-    .catch(reject)
+  }
 }
+
+
 
 const gmailAccountsReport = (backup) => {
   return new Promise((resolve, reject) => {

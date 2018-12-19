@@ -6,31 +6,24 @@ const fileHash = require('../../../util/backup_filehash')
 
 const file = fileHash('Library/Preferences/com.burbn.instagram.plist', 'AppDomain-com.burbn.instagram')
 
-module.exports.name = 'instagram_profile'
-module.exports.description = 'Show Instagram profile/user data'
+module.exports = {
+  version: 4,
+  name: 'instagram_profile',
+  description: `Show Instagram profile/user data`,
+  requiresBackup: true,
 
-// Specify this reporter requires a backup.
-// The second parameter to func() is now a backup instead of the path to one.
-module.exports.requiresBackup = true
+  // Run on a v3 lib / backup object.
+    run (lib, { backup }) {
+        return instagramProfileReport(backup)
+    },
 
-// Specify this reporter supports the promises API for allowing chaining of reports.
-module.exports.usesPromises = true
-
-module.exports.func = function (program, backup, resolve, reject) {
-  instagramProfileReport(backup)
-    .then((items) => {
-      var result = program.formatter.format(items, {
-        program: program,
-        columns: {
+  // Fields for apps report
+  output: {
           'Key': el => el.key,
           'Value': el => el.value
-        }
-      })
-
-      resolve(result)
-    })
-    .catch(reject)
+  }
 }
+
 
 function KeyValue (property, plist) {
   this.key = property

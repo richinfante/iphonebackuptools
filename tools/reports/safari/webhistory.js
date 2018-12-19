@@ -1,5 +1,6 @@
 const { URL } = require('url')
 const fileHash = require('../../util/backup_filehash')
+const apple_timestamp = require('../../util/apple_timestamp')
 const HISTORY_DB = fileHash('Library/Safari/History.db', 'AppDomain-com.apple.mobilesafari')
 
 module.exports = {
@@ -27,7 +28,7 @@ function getWebHistory (backup) {
   return new Promise((resolve, reject) => {
     backup.openDatabase(HISTORY_DB)
       .then(db => {
-        db.all(`SELECT *, datetime(visit_time + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING from history_visits LEFT JOIN history_items ON history_items.ROWID = history_visits.history_item`, function (err, rows) {
+        db.all(`SELECT *, ${apple_timestamp.parse('visit_time')} AS XFORMATTEDDATESTRING from history_visits LEFT JOIN history_items ON history_items.ROWID = history_visits.history_item`, function (err, rows) {
           if (err) reject(err)
 
           resolve(rows)

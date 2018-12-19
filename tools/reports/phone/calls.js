@@ -1,5 +1,6 @@
 const fileHash = require('../../util/backup_filehash')
 const log = require('../../util/log')
+const apple_timestamp = require('../../util/apple_timestamp')
 
 const CALLS_DB = '2b2b0084a1bc3a5ac8c27afdf14afb42c61a19ca'
 const CALLS2_DB = fileHash('Library/CallHistoryDB/CallHistory.storedata')
@@ -105,7 +106,7 @@ function getCallsListLater (backup) {
   return new Promise((resolve, reject) => {
     backup.openDatabase(CALLS2_DB)
       .then(db => {
-        db.all(`SELECT *, datetime(ZDATE + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING from ZCALLRECORD ORDER BY ZDATE ASC`, async function (err, rows) {
+        db.all(`SELECT *, ${apple_timestamp.parse('ZDATE')} AS XFORMATTEDDATESTRING from ZCALLRECORD ORDER BY ZDATE ASC`, async function (err, rows) {
           if (err) reject(err)
 
           resolve(rows)

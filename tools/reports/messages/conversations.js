@@ -2,6 +2,7 @@ const bplist = require('bplist-parser')
 
 const fileHash = require('../../util/backup_filehash')
 const log = require('../../util/log')
+const apple_timestamp = require('../../util/apple_timestamp')
 
 const SMS_DB = fileHash('Library/SMS/sms.db')
 
@@ -74,10 +75,10 @@ function getConversationsiOS9 (backup) {
 }
 
 function getConversationsiOS10iOS11 (backup) {
-  return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
     backup.openDatabase(SMS_DB)
       .then(db => {
-        db.all(`SELECT *, datetime(last_read_message_timestamp / 1000000000 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING FROM chat ORDER BY last_read_message_timestamp ASC`, async function (err, rows) {
+        db.all(`SELECT *, ${apple_timestamp.parse('last_read_message_timestamp')} AS XFORMATTEDDATESTRING FROM chat ORDER BY last_read_message_timestamp ASC`, async function (err, rows) {
           if (err) return reject(err)
           rows = rows || []
 

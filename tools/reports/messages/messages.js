@@ -1,6 +1,6 @@
 const fileHash = require('../../util/backup_filehash')
 const log = require('../../util/log')
-
+const apple_timestamp = require('../../util/apple_timestamp')
 const SMS_DB = fileHash('Library/SMS/sms.db')
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
   // Available fields.
   output: {
     id: el => el.ROWID,
-    date: el => el.XFORMATTEDDATESTRING,
+    date: el => el.date,
     sender: el => el.x_sender,
     text: el => (el.text || '').trim(),
     dateRead: el => el.date_read + '',
@@ -65,7 +65,7 @@ function getMessagesiOS9 (backup, chatId) {
       SELECT 
         message.*,
         handle.id as sender_name,
-        datetime(date + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING
+        ${apple_timestamp.parse(date)} AS date
       FROM chat_message_join 
       INNER JOIN message 
         ON message.rowid = chat_message_join.message_id 
@@ -106,9 +106,9 @@ function getMessagesiOS10iOS11 (backup, chatId) {
       SELECT 
         message.*,
         handle.id as sender_name,
-        datetime((date_read + 978307200), 'unixepoch') as date_read,
-        datetime((date_delivered + 978307200), 'unixepoch') as date_delivered,
-        datetime(date / 1000000000 + 978307200, 'unixepoch') AS XFORMATTEDDATESTRING
+        ${apple_timestamp.parse('date_read')} AS date_read,
+        ${apple_timestamp.parse('date_delivered')} AS date_delivered,
+        ${apple_timestamp.parse('date')} AS date
       FROM chat_message_join 
       INNER JOIN message 
         ON message.rowid = chat_message_join.message_id 
