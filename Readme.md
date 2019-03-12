@@ -41,7 +41,7 @@ bt.run('backups.list')
 
 
 ## Installing (as a global command line tool)
-
+Prerequisites: [nodejs](https://nodejs.org/en/) and [npm](https://www.npmjs.com/).
 ```bash
 # Install directly from NPM
 npm i -g ibackuptool
