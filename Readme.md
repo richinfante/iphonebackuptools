@@ -121,7 +121,7 @@ See [Roadmap](https://github.com/richinfante/iphonebackuptools/wiki/Roadmap-and-
 
 ## Legal
 
-Copyright &copy; 2017-2018 Richard Infante.
+Copyright &copy; 2017-2019 Richard Infante.
 
 Available under the MIT License.
 
