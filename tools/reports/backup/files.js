@@ -117,11 +117,22 @@ function extractFiles (backup, destination, filter, items) {
     }
 
     try {
+      var stat = new Mode(item)
+      if (stat.isDirectory()) {
+        // Created implicitly below
+        continue
+      }
+
+      if (stat.isSymbolicLink()) {
+        log.warning('skipping symlink', item.filename)
+        // FIXME: Restore symlinks
+        continue
+      }
+
       let sourceFile = backup.getFileName(item.fileID)
-      var stat = fs.lstatSync(sourceFile)
 
       // Only process files that exist.
-      if (stat.isFile() && fs.existsSync(sourceFile)) {
+      if (fs.existsSync(sourceFile)) {
         log.action('export', item.filename)
 
         // Calculate the output dir.
@@ -133,8 +144,6 @@ function extractFiles (backup, destination, filter, items) {
 
         // Save output info to the data item.
         item.output_dir = outDir
-      } else if (stat.isDirectory()) {
-      // Do nothing..
       } else {
         log.error('not found', sourceFile)
       }
