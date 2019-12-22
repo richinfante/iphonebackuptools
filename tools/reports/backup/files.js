@@ -123,6 +123,8 @@ function extractFiles (backup, destination, filter, items) {
         domainPath = domainPath.replace('-', path.sep)
       }
 
+      domainPath = domainPath.replace('Domain', '')
+
       var filePath = path.join(domainPath, item.filename)
       var stat = new Mode(item)
 
