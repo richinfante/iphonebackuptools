@@ -117,16 +117,16 @@ function extractFiles (backup, destination, filter, items) {
     }
 
     try {
+      var filePath = path.join(item.domain, item.filename)
       var stat = new Mode(item)
 
       if (stat.isSymbolicLink()) {
-        log.warning('skipping symlink', item.filename)
+        log.warning('skipping symlink', filePath, 'to', item.linktarget)
         // FIXME: Restore symlinks
         continue
       }
 
       // Calculate the output path
-      var filePath = path.join(item.domain, item.filename)
       var outPath = path.join(destination, filePath)
 
       if (stat.isDirectory()) {
