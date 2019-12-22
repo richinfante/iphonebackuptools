@@ -23,6 +23,11 @@ module.exports = {
         results.push(result)
       }
 
+      // Sort by descending dates
+      results.sort(function(a, b) {
+        return b.status.date - a.status.date;
+      });
+
       resolve(results)
     })
   },
