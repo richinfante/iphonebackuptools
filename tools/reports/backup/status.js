@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 const log = require('../../util/log')
-const bplist = require('bplist-parser')
+const plist = require('../../util/plist')
 
 module.exports = {
   version: 4,
@@ -14,9 +14,7 @@ module.exports = {
   async run (lib, { backup }) {
     // Load and parse status for the backup.
     log.verbose('parsing status', backup.path)
-    let data = bplist.parseBuffer(fs.readFileSync(path.join(backup.path, 'Status.plist')))[0]
-
-    return data
+    return plist.parseFile(path.join(backup.path, 'Status.plist'))
   },
 
   // Status fields.

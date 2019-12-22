@@ -1,5 +1,5 @@
 const fs = require('fs')
-const bplist = require('bplist-parser')
+const plist = require('../../util/plist')
 const fileHash = require('../../util/backup_filehash')
 
 const SAFARI_PLIST = fileHash('Library/Preferences/com.apple.mobilesafari.plist', 'AppDomain-com.apple.mobilesafari')
@@ -28,7 +28,7 @@ const safariRecentSearches = (backup) => {
     try {
       // Get the filename of the ID
       var filename = backup.getFileName(SAFARI_PLIST)
-      let mobilesafariPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
+      let mobilesafariPlist = plist.parseFile(filename)
 
       resolve(mobilesafariPlist['RecentWebSearches'])
     } catch (e) {

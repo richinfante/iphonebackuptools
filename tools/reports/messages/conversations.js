@@ -1,4 +1,4 @@
-const bplist = require('bplist-parser')
+const plist = require('../../util/plist')
 
 const fileHash = require('../../util/backup_filehash')
 const log = require('../../util/log')
@@ -39,7 +39,7 @@ function getConversationsiOS9 (backup) {
           // The timestamp information is stored in a binary blob named `properties`
           // Which is formatted as a binary PLIST.
           for (var el of rows) {
-            if (el.properties) el.properties = bplist.parseBuffer(el.properties)[0]
+            if (el.properties) el.properties = plist.parseBuffer(el.properties)
 
             // Interestingly, some of these do not have dates attached.
             if (el.properties) {

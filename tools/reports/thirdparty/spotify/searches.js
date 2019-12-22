@@ -1,4 +1,4 @@
-const bplist = require('bplist-parser')
+const plist = require('../../../util/plist')
 const fs = require('fs')
 
 // Derive filenames based on domain + file path
@@ -31,7 +31,7 @@ const spotifyReport = (backup) => {
   return new Promise((resolve, reject) => {
     var filename = backup.getFileName(database)
     try {
-      let spotifyData = bplist.parseBuffer(fs.readFileSync(filename))[0]
+      let spotifyData = plist.parseFile(filename)
       let spotifyResult = []
 
       console.log('spotifyData', spotifyData)

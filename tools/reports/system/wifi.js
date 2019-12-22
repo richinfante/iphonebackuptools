@@ -1,4 +1,4 @@
-const bplist = require('bplist-parser')
+const plist = require('../../util/plist')
 const fs = require('fs')
 
 // Normalize mac addresses in wifi output
@@ -23,7 +23,7 @@ module.exports = {
         var filename = backup.getFileName(WIFI_PLIST)
 
         // Attempt to parse it
-        let wifiList = bplist.parseBuffer(fs.readFileSync(filename))[0]
+        let wifiList = plist.parseFile(filename)
         let result = wifiList['List of known networks']
           .map(el => {
             if (el.BSSID) {

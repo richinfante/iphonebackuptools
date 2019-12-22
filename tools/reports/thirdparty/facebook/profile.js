@@ -1,4 +1,4 @@
-const bplist = require('bplist-parser')
+const plist = require('../../../util/plist')
 const fs = require('fs')
 
 // Derive filenames based on domain + file path
@@ -28,7 +28,7 @@ const facebookProfileReport = (backup) => {
   return new Promise((resolve, reject) => {
     var filename = backup.getFileName(file)
     try {
-      let facebookPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
+      let facebookPlist = plist.parseFile(filename)
       let facebookUserIds = Object.keys(facebookPlist['kUserGlobalSettings'])
       facebookUserIds = facebookUserIds.map((fbid) => ({
         fbid: fbid

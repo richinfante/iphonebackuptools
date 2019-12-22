@@ -1,4 +1,4 @@
-const bplist = require('bplist-parser')
+const plist = require('../../../util/plist')
 const fs = require('fs')
 
 // Derive filenames based on domain + file path
@@ -31,7 +31,7 @@ const instagramRecentSearchesReport = (backup) => {
     var results = []
     var filename = backup.getFileName(file)
     try {
-      let instagramPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
+      let instagramPlist = plist.parseFile(filename)
       let recentSearchesKey = Object.keys(instagramPlist).filter(key => key.indexOf('-blended-search-recent-item-order') !== -1)
       recentSearchesKey.forEach(key => {
         let recentSearches = instagramPlist[key]

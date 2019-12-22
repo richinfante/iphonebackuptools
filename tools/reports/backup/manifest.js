@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 
 const log = require('../../util/log')
-const bplist = require('bplist-parser')
+const plist = require('../../util/plist')
 
 module.exports = {
   version: 4,
@@ -14,7 +14,7 @@ module.exports = {
   async run (lib, { backup }) {
     // Load and parse the maniest for the backup.
     log.verbose('parsing manifest', backup.path)
-    let data = bplist.parseBuffer(fs.readFileSync(path.join(backup.path, 'Manifest.plist')))[0]
+    let data = plist.parseFile(path.join(backup.path, 'Manifest.plist'))
 
     // Remove this data, it's kind of useless.
     delete data['BackupKeyBag']

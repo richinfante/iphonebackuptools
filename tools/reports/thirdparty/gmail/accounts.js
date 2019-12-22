@@ -1,4 +1,4 @@
-const bplist = require('bplist-parser')
+const plist = require('../../../util/plist')
 const fs = require('fs')
 
 // Derive filenames based on domain + file path
@@ -32,7 +32,7 @@ const gmailAccountsReport = (backup) => {
   return new Promise((resolve, reject) => {
     var filename = backup.getFileName(file)
     try {
-      let gmailPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
+      let gmailPlist = plist.parseFile(filename)
       let gmailAccountIds = Object.keys(gmailPlist).filter(key => key.indexOf('kIdToEmailMapKey') !== -1)
       let gmailAvatars = Object.keys(gmailPlist).filter(key => key.indexOf('kCurrentAvatarUrlKey') !== -1)
       gmailAvatars = gmailAvatars.map(avatarKey => {

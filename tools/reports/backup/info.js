@@ -1,9 +1,8 @@
 const fs = require('fs')
 const path = require('path')
-const plist = require('plist')
-const bplist = require('bplist-parser')
 
 const log = require('../../util/log')
+const plist = require('../../util/plist')
 
 module.exports = {
   version: 4,
@@ -16,28 +15,11 @@ module.exports = {
     // Get the path for the info plist.
     let infoPath = path.join(backup.path, 'Info.plist')
 
-    let fd = fs.openSync(infoPath, 'r')
-    let buffer = Buffer.alloc(7)
-    // Read the first 7 bytes into the buffer.
-    fs.readSync(fd, buffer, 0, 7, 0)
-    fs.closeSync(fd)
+    log.verbose('parsing info', infoPath)
+    var data = plist.parseFile(infoPath)
 
-    var data
-    // Binary plists have the marker 'bplist0'
-    if (buffer.toString('ascii') === 'bplist0') {
-      // Parse as binary plist
-      log.verbose('parsing manifest', infoPath)
-      data = bplist.parseBuffer(fs.readFileSync(infoPath))[0]
-
-      // Remove this data, it's kind of useless.
-      delete data['iTunes Files']
-    } else {
-      // Parse as normal plist.
-      log.verbose('parsing info', infoPath)
-      data = plist.parse(fs.readFileSync(infoPath, 'utf8'))
-
-      delete data['iTunes Files']
-    }
+    // Remove this data, it's kind of useless.
+    delete data['iTunes Files']
 
     return data
   },

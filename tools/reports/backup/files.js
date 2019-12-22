@@ -2,7 +2,7 @@ const fs = require('fs-extra')
 const path = require('path')
 const log = require('../../util/log')
 const manifestMBDBParse = require('../../util/manifest_mbdb_parse')
-const bplist = require('bplist-parser')
+const plist = require('../../util/plist')
 const Mode = require('stat-mode');
 
 module.exports = {
@@ -47,7 +47,7 @@ function getSqliteFileManifest (backup) {
 
           // Extract binary plist metadata
           for (var row of rows) {
-            let data = bplist.parseBuffer(row.file)[0]
+            let data = plist.parseBuffer(row.file)
             let metadata = data['$objects'][1];
             row.filelen = metadata.Size
             row.mode = metadata.Mode
