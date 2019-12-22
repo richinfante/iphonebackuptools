@@ -2,6 +2,7 @@ const fs = require('fs-extra')
 const path = require('path')
 const log = require('../../util/log')
 const manifestMBDBParse = require('../../util/manifest_mbdb_parse')
+const bplist = require('bplist-parser')
 
 module.exports = {
   version: 4,
@@ -39,8 +40,15 @@ function getSqliteFileManifest (backup) {
   return new Promise(async (resolve, reject) => {
     backup.openDatabase('Manifest.db', true)
       .then(db => {
-        db.all('SELECT fileID, domain, relativePath as filename from FILES', async function (err, rows) {
+        db.all('SELECT fileID, domain, relativePath as filename, file from FILES', async function (err, rows) {
           if (err) reject(err)
+
+          // Extract binary plist metadata
+          for (var row of rows) {
+            let data = bplist.parseBuffer(row.file)[0]
+            let metadata = data['$objects'][1];
+            row.filelen = metadata.Size
+          }
 
           resolve(rows)
         })
