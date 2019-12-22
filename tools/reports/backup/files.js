@@ -117,7 +117,13 @@ function extractFiles (backup, destination, filter, items) {
     }
 
     try {
-      var filePath = path.join(item.domain, item.filename)
+      var domainPath = item.domain
+      if (domainPath.match(/^AppDomain.*-/)) {
+        // Extract sub-domain from app domain
+        domainPath = domainPath.replace('-', path.sep)
+      }
+
+      var filePath = path.join(domainPath, item.filename)
       var stat = new Mode(item)
 
       if (stat.isSymbolicLink()) {
