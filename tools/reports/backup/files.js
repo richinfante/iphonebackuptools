@@ -118,10 +118,6 @@ function extractFiles (backup, destination, filter, items) {
 
     try {
       var stat = new Mode(item)
-      if (stat.isDirectory()) {
-        // Created implicitly below
-        continue
-      }
 
       if (stat.isSymbolicLink()) {
         log.warning('skipping symlink', item.filename)
@@ -129,24 +125,30 @@ function extractFiles (backup, destination, filter, items) {
         continue
       }
 
-      let sourceFile = backup.getFileName(item.fileID)
+      // Calculate the output path
+      var filePath = path.join(item.domain, item.filename)
+      var outPath = path.join(destination, filePath)
 
-      // Only process files that exist.
-      if (fs.existsSync(sourceFile)) {
-        log.action('export', item.filename)
+      if (stat.isDirectory()) {
+        log.action('mkdir', filePath)
+        fs.ensureDirSync(outPath)
+      } else if (stat.isFile()) {
+        let sourceFile = backup.getFileName(item.fileID)
 
-        // Calculate the output dir.
-        var outDir = path.join(destination, item.domain, item.filename)
-
-        // Create the directory and copy
-        fs.ensureDirSync(path.dirname(outDir))
-        fs.copySync(sourceFile, outDir)
-
-        // Save output info to the data item.
-        item.output_dir = outDir
+        // Only process files that exist.
+        if (fs.existsSync(sourceFile)) {
+          log.action('export', filePath)
+          fs.copySync(sourceFile, outPath)
+        } else {
+          log.error('not found', sourceFile)
+        }
       } else {
-        log.error('not found', sourceFile)
+        throw new Error('unknown filetype')
       }
+
+      // Save output info to the data item.
+      item.output_dir = outPath
+
     } catch (e) {
       log.error(item.fileID, item.filename, e.toString())
     }
