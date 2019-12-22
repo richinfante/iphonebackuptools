@@ -31,8 +31,8 @@ module.exports = {
     udid: el => el.id,
     encrypted: el => el.manifest ? (!!el.manifest.IsEncrypted) : false,
     date: el => el.status ? new Date(el.status.date).toLocaleString() : '',
-    deviceName: el => el.manifest && el.manifest.Lockdown ? el.manifest.Lockdown.DeviceName : 'Unknown Device',
-    serialNumber: el => el.manifest && el.manifest.Lockdown ? el.manifest.Lockdown.SerialNumber : 'Unknown Serial #',
+    deviceName: el => el.info ? el.info.deviceName : 'Unknown Device',
+    serialNumber: el => el.info ? el.info.serialNumber : 'Unknown Serial #',
     iOSVersion: el => el.manifest && el.manifest.Lockdown ? el.manifest.Lockdown.ProductVersion : '?',
     backupVersion: el => el.status ? el.status.version : '?'
   }
