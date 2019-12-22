@@ -3,6 +3,7 @@ const path = require('path')
 const log = require('../../util/log')
 const manifestMBDBParse = require('../../util/manifest_mbdb_parse')
 const bplist = require('bplist-parser')
+const Mode = require('stat-mode');
 
 module.exports = {
   version: 4,
@@ -31,7 +32,8 @@ module.exports = {
     id: el => el.fileID,
     domain: el => el.domain,
     path: el => el.filename,
-    size: el => el.filelen || 0
+    size: el => el.filelen || 0,
+    mode: el => new Mode(el).toString()
   }
 }
 
@@ -48,6 +50,7 @@ function getSqliteFileManifest (backup) {
             let data = bplist.parseBuffer(row.file)[0]
             let metadata = data['$objects'][1];
             row.filelen = metadata.Size
+            row.mode = metadata.Mode
           }
 
           resolve(rows)
