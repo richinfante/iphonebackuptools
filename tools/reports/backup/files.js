@@ -94,11 +94,12 @@ function getManifest (backup) {
 }
 
 /// Filter exclusion check
-function isIncludedByFilter (filter, item) {
+function isIncludedByFilter (filter, item, filePath) {
   return filter === 'all' ||
     filter === undefined ||
     (filter && item.domain.indexOf(filter) > -1) ||
-    (filter && item.filename.indexOf(filter) > -1)
+    (filter && item.filename.indexOf(filter) > -1) ||
+    (filePath.indexOf(filter) > -1)
 }
 
 /// Extract files
@@ -108,14 +109,6 @@ function isIncludedByFilter (filter, item) {
 /// - items: list of files.
 function extractFiles (backup, destination, filter, items) {
   for (var item of items) {
-    // Filter by the domain.
-    // Simple "Contains" Search
-    if (!isIncludedByFilter(filter, item)) {
-      // Skip to the next iteration of the loop.
-      log.action('skipped', item.filename)
-      continue
-    }
-
     try {
       var domainPath = item.domain
       if (domainPath.match(/^AppDomain.*-/)) {
@@ -126,6 +119,14 @@ function extractFiles (backup, destination, filter, items) {
       domainPath = domainPath.replace('Domain', '')
 
       var filePath = path.join(domainPath, item.filename)
+
+      // Skip items not included by the filter
+      if (!isIncludedByFilter(filter, item, filePath)) {
+        // Skip to the next iteration of the loop.
+        log.action('skipped', filePath)
+        continue
+      }
+
       var stat = new Mode(item)
 
       if (stat.isSymbolicLink()) {
