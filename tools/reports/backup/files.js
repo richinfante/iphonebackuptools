@@ -33,6 +33,7 @@ module.exports = {
     domain: el => el.domain,
     path: el => el.filename,
     size: el => el.filelen || 0,
+    mtime: el => el.mtime || 0,
     mode: el => new Mode(el).toString()
   }
 }
@@ -51,6 +52,7 @@ function getSqliteFileManifest (backup) {
             let metadata = data['$objects'][1];
             row.filelen = metadata.Size
             row.mode = metadata.Mode
+            row.mtime = row.atime = metadata.LastModified
           }
 
           resolve(rows)
@@ -148,6 +150,7 @@ function extractFiles (backup, destination, filter, items) {
         if (fs.existsSync(sourceFile)) {
           log.action('export', filePath)
           fs.copySync(sourceFile, outPath)
+          fs.utimesSync(outPath, item.atime, item.mtime)
         } else {
           log.error('not found', sourceFile)
         }
