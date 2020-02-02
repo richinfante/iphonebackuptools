@@ -23,6 +23,7 @@
     "json2csv": "^3.11.5",
     "plist": "^2.1.0",
     "sqlite3": "^4.0.0",
+    "stat-mode": "^1.0.0",
     "strip-ansi": "^4.0.0"
   },
   "devDependencies": {

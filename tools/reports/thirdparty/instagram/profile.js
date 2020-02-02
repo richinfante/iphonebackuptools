@@ -1,4 +1,4 @@
-const bplist = require('bplist-parser')
+const plist = require('../../../util/plist')
 const fs = require('fs')
 
 // Derive filenames based on domain + file path
@@ -35,7 +35,7 @@ const instagramProfileReport = (backup) => {
     var results = []
     var filename = backup.getFileName(file)
     try {
-      let instagramPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
+      let instagramPlist = plist.parseFile(filename)
 
       results.push(new KeyValue('last-logged-in-username', instagramPlist))
       results.push(new KeyValue('prefill_fb_email', instagramPlist))

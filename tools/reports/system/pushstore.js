@@ -1,5 +1,5 @@
 const fs = require('fs')
-const bplist = require('bplist-parser')
+const plist = require('../../util/plist')
 const pushstoreParse = require('../../util/pushstore_parse')
 
 module.exports = {
@@ -36,8 +36,8 @@ module.exports = {
 
         // For each file, run a parse on the plist.
         files.forEach((file) => {
-          let plist = bplist.parseBuffer(fs.readFileSync(backup.getFileName(file.id)))[0]
-          pushstores.push(...pushstoreParse.run(plist))
+          let data = plist.parseFile(backup.getFileName(file.id))
+          pushstores.push(...pushstoreParse.run(data))
         })
 
         resolve(pushstores)

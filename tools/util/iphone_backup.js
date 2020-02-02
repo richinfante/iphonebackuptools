@@ -1,9 +1,8 @@
 const log = require('./log')
 const path = require('path')
 const sqlite3 = require('sqlite3')
-const bplist = require('bplist-parser')
 const fs = require('fs')
-const plist = require('plist')
+const plist = require('./plist')
 
 // Cookie Parser
 const cookieParser = require('./cookies.js')
@@ -17,7 +16,7 @@ const fileHash = require('./backup_filehash')
 // Manifest.mbdb parser
 const manifestMBDBParse = require('./manifest_mbdb_parse')
 
-// Pushstore bplist parser
+// Pushstore plist parser
 const pushstoreParse = require('./pushstore_parse')
 
 const databases = {
@@ -65,22 +64,22 @@ class IPhoneBackup {
       base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', id)
     }
 
-    // Parse manifest bplist files
+    // Parse manifest plist files
     try {
       log.verbose('parsing status', base)
-      var status = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Status.plist')))[0]
+      var status = plist.parseFile(path.join(base, 'Status.plist'))
     } catch (e) {
       log.error('Cannot open Status.plist', e)
     }
     try {
       log.verbose('parsing manifest', base)
-      var manifest = bplist.parseBuffer(fs.readFileSync(path.join(base, 'Manifest.plist')))[0]
+      var manifest = plist.parseFile(path.join(base, 'Manifest.plist'))
     } catch (e) {
       log.error('Cannot open Manifest.plist', e)
     }
     try {
       log.verbose('parsing status', base)
-      var info = plist.parse(fs.readFileSync(path.join(base, 'Info.plist'), 'utf8'))
+      var info = plist.parseFile(path.join(base, 'Info.plist'))
     } catch (e) {
       log.error('Cannot open Info.plist', e)
     }
@@ -329,7 +328,7 @@ class IPhoneBackup {
         // The timestamp information is stored in a binary blob named `properties`
         // Which is formatted as a binary PLIST.
         for (var el of rows) {
-          if (el.properties) el.properties = bplist.parseBuffer(el.properties)[0]
+          if (el.properties) el.properties = plist.parseBuffer(el.properties)
 
           // Interestingly, some of these do not have dates attached.
           if (el.properties) {
@@ -571,7 +570,7 @@ class IPhoneBackup {
       var filename = this.getFileName(databases.WiFi)
 
       try {
-        let wifiList = bplist.parseBuffer(fs.readFileSync(filename))[0]
+        let wifiList = plist.parseFile(filename)
         wifiList['List of known networks'] = wifiList['List of known networks']
           .map(el => {
             if (el.BSSID) {
@@ -816,8 +815,8 @@ class IPhoneBackup {
           const pushstores = []
 
           files.forEach((file) => {
-            let plist = bplist.parseBuffer(fs.readFileSync(this.getFileName(file.fileID)))[0]
-            pushstores.push(...pushstoreParse.run(plist))
+            let data = plist.parseFile(this.getFileName(file.fileID))
+            pushstores.push(...pushstoreParse.run(data))
           })
           resolve(pushstores)
         } catch (e) {
@@ -840,8 +839,8 @@ class IPhoneBackup {
 
           let pushstores = []
           files.forEach((file) => {
-            let plist = bplist.parseBuffer(fs.readFileSync(this.getFileName(file.fileID)))[0]
-            pushstores.push(...pushstoreParse.run(plist))
+            let data = plist.parseFile(this.getFileName(file.fileID))
+            pushstores.push(...pushstoreParse.run(data))
           })
           resolve(pushstores)
         } catch (e) {

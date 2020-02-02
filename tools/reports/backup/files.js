@@ -2,6 +2,8 @@ const fs = require('fs-extra')
 const path = require('path')
 const log = require('../../util/log')
 const manifestMBDBParse = require('../../util/manifest_mbdb_parse')
+const plist = require('../../util/plist')
+const Mode = require('stat-mode');
 
 module.exports = {
   version: 4,
@@ -30,7 +32,9 @@ module.exports = {
     id: el => el.fileID,
     domain: el => el.domain,
     path: el => el.filename,
-    size: el => el.filelen || 0
+    size: el => el.filelen || 0,
+    mtime: el => el.mtime || 0,
+    mode: el => new Mode(el).toString()
   }
 }
 
@@ -39,8 +43,17 @@ function getSqliteFileManifest (backup) {
   return new Promise(async (resolve, reject) => {
     backup.openDatabase('Manifest.db', true)
       .then(db => {
-        db.all('SELECT fileID, domain, relativePath as filename from FILES', async function (err, rows) {
+        db.all('SELECT fileID, domain, relativePath as filename, file from FILES', async function (err, rows) {
           if (err) reject(err)
+
+          // Extract binary plist metadata
+          for (var row of rows) {
+            let data = plist.parseBuffer(row.file)
+            let metadata = data['$objects'][1];
+            row.filelen = metadata.Size
+            row.mode = metadata.Mode
+            row.mtime = row.atime = metadata.LastModified
+          }
 
           resolve(rows)
         })
@@ -83,11 +96,12 @@ function getManifest (backup) {
 }
 
 /// Filter exclusion check
-function isIncludedByFilter (filter, item) {
+function isIncludedByFilter (filter, item, filePath) {
   return filter === 'all' ||
     filter === undefined ||
     (filter && item.domain.indexOf(filter) > -1) ||
-    (filter && item.filename.indexOf(filter) > -1)
+    (filter && item.filename.indexOf(filter) > -1) ||
+    (filePath.indexOf(filter) > -1)
 }
 
 /// Extract files
@@ -97,36 +111,56 @@ function isIncludedByFilter (filter, item) {
 /// - items: list of files.
 function extractFiles (backup, destination, filter, items) {
   for (var item of items) {
-    // Filter by the domain.
-    // Simple "Contains" Search
-    if (!isIncludedByFilter(filter, item)) {
-      // Skip to the next iteration of the loop.
-      log.action('skipped', item.filename)
-      continue
-    }
-
     try {
-      let sourceFile = backup.getFileName(item.fileID)
-      var stat = fs.lstatSync(sourceFile)
-
-      // Only process files that exist.
-      if (stat.isFile() && fs.existsSync(sourceFile)) {
-        log.action('export', item.filename)
-
-        // Calculate the output dir.
-        var outDir = path.join(destination, item.domain, item.filename)
-
-        // Create the directory and copy
-        fs.ensureDirSync(path.dirname(outDir))
-        fs.copySync(sourceFile, outDir)
-
-        // Save output info to the data item.
-        item.output_dir = outDir
-      } else if (stat.isDirectory()) {
-      // Do nothing..
-      } else {
-        log.error('not found', sourceFile)
+      var domainPath = item.domain
+      if (domainPath.match(/^AppDomain.*-/)) {
+        // Extract sub-domain from app domain
+        domainPath = domainPath.replace('-', path.sep)
       }
+
+      domainPath = domainPath.replace('Domain', '')
+
+      var filePath = path.join(domainPath, item.filename)
+
+      // Skip items not included by the filter
+      if (!isIncludedByFilter(filter, item, filePath)) {
+        // Skip to the next iteration of the loop.
+        log.action('skipped', filePath)
+        continue
+      }
+
+      var stat = new Mode(item)
+
+      if (stat.isSymbolicLink()) {
+        log.warning('skipping symlink', filePath, 'to', item.linktarget)
+        // FIXME: Restore symlinks
+        continue
+      }
+
+      // Calculate the output path
+      var outPath = path.join(destination, filePath)
+
+      if (stat.isDirectory()) {
+        log.action('mkdir', filePath)
+        fs.ensureDirSync(outPath)
+      } else if (stat.isFile()) {
+        let sourceFile = backup.getFileName(item.fileID)
+
+        // Only process files that exist.
+        if (fs.existsSync(sourceFile)) {
+          log.action('export', filePath)
+          fs.copySync(sourceFile, outPath)
+          fs.utimesSync(outPath, item.atime, item.mtime)
+        } else {
+          log.error('not found', sourceFile)
+        }
+      } else {
+        throw new Error('unknown filetype')
+      }
+
+      // Save output info to the data item.
+      item.output_dir = outPath
+
     } catch (e) {
       log.error(item.fileID, item.filename, e.toString())
     }

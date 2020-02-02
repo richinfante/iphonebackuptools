@@ -1,5 +1,5 @@
 
-const bplist = require('bplist-parser')
+const plist = require('../../util/plist')
 const fs = require('fs')
 
 // Derive filenames based on domain + file path
@@ -41,7 +41,7 @@ const speedDialReport = (backup) => {
   return new Promise((resolve, reject) => {
     try {
       var filename = backup.getFileName(file)
-      let speeddialPlist = bplist.parseBuffer(fs.readFileSync(filename))[0]
+      let speeddialPlist = plist.parseFile(filename)
 
       resolve(speeddialPlist)
     } catch (e) {
