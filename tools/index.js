@@ -4,9 +4,10 @@ const report = require('./reports')
 const matcher = require('./util/matcher')
 const Group = report.Group
 const Backup = require('./backup')
+const os = require('os')
 
 // Backup source directory
-var backupDirectory = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
+var backupDirectory = path.join(os.homedir(), '/Library/Application Support/MobileSync/Backup/')
 
 // Object containing all report modules
 var moduleCache = report.types

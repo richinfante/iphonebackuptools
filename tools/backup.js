@@ -4,6 +4,7 @@ const path = require('path')
 const log = require('./util/log')
 const filehash = require('./util/backup_filehash')
 const manifestMBDBParse = require('./util/manifest_mbdb_parse')
+const os = require('os')
 
 /**
  * Backup3 is the version 4 of the backup library.
@@ -33,7 +34,7 @@ class Backup {
     if (base) {
       this.path = path.join(base, id)
     } else {
-      this.path = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', id)
+      this.path = path.join(os.homedir(), '/Library/Application Support/MobileSync/Backup/', id)
     }
   }
 
