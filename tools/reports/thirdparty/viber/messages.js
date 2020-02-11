@@ -19,7 +19,7 @@ module.exports = {
   // Fields for apps report
   output: {
           'PK': el => el.Z_PK,
-          'Date': el => ZDATE_STRING,
+          'Date': el => el.ZDATE_STRING,
           'Name': el => el.ZDISPLAYFULLNAME,
           'Text': el => el.ZTEXT,
           'State': el => el.ZSTATE
