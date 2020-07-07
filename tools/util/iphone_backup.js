@@ -3,6 +3,7 @@ const path = require('path')
 const sqlite3 = require('sqlite3')
 const fs = require('fs')
 const plist = require('./plist')
+const os = require('os')
 
 // Cookie Parser
 const cookieParser = require('./cookies.js')
@@ -61,7 +62,7 @@ class IPhoneBackup {
     if (base) {
       base = path.join(base, id)
     } else {
-      base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/', id)
+      base = path.join(os.homedir(), '/Library/Application Support/MobileSync/Backup/', id)
     }
 
     // Parse manifest plist files
@@ -852,7 +853,7 @@ class IPhoneBackup {
 }
 
 module.exports.availableBackups = function () {
-  const base = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
+  const base = path.join(os.homedir(), '/Library/Application Support/MobileSync/Backup/')
   return new Promise((resolve, reject) => {
     resolve(fs.readdirSync(base, {
       encoding: 'utf8'

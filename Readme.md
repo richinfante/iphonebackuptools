@@ -60,6 +60,21 @@ UDID="0c1bc52c50016933679b0980ccff3680e5831162"
 ibackuptool -b $UDID --report '$TYPE'
 ```
 
+### Terminal Permissions
+
+If you receive an error, then it is possible Terminal does not have permission to access the folder where backups are stored. Read the error message for the location, otherwise try to just list the backups manually:
+
+```bash
+# List all backups manually
+/Users/<username>/Library/Application Support/MobileSync/Backup
+```
+
+You will see `ls: Operation not permitted` and know that Terminal does not have permission. Fix by allowing Terminal in Full Disk Encryption under Security & Privacy. First, close Terminal, and then:
+
+`System Preferences -> Security & Privacy -> Privacy -> Full Disk Access -> + -> tick Terminal`
+
+Open Terminal and try again.
+
 #### Multiple-Reporting 
 You can also provide a comma separated list of reports to generate. Additionally, there is a special `all` report type which will run all available reports. This is best paired with the `-o` option for saving to disk and the `-f` option for selecting a format such as CSV, or JSON.
 
