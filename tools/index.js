@@ -4,10 +4,18 @@ const report = require('./reports')
 const matcher = require('./util/matcher')
 const Group = report.Group
 const Backup = require('./backup')
-const os = require('os')
 
 // Backup source directory
-var backupDirectory = path.join(os.homedir(), '/Library/Application Support/MobileSync/Backup/')
+osType = process.platform
+if (osType === "win32") {
+  console.log('[i] Detected OS: Windows')
+  var backupDirectory = path.join(require('os').homedir(), '\\Apple\\MobileSync\\Backup')
+} else if (osType === "darwin") {
+  console.log('[i] Detected OS: MacOS')
+  var backupDirectory = path.join(process.env.HOME, '/Library/Application Support/MobileSync/Backup/')
+} else {
+  console.log('[i] Detected OS:', osType, 'may not be properly supported')
+}
 
 // Object containing all report modules
 var moduleCache = report.types
