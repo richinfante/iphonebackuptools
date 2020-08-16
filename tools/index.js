@@ -7,13 +7,11 @@ const Backup = require('./backup')
 const os = require('os')
 
 // Backup source directory
+var backupDirectory = path.join(os.homedir(), '/Library/Application Support/MobileSync/Backup/')
+
 osType = process.platform
 if (osType === "win32") {
   var backupDirectory = path.join(require('os').homedir(), '\\Apple\\MobileSync\\Backup')
-} else if (osType === "darwin") {
-  var backupDirectory = path.join(os.homedir(), '/Library/Application Support/MobileSync/Backup/')
-} else {
-  console.log('[i] Detected OS:', osType, 'may not be properly supported')
 }
 
 // Object containing all report modules
