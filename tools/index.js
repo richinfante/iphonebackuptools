@@ -9,6 +9,11 @@ const os = require('os')
 // Backup source directory
 var backupDirectory = path.join(os.homedir(), '/Library/Application Support/MobileSync/Backup/')
 
+osType = process.platform
+if (osType === "win32") {
+  var backupDirectory = path.join(require('os').homedir(), '\\Apple\\MobileSync\\Backup')
+}
+
 // Object containing all report modules
 var moduleCache = report.types
 
