@@ -117,6 +117,8 @@ function isIncludedBySingleFilter (filter, item, filePath) {
 function isIncludedBySingleFilterCheck (filter, x) {
   if (filter instanceof RegExp)
     return x.search(filter) > -1
+  else if (filter instanceof Function)
+    return filter(x)
   else
     return x.indexOf(filter) > -1;
 }
