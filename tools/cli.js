@@ -38,6 +38,7 @@ program
   .option(`-v, --verbose`, 'Verbose debugging output')
   .option(`    --plugins <plugins>`, 'List of pluging modules to use')
   .option(`    --filter <filter...>`, 'Filters output for individual reports.')
+  .option(`    --regex-filter <filter...>`, 'Filters output for individual reports using a regular expression.')
   .option('    --join-reports', 'Join JSON reports together. (available for -f json or -f raw only!)')
   .option(`    --no-color`, 'Disable colorized output')
   .option(`    --dump`, 'alias for "--formatter raw"')
@@ -183,11 +184,15 @@ async function main () {
         try {
           log.begin('run', report.name)
 
+          var filters = program.filter || [];
+          for (var filter of program.regexFilter || [])
+            filters.push(new RegExp(filter));
+
           // Create some parameters to send by default.
           let params = {
             backup: program.backup,
             extract: program.extract,
-            filter: program.filter,
+            filter: filters,
             id: program.id,
             raw: !!program.formatter.isRaw
           }

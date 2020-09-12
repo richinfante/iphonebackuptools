@@ -118,9 +118,11 @@ the `--extract <path>` parameter paired with the backup.files report will extrac
 To limit which files are extracted, pass one or more filters via `--filter <filter>`.
 Each filter must match for the file to be included.
 
+Regular expression filters can be passed by `--regex-filter <filter>`.
+
 ```bash
-# Export all photos onto "~/Desktop/Photos"
-ibackuptool -b $UDID -r backup.files --extract ~/Desktop/Photos --filter DCIM
+# Export all JPEG photos onto "~/Desktop/Photos"
+ibackuptool -b $UDID -r backup.files --extract ~/Desktop/Photos --filter DCIM --regex-filter '\.(jpg|JPG|jpeg|JPEG)$'
 ```
 
 ## Running Tests

@@ -108,9 +108,17 @@ function isIncludedByFilter (filter, item, filePath) {
 }
 
 function isIncludedBySingleFilter (filter, item, filePath) {
-  return item.domain.indexOf(filter) > -1 ||
-    item.filename.indexOf(filter) > -1 ||
-    filePath.indexOf(filter) > -1;
+  for (var x of [item.domain, item.filename, filePath]) {
+    if (isIncludedBySingleFilterCheck(filter, x))
+      return true;
+  }
+}
+
+function isIncludedBySingleFilterCheck (filter, x) {
+  if (filter instanceof RegExp)
+    return x.search(filter) > -1
+  else
+    return x.indexOf(filter) > -1;
 }
 
 /// Extract files
