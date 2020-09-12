@@ -113,7 +113,10 @@ ibackuptool -b $UDID --report system.wifi,phone.calls,phone.voicemail -f csv -o 
 ```
 
 ## Extracting files
-the `--extract <path>` parameter paired with the backup.files report will extract all files in a backup, with filenames matching an optional filter (specified by `--filter <filter>`).
+the `--extract <path>` parameter paired with the backup.files report will extract all files in a backup.
+
+To limit which files are extracted, pass one or more filters via `--filter <filter>`.
+Each filter must match for the file to be included.
 
 ```bash
 # Export all photos onto "~/Desktop/Photos"

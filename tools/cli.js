@@ -37,7 +37,7 @@ program
   .option('-o, --output <path>', 'Specify an output directory for files to be written to.')
   .option(`-v, --verbose`, 'Verbose debugging output')
   .option(`    --plugins <plugins>`, 'List of pluging modules to use')
-  .option(`    --filter <filter>`, 'Filter output fo r individual reports. See the README for usage.')
+  .option(`    --filter <filter...>`, 'Filters output for individual reports.')
   .option('    --join-reports', 'Join JSON reports together. (available for -f json or -f raw only!)')
   .option(`    --no-color`, 'Disable colorized output')
   .option(`    --dump`, 'alias for "--formatter raw"')

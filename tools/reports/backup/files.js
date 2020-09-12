@@ -97,11 +97,20 @@ function getManifest (backup) {
 
 /// Filter exclusion check
 function isIncludedByFilter (filter, item, filePath) {
-  return filter === 'all' ||
-    filter === undefined ||
-    (filter && item.domain.indexOf(filter) > -1) ||
-    (filter && item.filename.indexOf(filter) > -1) ||
-    (filePath.indexOf(filter) > -1)
+  if (filter === 'all' || filter === undefined)
+    return true;
+
+  for (var f of Array.isArray(filter) ? filter : [filter]) {
+    if (!isIncludedBySingleFilter(f, item, filePath))
+      return false;
+  }
+  return true;
+}
+
+function isIncludedBySingleFilter (filter, item, filePath) {
+  return item.domain.indexOf(filter) > -1 ||
+    item.filename.indexOf(filter) > -1 ||
+    filePath.indexOf(filter) > -1;
 }
 
 /// Extract files
