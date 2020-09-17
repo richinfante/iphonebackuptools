@@ -10,7 +10,7 @@ Check out my recently updated post about my work on backups here: [Reverse Engin
 
 **This tool is also still fairly experimental, so use at your own risk! Even though the tool opens the backup files as read-only, you should still make a copy of your backups before using this if they are important.**
 
-Currently works on macOS, not tested on windows but should work on windows by setting the attribute `--dir` to the backups directory location.
+Currently works on macOS, not tested extensively on windows but should function properly. Please flag any issues!
 
 ## Documentation
 This readme is intended to be an overview of features. Please read the [wiki](https://github.com/richinfante/iphonebackuptools/wiki) for more up-to-date and in-depth examples, and examples of how to make and use reports.
