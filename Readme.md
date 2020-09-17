@@ -39,15 +39,18 @@ bt.run('backups.list')
   })
 ```
 
-
 ## Installing (as a global command line tool)
-Prerequisites: [nodejs](https://nodejs.org/en/) and [npm](https://www.npmjs.com/).
+
+Prerequisites: [nodejs](https://nodejs.org/en/) and [npm](https://www.npmjs.com/). It's highly recommended using [nvm](https://github.com/nvm-sh/nvm) to install node/npm, as it makes it easier to install globally.
+
 ```bash
 # Install directly from NPM
 npm i -g ibackuptool
 ```
+If you do not have permission to install globally, you can try something like [this](https://medium.com/@samfeolu/install-your-npm-packages-globally-without-sudo-in-3-steps-d62c96a76b89) to change your NPM prefix and add it into your $PATH. 
 
 ### CLI Quickstart
+
 ```bash
 # List all the backups on the system
 ibackuptool -l 
@@ -60,22 +63,23 @@ UDID="0c1bc52c50016933679b0980ccff3680e5831162"
 ibackuptool -b $UDID --report '$TYPE'
 ```
 
-### Terminal Permissions
+### Terminal Permissions (macOS)
 
 If you receive an error, then it is possible Terminal does not have permission to access the folder where backups are stored. Read the error message for the location, otherwise try to just list the backups manually:
 
 ```bash
-# List all backups manually
-/Users/<username>/Library/Application Support/MobileSync/Backup
+# List all backups manually (macOS)
+ls "/Users/$(whoami)/Library/Application Support/MobileSync/Backup"
 ```
 
-You will see `ls: Operation not permitted` and know that Terminal does not have permission. Fix by allowing Terminal in Full Disk Encryption under Security & Privacy. First, close Terminal, and then:
+You will see `ls: Operation not permitted` and know that Terminal does not have permission. Fix by allowing Terminal in Full Disk Access under Security & Privacy. First, close Terminal, and then:
 
 `System Preferences -> Security & Privacy -> Privacy -> Full Disk Access -> + -> tick Terminal`
 
-Open Terminal and try again.
+Restart Terminal and try again.
 
-#### Multiple-Reporting 
+#### Multiple-Reporting
+
 You can also provide a comma separated list of reports to generate. Additionally, there is a special `all` report type which will run all available reports. This is best paired with the `-o` option for saving to disk and the `-f` option for selecting a format such as CSV, or JSON.
 
 ```bash
