@@ -65,7 +65,7 @@ ibackuptool -b $UDID --report '$TYPE'
 
 ### Terminal Permissions (macOS)
 
-If you receive an error, then it is possible Terminal does not have permission to access the folder where backups are stored. Read the error message for the location, otherwise try to just list the backups manually:
+If you receive an error when trying to list backups, then it is possible Terminal does not have permission to access the folder where backups are stored. Read the error message for the location, otherwise try to just list the backups manually:
 
 ```bash
 # List all backups manually (macOS)
