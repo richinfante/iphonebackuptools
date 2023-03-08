@@ -21,7 +21,9 @@
     "commander": "^6.1.0",
     "fs-extra": "^4.0.3",
     "json2csv": "^3.11.5",
+    "pbf": "^3.2.1",
     "plist": "^2.1.0",
+    "protocol-buffers-schema": "^3.6.0",
     "sqlite3": "^4.0.0",
     "stat-mode": "^1.0.0",
     "strip-ansi": "^4.0.0"
