@@ -93,6 +93,7 @@ ibackuptool -b $UDID --report all
 ### Reporting formats
 iBackupTool now supports multiple kinds of data export, which can be selected using the `-f` flag.
 - `table` - Selected data columns in an ascii table
+- `html` - HTML file containing table with selected columns (same data as `table`)
 - `json` - Selected data columns for display (same data as `table`)
 - `csv` - CSV file containing selected columns (same data as `table`)
 
