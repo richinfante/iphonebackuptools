@@ -14,6 +14,7 @@ const { runSingleReport, runSwitchedReport } = require('./util/report_runner')
 var formatters = {
   'json': require('./formatters/json'),
   'table': require('./formatters/table'),
+  'html': require('./formatters/html'),
   'raw': require('./formatters/raw-json'),
   'raw-json': require('./formatters/raw-json'),
   'csv': require('./formatters/csv'),
