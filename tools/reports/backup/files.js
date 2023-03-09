@@ -34,7 +34,7 @@ module.exports = {
     path: el => el.filename,
     size: el => el.filelen || 0,
     mtime: el => el.mtime || 0,
-    mode: el => new Mode(el).toString()
+    mode: el => el.mode && new Mode(el).toString()
   }
 }
 
@@ -44,15 +44,20 @@ function getSqliteFileManifest (backup) {
     backup.openDatabase('Manifest.db', true)
       .then(db => {
         db.all('SELECT fileID, domain, relativePath as filename, file from FILES', async function (err, rows) {
-          if (err) reject(err)
+          if (err) {
+            reject(err)
+            return
+          }
 
           // Extract binary plist metadata
           for (var row of rows) {
-            let data = plist.parseBuffer(row.file)
-            let metadata = data['$objects'][1];
-            row.filelen = metadata.Size
-            row.mode = metadata.Mode
-            row.mtime = row.atime = metadata.LastModified
+            if (row.file) {
+              let data = plist.parseBuffer(row.file)
+              let metadata = data['$objects'][1];
+              row.filelen = metadata.Size
+              row.mode = metadata.Mode
+              row.mtime = row.atime = metadata.LastModified
+            }
           }
 
           resolve(rows)
@@ -131,6 +136,11 @@ function isIncludedBySingleFilterCheck (filter, x) {
 function extractFiles (backup, destination, filter, items) {
   for (var item of items) {
     try {
+      if (!item.domain || !item.filename) {
+        log.warning(`skipping fileID ${item.fileID} without domain or path`)
+        continue
+      }
+
       var domainPath = item.domain
       if (domainPath.match(/^AppDomain.*-/)) {
         // Extract sub-domain from app domain
